@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PetsService } from './pets.service';
+import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 
 @Controller('pets')
 @UseGuards(JwtAuthGuard)
@@ -8,8 +10,8 @@ export class PetsController {
   constructor(private readonly petsService: PetsService) {}
 
   @Post()
-  async create(@Request() req, @Body() petData: any) {
-    return this.petsService.create({ ...petData, ownerId: req.user.userId });
+  async create(@Request() req, @Body() createPetDto: CreatePetDto) {
+    return this.petsService.create({ ...createPetDto, ownerId: req.user.userId });
   }
 
   @Get()
@@ -23,8 +25,8 @@ export class PetsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateData: any) {
-    return this.petsService.update(id, updateData);
+  async update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto) {
+    return this.petsService.update(id, updatePetDto);
   }
 
   @Delete(':id')

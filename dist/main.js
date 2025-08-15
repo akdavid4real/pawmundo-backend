@@ -821,6 +821,99 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/pets/dto/create-pet.dto.ts":
+/*!************************************************!*\
+  !*** ./src/modules/pets/dto/create-pet.dto.ts ***!
+  \************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreatePetDto = void 0;
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class CreatePetDto {
+}
+exports.CreatePetDto = CreatePetDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other']),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "species", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "breed", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(30),
+    __metadata("design:type", Number)
+], CreatePetDto.prototype, "age", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(['male', 'female']),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "gender", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreatePetDto.prototype, "weight", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "color", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "microchipId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "profileImage", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/pets/dto/update-pet.dto.ts":
+/*!************************************************!*\
+  !*** ./src/modules/pets/dto/update-pet.dto.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdatePetDto = void 0;
+const mapped_types_1 = __webpack_require__(Object(function webpackMissingModule() { var e = new Error("Cannot find module '@nestjs/mapped-types'"); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+const create_pet_dto_1 = __webpack_require__(/*! ./create-pet.dto */ "./src/modules/pets/dto/create-pet.dto.ts");
+class UpdatePetDto extends (0, mapped_types_1.PartialType)(create_pet_dto_1.CreatePetDto) {
+}
+exports.UpdatePetDto = UpdatePetDto;
+
+
+/***/ }),
+
 /***/ "./src/modules/pets/pets.controller.ts":
 /*!*********************************************!*\
   !*** ./src/modules/pets/pets.controller.ts ***!
@@ -840,18 +933,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PetsController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
 const pets_service_1 = __webpack_require__(/*! ./pets.service */ "./src/modules/pets/pets.service.ts");
+const create_pet_dto_1 = __webpack_require__(/*! ./dto/create-pet.dto */ "./src/modules/pets/dto/create-pet.dto.ts");
+const update_pet_dto_1 = __webpack_require__(/*! ./dto/update-pet.dto */ "./src/modules/pets/dto/update-pet.dto.ts");
 let PetsController = class PetsController {
     constructor(petsService) {
         this.petsService = petsService;
     }
-    async create(req, petData) {
-        return this.petsService.create({ ...petData, ownerId: req.user.userId });
+    async create(req, createPetDto) {
+        return this.petsService.create({ ...createPetDto, ownerId: req.user.userId });
     }
     async findMyPets(req) {
         return this.petsService.findByOwner(req.user.userId);
@@ -859,8 +954,8 @@ let PetsController = class PetsController {
     async findOne(id) {
         return this.petsService.findById(id);
     }
-    async update(id, updateData) {
-        return this.petsService.update(id, updateData);
+    async update(id, updatePetDto) {
+        return this.petsService.update(id, updatePetDto);
     }
     async remove(id) {
         return this.petsService.delete(id);
@@ -872,7 +967,7 @@ __decorate([
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_pet_dto_1.CreatePetDto !== "undefined" && create_pet_dto_1.CreatePetDto) === "function" ? _b : Object]),
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "create", null);
 __decorate([
@@ -894,7 +989,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof update_pet_dto_1.UpdatePetDto !== "undefined" && update_pet_dto_1.UpdatePetDto) === "function" ? _c : Object]),
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "update", null);
 __decorate([
