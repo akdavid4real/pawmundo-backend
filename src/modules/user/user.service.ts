@@ -8,10 +8,10 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async findById(id: string): Promise<User> {
-    return this.userModel.findById(id).exec();
+    return this.userModel.findById(id).select('-password').exec();
   }
 
   async updateProfile(id: string, updateData: Partial<User>): Promise<User> {
-    return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password').exec();
   }
 }
