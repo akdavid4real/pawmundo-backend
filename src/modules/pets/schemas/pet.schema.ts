@@ -33,6 +33,21 @@ export class Pet extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   ownerId: Types.ObjectId;
 
+  @Prop()
+  dateOfBirth: Date;
+
+  @Prop()
+  medicalNotes: string;
+
+  @Prop()
+  emergencyContactName: string;
+
+  @Prop()
+  emergencyContactPhone: string;
+
+  @Prop({ default: 'healthy', enum: ['healthy', 'sick', 'recovering', 'chronic'] })
+  healthStatus: string;
+
   @Prop({ default: true })
   isActive: boolean;
 }

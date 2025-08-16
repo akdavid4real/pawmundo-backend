@@ -17,8 +17,32 @@ export class User {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ default: 'user' })
+  @Prop({ default: 'user', enum: ['user', 'vet', 'admin'] })
   role: string;
+
+  @Prop()
+  phone: string;
+
+  @Prop()
+  address: string;
+
+  @Prop()
+  profileImage: string;
+
+  @Prop({ default: false })
+  isEmailVerified: boolean;
+
+  @Prop()
+  emailVerificationToken: string;
+
+  @Prop()
+  passwordResetToken: string;
+
+  @Prop()
+  passwordResetExpires: Date;
+
+  @Prop()
+  lastLogin: Date;
 
   @Prop({ default: true })
   isActive: boolean;

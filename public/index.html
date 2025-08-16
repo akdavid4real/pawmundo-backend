@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPromise Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        input, textarea, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        .response { background: #f8f9fa; padding: 10px; margin: 10px 0; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <h1>PawPromise API Test</h1>
+    
+    <div class="section">
+        <h3>Auth</h3>
+        <div>
+            <h4>Register</h4>
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password">
+            <input type="text" id="regFirstName" placeholder="First Name">
+            <input type="text" id="regLastName" placeholder="Last Name">
+            <button onclick="register()">Register</button>
+        </div>
+        <div>
+            <h4>Login</h4>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="authResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h3>Pets</h3>
+        <div>
+            <h4>Add Pet</h4>
+            <input type="text" id="petName" placeholder="Pet Name">
+            <input type="text" id="petSpecies" placeholder="Species">
+            <input type="text" id="petBreed" placeholder="Breed">
+            <input type="number" id="petAge" placeholder="Age">
+            <input type="text" id="petGender" placeholder="Gender">
+            <button onclick="addPet()">Add Pet</button>
+        </div>
+        <div>
+            <button onclick="getPets()">Get My Pets</button>
+        </div>
+        <div id="petsResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h3>Health Records</h3>
+        <div>
+            <h4>Add Health Record</h4>
+            <input type="text" id="recordPetId" placeholder="Pet ID">
+            <input type="text" id="recordType" placeholder="Type (vaccination, checkup, etc.)">
+            <input type="text" id="recordTitle" placeholder="Title">
+            <input type="date" id="recordDate">
+            <textarea id="recordDescription" placeholder="Description"></textarea>
+            <button onclick="addHealthRecord()">Add Record</button>
+        </div>
+        <div id="healthResponse" class="response"></div>
+    </div>
+
+    <div class="section">
+        <h3>Appointments</h3>
+        <div>
+            <h4>Book Appointment</h4>
+            <input type="text" id="apptPetId" placeholder="Pet ID">
+            <input type="text" id="apptVetName" placeholder="Vet Name">
+            <input type="text" id="apptVetClinic" placeholder="Vet Clinic">
+            <input type="date" id="apptDate">
+            <input type="time" id="apptTime">
+            <input type="text" id="apptReason" placeholder="Reason">
+            <button onclick="bookAppointment()">Book Appointment</button>
+        </div>
+        <div>
+            <button onclick="getAppointments()">Get My Appointments</button>
+        </div>
+        <div id="appointmentsResponse" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let token = localStorage.getItem('token');
+
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = JSON.stringify(data, null, 2);
+            element.className = `response ${isError ? 'error' : 'success'}`;
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers.Authorization = `Bearer ${token}`;
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method,
+                    headers,
+                    body: body ? JSON.stringify(body) : null
+                });
+                const data = await response.json();
+                return { data, ok: response.ok };
+            } catch (error) {
+                return { data: { error: error.message }, ok: false };
+            }
+        }
+
+        async function register() {
+            const body = {
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                firstName: document.getElementById('regFirstName').value,
+                lastName: document.getElementById('regLastName').value
+            };
+            const { data, ok } = await apiCall('/auth/register', 'POST', body);
+            if (ok && data.access_token) {
+                token = data.access_token;
+                localStorage.setItem('token', token);
+            }
+            showResponse('authResponse', data, !ok);
+        }
+
+        async function login() {
+            const body = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+            const { data, ok } = await apiCall('/auth/login', 'POST', body);
+            if (ok && data.access_token) {
+                token = data.access_token;
+                localStorage.setItem('token', token);
+            }
+            showResponse('authResponse', data, !ok);
+        }
+
+        async function addPet() {
+            const body = {
+                name: document.getElementById('petName').value,
+                species: document.getElementById('petSpecies').value,
+                breed: document.getElementById('petBreed').value,
+                age: parseInt(document.getElementById('petAge').value),
+                gender: document.getElementById('petGender').value
+            };
+            const { data, ok } = await apiCall('/pets', 'POST', body);
+            showResponse('petsResponse', data, !ok);
+        }
+
+        async function getPets() {
+            const { data, ok } = await apiCall('/pets');
+            showResponse('petsResponse', data, !ok);
+        }
+
+        async function addHealthRecord() {
+            const body = {
+                petId: document.getElementById('recordPetId').value,
+                type: document.getElementById('recordType').value,
+                title: document.getElementById('recordTitle').value,
+                date: document.getElementById('recordDate').value,
+                description: document.getElementById('recordDescription').value
+            };
+            const { data, ok } = await apiCall('/health-records', 'POST', body);
+            showResponse('healthResponse', data, !ok);
+        }
+
+        async function bookAppointment() {
+            const body = {
+                petId: document.getElementById('apptPetId').value,
+                vetName: document.getElementById('apptVetName').value,
+                vetClinic: document.getElementById('apptVetClinic').value,
+                appointmentDate: document.getElementById('apptDate').value,
+                appointmentTime: document.getElementById('apptTime').value,
+                reason: document.getElementById('apptReason').value
+            };
+            const { data, ok } = await apiCall('/appointments', 'POST', body);
+            showResponse('appointmentsResponse', data, !ok);
+        }
+
+        async function getAppointments() {
+            const { data, ok } = await apiCall('/appointments');
+            showResponse('appointmentsResponse', data, !ok);
+        }
+    </script>
+</body>
+</html>
