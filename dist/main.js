@@ -1,11 +1,20 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ({
+/******/ 	var __webpack_modules__ = ([
+/* 0 */,
+/* 1 */
+/***/ ((module) => {
 
-/***/ "./src/app.module.ts":
-/*!***************************!*\
-  !*** ./src/app.module.ts ***!
-  \***************************/
+module.exports = require("@nestjs/core");
+
+/***/ }),
+/* 2 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/common");
+
+/***/ }),
+/* 3 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17,26 +26,26 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const schedule_1 = __webpack_require__(/*! @nestjs/schedule */ "@nestjs/schedule");
-const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
-const mongodb_config_1 = __webpack_require__(/*! @config/mongodb.config */ "./src/config/mongodb.config.ts");
-const redis_config_1 = __webpack_require__(/*! @config/redis.config */ "./src/config/redis.config.ts");
-const cloudinary_config_1 = __webpack_require__(/*! @config/cloudinary.config */ "./src/config/cloudinary.config.ts");
-const auth_module_1 = __webpack_require__(/*! @modules/auth/auth.module */ "./src/modules/auth/auth.module.ts");
-const user_module_1 = __webpack_require__(/*! @modules/user/user.module */ "./src/modules/user/user.module.ts");
-const pets_module_1 = __webpack_require__(/*! @modules/pets/pets.module */ "./src/modules/pets/pets.module.ts");
-const appointments_module_1 = __webpack_require__(/*! @modules/appointments/appointments.module */ "./src/modules/appointments/appointments.module.ts");
-const health_records_module_1 = __webpack_require__(/*! @modules/health-records/health-records.module */ "./src/modules/health-records/health-records.module.ts");
-const medications_module_1 = __webpack_require__(/*! @modules/medications/medications.module */ "./src/modules/medications/medications.module.ts");
-const health_reminders_module_1 = __webpack_require__(/*! @modules/health-reminders/health-reminders.module */ "./src/modules/health-reminders/health-reminders.module.ts");
-const consultations_module_1 = __webpack_require__(/*! @modules/consultations/consultations.module */ "./src/modules/consultations/consultations.module.ts");
-const insurance_module_1 = __webpack_require__(/*! @modules/insurance/insurance.module */ "./src/modules/insurance/insurance.module.ts");
-const symptom_checker_module_1 = __webpack_require__(/*! @modules/symptom-checker/symptom-checker.module */ "./src/modules/symptom-checker/symptom-checker.module.ts");
-const forum_module_1 = __webpack_require__(/*! @modules/forum/forum.module */ "./src/modules/forum/forum.module.ts");
-const notifications_module_1 = __webpack_require__(/*! @modules/notifications/notifications.module */ "./src/modules/notifications/notifications.module.ts");
+const common_1 = __webpack_require__(2);
+const config_1 = __webpack_require__(4);
+const mongoose_1 = __webpack_require__(5);
+const schedule_1 = __webpack_require__(6);
+const bull_1 = __webpack_require__(7);
+const mongodb_config_1 = __webpack_require__(8);
+const redis_config_1 = __webpack_require__(9);
+const cloudinary_config_1 = __webpack_require__(10);
+const auth_module_1 = __webpack_require__(11);
+const user_module_1 = __webpack_require__(32);
+const pets_module_1 = __webpack_require__(37);
+const appointments_module_1 = __webpack_require__(44);
+const health_records_module_1 = __webpack_require__(50);
+const medications_module_1 = __webpack_require__(56);
+const health_reminders_module_1 = __webpack_require__(57);
+const consultations_module_1 = __webpack_require__(60);
+const insurance_module_1 = __webpack_require__(61);
+const symptom_checker_module_1 = __webpack_require__(62);
+const forum_module_1 = __webpack_require__(63);
+const notifications_module_1 = __webpack_require__(64);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -79,53 +88,50 @@ exports.AppModule = AppModule = __decorate([
 
 
 /***/ }),
+/* 4 */
+/***/ ((module) => {
 
-/***/ "./src/config/cloudinary.config.ts":
-/*!*****************************************!*\
-  !*** ./src/config/cloudinary.config.ts ***!
-  \*****************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CloudinaryConfig = void 0;
-const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
-exports.CloudinaryConfig = (0, config_1.registerAs)('cloudinary', () => ({
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    apiKey: process.env.CLOUDINARY_API_KEY,
-    apiSecret: process.env.CLOUDINARY_API_SECRET,
-}));
-
+module.exports = require("@nestjs/config");
 
 /***/ }),
+/* 5 */
+/***/ ((module) => {
 
-/***/ "./src/config/mongodb.config.ts":
-/*!**************************************!*\
-  !*** ./src/config/mongodb.config.ts ***!
-  \**************************************/
+module.exports = require("@nestjs/mongoose");
+
+/***/ }),
+/* 6 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/schedule");
+
+/***/ }),
+/* 7 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/bull");
+
+/***/ }),
+/* 8 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MongodbConfig = void 0;
-const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const config_1 = __webpack_require__(4);
 exports.MongodbConfig = (0, config_1.registerAs)('mongodb', () => ({
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/pawpromise',
 }));
 
 
 /***/ }),
-
-/***/ "./src/config/redis.config.ts":
-/*!************************************!*\
-  !*** ./src/config/redis.config.ts ***!
-  \************************************/
+/* 9 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RedisConfig = void 0;
-const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const config_1 = __webpack_require__(4);
 exports.RedisConfig = (0, config_1.registerAs)('redis', () => ({
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
@@ -134,11 +140,1494 @@ exports.RedisConfig = (0, config_1.registerAs)('redis', () => ({
 
 
 /***/ }),
+/* 10 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-/***/ "./src/modules/appointments/appointments.controller.ts":
-/*!*************************************************************!*\
-  !*** ./src/modules/appointments/appointments.controller.ts ***!
-  \*************************************************************/
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CloudinaryConfig = void 0;
+const config_1 = __webpack_require__(4);
+exports.CloudinaryConfig = (0, config_1.registerAs)('cloudinary', () => ({
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+}));
+
+
+/***/ }),
+/* 11 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AuthModule = void 0;
+const common_1 = __webpack_require__(2);
+const jwt_1 = __webpack_require__(12);
+const passport_1 = __webpack_require__(13);
+const mongoose_1 = __webpack_require__(5);
+const auth_service_1 = __webpack_require__(14);
+const auth_controller_1 = __webpack_require__(21);
+const user_schema_1 = __webpack_require__(18);
+const jwt_strategy_1 = __webpack_require__(28);
+const local_strategy_1 = __webpack_require__(30);
+const mail_service_1 = __webpack_require__(19);
+let AuthModule = class AuthModule {
+};
+exports.AuthModule = AuthModule;
+exports.AuthModule = AuthModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            passport_1.PassportModule,
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET || 'your-secret-key',
+                signOptions: { expiresIn: '24h' },
+            }),
+            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
+        ],
+        controllers: [auth_controller_1.AuthController],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, local_strategy_1.LocalStrategy, mail_service_1.MailService],
+        exports: [auth_service_1.AuthService],
+    })
+], AuthModule);
+
+
+/***/ }),
+/* 12 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/jwt");
+
+/***/ }),
+/* 13 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/passport");
+
+/***/ }),
+/* 14 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AuthService = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+const jwt_1 = __webpack_require__(12);
+const bcrypt = __webpack_require__(16);
+const crypto = __webpack_require__(17);
+const user_schema_1 = __webpack_require__(18);
+const mail_service_1 = __webpack_require__(19);
+let AuthService = class AuthService {
+    constructor(userModel, jwtService, mailService) {
+        this.userModel = userModel;
+        this.jwtService = jwtService;
+        this.mailService = mailService;
+    }
+    async register(registerDto) {
+        const { email, password, firstName, lastName, phone, address } = registerDto;
+        const existingUser = await this.userModel.findOne({ email });
+        if (existingUser) {
+            throw new common_1.ConflictException('User with this email already exists');
+        }
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+        const user = new this.userModel({
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            phone,
+            address,
+            emailVerificationToken,
+        });
+        await user.save();
+        const payload = { email: user.email, sub: user._id };
+        const token = this.jwtService.sign(payload);
+        return {
+            access_token: token,
+            user: {
+                id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                isEmailVerified: user.isEmailVerified,
+            },
+        };
+    }
+    async login(loginDto) {
+        const { email, password } = loginDto;
+        const user = await this.validateUser(email, password);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        await this.userModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
+        const payload = { email: user.email, sub: user._id };
+        const token = this.jwtService.sign(payload);
+        return {
+            access_token: token,
+            user: {
+                id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                isEmailVerified: user.isEmailVerified,
+                lastLogin: new Date(),
+            },
+        };
+    }
+    async validateUser(email, password) {
+        const user = await this.userModel.findOne({ email });
+        if (user && await bcrypt.compare(password, user.password)) {
+            const { password, ...result } = user.toObject();
+            return result;
+        }
+        return null;
+    }
+    async findById(id) {
+        return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+    }
+    async forgotPassword(forgotPasswordDto) {
+        const { email } = forgotPasswordDto;
+        const user = await this.userModel.findOne({ email });
+        if (!user) {
+            return { message: 'If email exists, password reset link has been sent' };
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const resetExpires = new Date(Date.now() + 10 * 60 * 1000);
+        await this.userModel.findByIdAndUpdate(user._id, {
+            passwordResetToken: hashedToken,
+            passwordResetExpires: resetExpires,
+        });
+        try {
+            await this.mailService.sendResetPassword(user.email, resetToken);
+        }
+        catch (err) {
+        }
+        return { message: 'If email exists, password reset link has been sent' };
+    }
+    async resetPassword(resetPasswordDto) {
+        const { token, newPassword } = resetPasswordDto;
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await this.userModel.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: new Date() },
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('Invalid or expired reset token');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await this.userModel.findByIdAndUpdate(user._id, {
+            password: hashedPassword,
+            passwordResetToken: undefined,
+            passwordResetExpires: undefined,
+        });
+        return { message: 'Password reset successfully' };
+    }
+    async changePassword(userId, changePasswordDto) {
+        const { currentPassword, newPassword } = changePasswordDto;
+        const user = await this.userModel.findById(userId);
+        if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
+            throw new common_1.UnauthorizedException('Current password is incorrect');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
+        return { message: 'Password changed successfully' };
+    }
+    async verifyEmail(token) {
+        const user = await this.userModel.findOne({ emailVerificationToken: token });
+        if (!user) {
+            throw new common_1.BadRequestException('Invalid verification token');
+        }
+        await this.userModel.findByIdAndUpdate(user._id, {
+            isEmailVerified: true,
+            emailVerificationToken: undefined,
+        });
+        return { message: 'Email verified successfully' };
+    }
+    async updateProfile(userId, updateData) {
+        const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'profileImage'];
+        const filteredData = Object.keys(updateData)
+            .filter(key => allowedFields.includes(key))
+            .reduce((obj, key) => ({ ...obj, [key]: updateData[key] }), {});
+        return this.userModel.findByIdAndUpdate(userId, filteredData, { new: true })
+            .select('-password -emailVerificationToken -passwordResetToken');
+    }
+};
+exports.AuthService = AuthService;
+exports.AuthService = AuthService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _b : Object, typeof (_c = typeof mail_service_1.MailService !== "undefined" && mail_service_1.MailService) === "function" ? _c : Object])
+], AuthService);
+
+
+/***/ }),
+/* 15 */
+/***/ ((module) => {
+
+module.exports = require("mongoose");
+
+/***/ }),
+/* 16 */
+/***/ ((module) => {
+
+module.exports = require("bcrypt");
+
+/***/ }),
+/* 17 */
+/***/ ((module) => {
+
+module.exports = require("crypto");
+
+/***/ }),
+/* 18 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserSchema = exports.User = void 0;
+const mongoose_1 = __webpack_require__(5);
+let User = class User {
+};
+exports.User = User;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, unique: true }),
+    __metadata("design:type", String)
+], User.prototype, "email", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], User.prototype, "password", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], User.prototype, "firstName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], User.prototype, "lastName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'user', enum: ['user', 'vet', 'admin'] }),
+    __metadata("design:type", String)
+], User.prototype, "role", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "phone", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "address", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "profileImage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isEmailVerified", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "emailVerificationToken", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], User.prototype, "passwordResetToken", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], User.prototype, "passwordResetExpires", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], User.prototype, "lastLogin", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isActive", void 0);
+exports.User = User = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], User);
+exports.UserSchema = mongoose_1.SchemaFactory.createForClass(User);
+
+
+/***/ }),
+/* 19 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var MailService_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MailService = void 0;
+const common_1 = __webpack_require__(2);
+const nodemailer_1 = __webpack_require__(20);
+let MailService = MailService_1 = class MailService {
+    constructor() {
+        this.logger = new common_1.Logger(MailService_1.name);
+        this.transporter = nodemailer_1.default.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.example.com',
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+                user: process.env.SMTP_USER || '',
+                pass: process.env.SMTP_PASS || '',
+            },
+        });
+    }
+    async sendResetPassword(email, token) {
+        const frontend = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const resetUrl = `${frontend}/reset-password?token=${encodeURIComponent(token)}`;
+        const mailOptions = {
+            from: process.env.FROM_EMAIL || 'no-reply@pawpromise.app',
+            to: email,
+            subject: 'PawPromise — Password reset',
+            html: `
+        <p>You requested a password reset. Click the link below (expires in 10 minutes):</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>If you did not request this, ignore this email.</p>
+      `,
+        };
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            this.logger.log(`Reset email sent to ${email}: ${info.messageId}`);
+            return info;
+        }
+        catch (err) {
+            this.logger.error('Error sending reset email', err);
+            throw err;
+        }
+    }
+};
+exports.MailService = MailService;
+exports.MailService = MailService = MailService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [])
+], MailService);
+
+
+/***/ }),
+/* 20 */
+/***/ ((module) => {
+
+module.exports = require("nodemailer");
+
+/***/ }),
+/* 21 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AuthController = void 0;
+const common_1 = __webpack_require__(2);
+const passport_1 = __webpack_require__(13);
+const auth_service_1 = __webpack_require__(14);
+const register_dto_1 = __webpack_require__(22);
+const login_dto_1 = __webpack_require__(25);
+const forgot_password_dto_1 = __webpack_require__(26);
+const reset_password_dto_1 = __webpack_require__(27);
+let AuthController = class AuthController {
+    constructor(authService) {
+        this.authService = authService;
+    }
+    async register(registerDto) {
+        return this.authService.register(registerDto);
+    }
+    async login(loginDto) {
+        return this.authService.login(loginDto);
+    }
+    getProfile(req) {
+        return req.user;
+    }
+    async forgotPassword(forgotPasswordDto) {
+        return this.authService.forgotPassword(forgotPasswordDto);
+    }
+    async resetPassword(resetPasswordDto) {
+        return this.authService.resetPassword(resetPasswordDto);
+    }
+};
+exports.AuthController = AuthController;
+__decorate([
+    (0, common_1.Post)('register'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof register_dto_1.RegisterDto !== "undefined" && register_dto_1.RegisterDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
+    (0, common_1.Post)('login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.Get)('profile'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof forgot_password_dto_1.ForgotPasswordDto !== "undefined" && forgot_password_dto_1.ForgotPasswordDto) === "function" ? _d : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof reset_password_dto_1.ResetPasswordDto !== "undefined" && reset_password_dto_1.ResetPasswordDto) === "function" ? _e : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetPassword", null);
+exports.AuthController = AuthController = __decorate([
+    (0, common_1.Controller)('auth'),
+    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+], AuthController);
+
+
+/***/ }),
+/* 22 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class RegisterDto {
+}
+exports.RegisterDto = RegisterDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'user@example.com' }),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Password (min 8 chars, must contain uppercase, lowercase, number)',
+        minLength: 8
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+        message: 'Password must contain uppercase, lowercase and number'
+    }),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'First name', example: 'John' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "firstName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Last name', example: 'Doe' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "lastName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Phone number' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "phone", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Address' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "address", void 0);
+
+
+/***/ }),
+/* 23 */
+/***/ ((module) => {
+
+module.exports = require("class-validator");
+
+/***/ }),
+/* 24 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/swagger");
+
+/***/ }),
+/* 25 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class LoginDto {
+}
+exports.LoginDto = LoginDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'user@example.com' }),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], LoginDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User password' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], LoginDto.prototype, "password", void 0);
+
+
+/***/ }),
+/* 26 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ForgotPasswordDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class ForgotPasswordDto {
+}
+exports.ForgotPasswordDto = ForgotPasswordDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Email address for password reset' }),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ForgotPasswordDto.prototype, "email", void 0);
+
+
+/***/ }),
+/* 27 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ResetPasswordDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class ResetPasswordDto {
+}
+exports.ResetPasswordDto = ResetPasswordDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Password reset token' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "token", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'New password (min 8 chars, must contain uppercase, lowercase, number)' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+        message: 'Password must contain uppercase, lowercase and number'
+    }),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "newPassword", void 0);
+
+
+/***/ }),
+/* 28 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JwtStrategy = void 0;
+const common_1 = __webpack_require__(2);
+const passport_1 = __webpack_require__(13);
+const passport_jwt_1 = __webpack_require__(29);
+const auth_service_1 = __webpack_require__(14);
+let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
+    constructor(authService) {
+        super({
+            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            ignoreExpiration: false,
+            secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
+        });
+        this.authService = authService;
+    }
+    async validate(payload) {
+        const user = await this.authService.findById(payload.sub);
+        if (!user) {
+            throw new common_1.UnauthorizedException();
+        }
+        return user;
+    }
+};
+exports.JwtStrategy = JwtStrategy;
+exports.JwtStrategy = JwtStrategy = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+], JwtStrategy);
+
+
+/***/ }),
+/* 29 */
+/***/ ((module) => {
+
+module.exports = require("passport-jwt");
+
+/***/ }),
+/* 30 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LocalStrategy = void 0;
+const common_1 = __webpack_require__(2);
+const passport_1 = __webpack_require__(13);
+const passport_local_1 = __webpack_require__(31);
+const auth_service_1 = __webpack_require__(14);
+let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
+    constructor(authService) {
+        super({ usernameField: 'email' });
+        this.authService = authService;
+    }
+    async validate(email, password) {
+        const user = await this.authService.validateUser(email, password);
+        if (!user) {
+            throw new common_1.UnauthorizedException();
+        }
+        return user;
+    }
+};
+exports.LocalStrategy = LocalStrategy;
+exports.LocalStrategy = LocalStrategy = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+], LocalStrategy);
+
+
+/***/ }),
+/* 31 */
+/***/ ((module) => {
+
+module.exports = require("passport-local");
+
+/***/ }),
+/* 32 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserModule = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const user_controller_1 = __webpack_require__(33);
+const user_service_1 = __webpack_require__(35);
+const user_schema_1 = __webpack_require__(18);
+let UserModule = class UserModule {
+};
+exports.UserModule = UserModule;
+exports.UserModule = UserModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
+        ],
+        controllers: [user_controller_1.UserController],
+        providers: [user_service_1.UserService],
+        exports: [user_service_1.UserService],
+    })
+], UserModule);
+
+
+/***/ }),
+/* 33 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserController = void 0;
+const common_1 = __webpack_require__(2);
+const jwt_auth_guard_1 = __webpack_require__(34);
+const user_service_1 = __webpack_require__(35);
+const update_user_dto_1 = __webpack_require__(36);
+let UserController = class UserController {
+    constructor(userService) {
+        this.userService = userService;
+    }
+    async getProfile(req) {
+        return this.userService.findById(req.user._id);
+    }
+    async updateProfile(req, updateData) {
+        return this.userService.updateProfile(req.user._id, updateData);
+    }
+};
+exports.UserController = UserController;
+__decorate([
+    (0, common_1.Get)('profile'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Put)('profile'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_b = typeof update_user_dto_1.UpdateUserDto !== "undefined" && update_user_dto_1.UpdateUserDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "updateProfile", null);
+exports.UserController = UserController = __decorate([
+    (0, common_1.Controller)('users'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_a = typeof user_service_1.UserService !== "undefined" && user_service_1.UserService) === "function" ? _a : Object])
+], UserController);
+
+
+/***/ }),
+/* 34 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JwtAuthGuard = void 0;
+const common_1 = __webpack_require__(2);
+const passport_1 = __webpack_require__(13);
+let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+};
+exports.JwtAuthGuard = JwtAuthGuard;
+exports.JwtAuthGuard = JwtAuthGuard = __decorate([
+    (0, common_1.Injectable)()
+], JwtAuthGuard);
+
+
+/***/ }),
+/* 35 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserService = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+const user_schema_1 = __webpack_require__(18);
+let UserService = class UserService {
+    constructor(userModel) {
+        this.userModel = userModel;
+    }
+    async findById(id) {
+        return this.userModel.findById(id).select('-password').exec();
+    }
+    async updateProfile(id, updateData) {
+        return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password').exec();
+    }
+};
+exports.UserService = UserService;
+exports.UserService = UserService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], UserService);
+
+
+/***/ }),
+/* 36 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateUserDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+class UpdateUserDto {
+}
+exports.UpdateUserDto = UpdateUserDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "firstName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "lastName", void 0);
+
+
+/***/ }),
+/* 37 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PetsModule = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const pets_controller_1 = __webpack_require__(38);
+const pets_service_1 = __webpack_require__(39);
+const pet_schema_1 = __webpack_require__(40);
+let PetsModule = class PetsModule {
+};
+exports.PetsModule = PetsModule;
+exports.PetsModule = PetsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: pet_schema_1.Pet.name, schema: pet_schema_1.PetSchema }]),
+        ],
+        controllers: [pets_controller_1.PetsController],
+        providers: [pets_service_1.PetsService],
+        exports: [pets_service_1.PetsService],
+    })
+], PetsModule);
+
+
+/***/ }),
+/* 38 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PetsController = void 0;
+const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(24);
+const jwt_auth_guard_1 = __webpack_require__(34);
+const pets_service_1 = __webpack_require__(39);
+const create_pet_dto_1 = __webpack_require__(41);
+const update_pet_dto_1 = __webpack_require__(42);
+let PetsController = class PetsController {
+    constructor(petsService) {
+        this.petsService = petsService;
+    }
+    async create(req, createPetDto) {
+        const petData = {
+            ...createPetDto,
+            ownerId: req.user._id,
+            dateOfBirth: createPetDto.dateOfBirth ? new Date(createPetDto.dateOfBirth) : undefined
+        };
+        return this.petsService.create(petData);
+    }
+    async findMyPets(req, species) {
+        return this.petsService.findByOwner(req.user._id, species);
+    }
+    async findOne(id, req) {
+        return this.petsService.findById(id, req.user._id);
+    }
+    async update(id, updatePetDto, req) {
+        const petData = { ...updatePetDto };
+        if (updatePetDto.dateOfBirth) {
+            petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
+        }
+        return this.petsService.update(id, req.user._id, petData);
+    }
+    async updateHealthStatus(id, status, req) {
+        return this.petsService.updateHealthStatus(id, req.user._id, status);
+    }
+    async remove(id, req) {
+        return this.petsService.delete(id, req.user._id);
+    }
+};
+exports.PetsController = PetsController;
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Add a new pet' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Pet created successfully' }),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_pet_dto_1.CreatePetDto !== "undefined" && create_pet_dto_1.CreatePetDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "create", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all user pets' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user pets' }),
+    (0, swagger_1.ApiQuery)({ name: 'species', required: false, description: 'Filter by species' }),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('species')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "findMyPets", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get pet by ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet details' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Pet not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "findOne", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update pet information' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet updated successfully' }),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof update_pet_dto_1.UpdatePetDto !== "undefined" && update_pet_dto_1.UpdatePetDto) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "update", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update pet health status' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Health status updated' }),
+    (0, common_1.Put)(':id/health-status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "updateHealthStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete pet' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet deleted successfully' }),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "remove", null);
+exports.PetsController = PetsController = __decorate([
+    (0, swagger_1.ApiTags)('pets'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.Controller)('pets'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_a = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _a : Object])
+], PetsController);
+
+
+/***/ }),
+/* 39 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PetsService = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+const pet_schema_1 = __webpack_require__(40);
+let PetsService = class PetsService {
+    constructor(petModel) {
+        this.petModel = petModel;
+    }
+    async create(petData) {
+        const pet = new this.petModel(petData);
+        return pet.save();
+    }
+    async findByOwner(ownerId, species) {
+        const filter = { ownerId, isActive: true };
+        if (species)
+            filter.species = species;
+        return this.petModel.find(filter).sort({ name: 1 }).exec();
+    }
+    async findById(id, ownerId) {
+        const pet = await this.petModel.findById(id).exec();
+        if (!pet)
+            throw new common_1.NotFoundException('Pet not found');
+        if (ownerId && pet.ownerId.toString() !== ownerId) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        return pet;
+    }
+    async update(id, ownerId, updateData) {
+        await this.findById(id, ownerId);
+        return this.petModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    }
+    async delete(id, ownerId) {
+        await this.findById(id, ownerId);
+        return this.petModel.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
+    }
+    async updateHealthStatus(id, ownerId, status) {
+        await this.findById(id, ownerId);
+        const validStatuses = ['healthy', 'sick', 'recovering', 'chronic'];
+        if (!validStatuses.includes(status)) {
+            throw new Error('Invalid health status');
+        }
+        return this.petModel.findByIdAndUpdate(id, { healthStatus: status }, { new: true }).exec();
+    }
+    async findByHealthStatus(ownerId, status) {
+        return this.petModel.find({ ownerId, healthStatus: status, isActive: true }).exec();
+    }
+};
+exports.PetsService = PetsService;
+exports.PetsService = PetsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(pet_schema_1.Pet.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], PetsService);
+
+
+/***/ }),
+/* 40 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PetSchema = exports.Pet = void 0;
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+let Pet = class Pet extends mongoose_2.Document {
+};
+exports.Pet = Pet;
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Pet.prototype, "name", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Pet.prototype, "species", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Pet.prototype, "breed", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Number)
+], Pet.prototype, "age", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Pet.prototype, "gender", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", Number)
+], Pet.prototype, "weight", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "color", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "microchipId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "profileImage", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], Pet.prototype, "ownerId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], Pet.prototype, "dateOfBirth", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "medicalNotes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "emergencyContactName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Pet.prototype, "emergencyContactPhone", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'healthy', enum: ['healthy', 'sick', 'recovering', 'chronic'] }),
+    __metadata("design:type", String)
+], Pet.prototype, "healthStatus", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], Pet.prototype, "isActive", void 0);
+exports.Pet = Pet = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], Pet);
+exports.PetSchema = mongoose_1.SchemaFactory.createForClass(Pet);
+
+
+/***/ }),
+/* 41 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreatePetDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class CreatePetDto {
+}
+exports.CreatePetDto = CreatePetDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Pet name', example: 'Buddy' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Pet species',
+        enum: ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other']
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other']),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "species", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Pet breed', example: 'Golden Retriever' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "breed", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Pet age in years', minimum: 0, maximum: 30 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(30),
+    __metadata("design:type", Number)
+], CreatePetDto.prototype, "age", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Pet gender', enum: ['male', 'female'] }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(['male', 'female']),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "gender", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet weight in kg' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreatePetDto.prototype, "weight", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet color' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Microchip ID' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "microchipId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Profile image URL' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "profileImage", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Date of birth', example: '2020-01-15' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "dateOfBirth", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Medical notes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "medicalNotes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Emergency contact name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "emergencyContactName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Emergency contact phone' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreatePetDto.prototype, "emergencyContactPhone", void 0);
+
+
+/***/ }),
+/* 42 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdatePetDto = void 0;
+const mapped_types_1 = __webpack_require__(43);
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+const create_pet_dto_1 = __webpack_require__(41);
+class UpdatePetDto extends (0, mapped_types_1.PartialType)(create_pet_dto_1.CreatePetDto) {
+}
+exports.UpdatePetDto = UpdatePetDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Pet health status',
+        enum: ['healthy', 'sick', 'recovering', 'chronic']
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['healthy', 'sick', 'recovering', 'chronic']),
+    __metadata("design:type", String)
+], UpdatePetDto.prototype, "healthStatus", void 0);
+
+
+/***/ }),
+/* 43 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/mapped-types");
+
+/***/ }),
+/* 44 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppointmentsModule = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const appointments_controller_1 = __webpack_require__(45);
+const appointments_service_1 = __webpack_require__(46);
+const appointment_schema_1 = __webpack_require__(47);
+let AppointmentsModule = class AppointmentsModule {
+};
+exports.AppointmentsModule = AppointmentsModule;
+exports.AppointmentsModule = AppointmentsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema }])
+        ],
+        controllers: [appointments_controller_1.AppointmentsController],
+        providers: [appointments_service_1.AppointmentsService],
+        exports: [appointments_service_1.AppointmentsService]
+    })
+], AppointmentsModule);
+
+
+/***/ }),
+/* 45 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -157,12 +1646,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppointmentsController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
-const appointments_service_1 = __webpack_require__(/*! ./appointments.service */ "./src/modules/appointments/appointments.service.ts");
-const create_appointment_dto_1 = __webpack_require__(/*! ./dto/create-appointment.dto */ "./src/modules/appointments/dto/create-appointment.dto.ts");
-const update_appointment_dto_1 = __webpack_require__(/*! ./dto/update-appointment.dto */ "./src/modules/appointments/dto/update-appointment.dto.ts");
+const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(24);
+const jwt_auth_guard_1 = __webpack_require__(34);
+const appointments_service_1 = __webpack_require__(46);
+const create_appointment_dto_1 = __webpack_require__(48);
+const update_appointment_dto_1 = __webpack_require__(49);
 let AppointmentsController = class AppointmentsController {
     constructor(appointmentsService) {
         this.appointmentsService = appointmentsService;
@@ -270,48 +1759,7 @@ exports.AppointmentsController = AppointmentsController = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/appointments/appointments.module.ts":
-/*!*********************************************************!*\
-  !*** ./src/modules/appointments/appointments.module.ts ***!
-  \*********************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppointmentsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const appointments_controller_1 = __webpack_require__(/*! ./appointments.controller */ "./src/modules/appointments/appointments.controller.ts");
-const appointments_service_1 = __webpack_require__(/*! ./appointments.service */ "./src/modules/appointments/appointments.service.ts");
-const appointment_schema_1 = __webpack_require__(/*! ./schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts");
-let AppointmentsModule = class AppointmentsModule {
-};
-exports.AppointmentsModule = AppointmentsModule;
-exports.AppointmentsModule = AppointmentsModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema }])
-        ],
-        controllers: [appointments_controller_1.AppointmentsController],
-        providers: [appointments_service_1.AppointmentsService],
-        exports: [appointments_service_1.AppointmentsService]
-    })
-], AppointmentsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/appointments/appointments.service.ts":
-/*!**********************************************************!*\
-  !*** ./src/modules/appointments/appointments.service.ts ***!
-  \**********************************************************/
+/* 46 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -330,10 +1778,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppointmentsService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-const appointment_schema_1 = __webpack_require__(/*! ./schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts");
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+const appointment_schema_1 = __webpack_require__(47);
 let AppointmentsService = class AppointmentsService {
     constructor(appointmentModel) {
         this.appointmentModel = appointmentModel;
@@ -412,11 +1860,83 @@ exports.AppointmentsService = AppointmentsService = __decorate([
 
 
 /***/ }),
+/* 47 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-/***/ "./src/modules/appointments/dto/create-appointment.dto.ts":
-/*!****************************************************************!*\
-  !*** ./src/modules/appointments/dto/create-appointment.dto.ts ***!
-  \****************************************************************/
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppointmentSchema = exports.Appointment = void 0;
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+let Appointment = class Appointment {
+};
+exports.Appointment = Appointment;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], Appointment.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
+    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+], Appointment.prototype, "petId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Appointment.prototype, "vetName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Appointment.prototype, "vetClinic", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], Appointment.prototype, "appointmentDate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Appointment.prototype, "appointmentTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Appointment.prototype, "reason", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'scheduled', enum: ['scheduled', 'confirmed', 'completed', 'cancelled'] }),
+    __metadata("design:type", String)
+], Appointment.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Appointment.prototype, "notes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Appointment.prototype, "vetPhone", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Appointment.prototype, "vetEmail", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], Appointment.prototype, "isActive", void 0);
+exports.Appointment = Appointment = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], Appointment);
+exports.AppointmentSchema = mongoose_1.SchemaFactory.createForClass(Appointment);
+
+
+/***/ }),
+/* 48 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -431,8 +1951,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateAppointmentDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
 class CreateAppointmentDto {
 }
 exports.CreateAppointmentDto = CreateAppointmentDto;
@@ -493,11 +2013,7 @@ __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/appointments/dto/update-appointment.dto.ts":
-/*!****************************************************************!*\
-  !*** ./src/modules/appointments/dto/update-appointment.dto.ts ***!
-  \****************************************************************/
+/* 49 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -512,10 +2028,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateAppointmentDto = void 0;
-const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const create_appointment_dto_1 = __webpack_require__(/*! ./create-appointment.dto */ "./src/modules/appointments/dto/create-appointment.dto.ts");
+const mapped_types_1 = __webpack_require__(43);
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+const create_appointment_dto_1 = __webpack_require__(48);
 class UpdateAppointmentDto extends (0, mapped_types_1.PartialType)(create_appointment_dto_1.CreateAppointmentDto) {
 }
 exports.UpdateAppointmentDto = UpdateAppointmentDto;
@@ -531,164 +2047,7 @@ __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/appointments/schemas/appointment.schema.ts":
-/*!****************************************************************!*\
-  !*** ./src/modules/appointments/schemas/appointment.schema.ts ***!
-  \****************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppointmentSchema = exports.Appointment = void 0;
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-let Appointment = class Appointment {
-};
-exports.Appointment = Appointment;
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
-], Appointment.prototype, "userId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
-], Appointment.prototype, "petId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Appointment.prototype, "vetName", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Appointment.prototype, "vetClinic", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
-], Appointment.prototype, "appointmentDate", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Appointment.prototype, "appointmentTime", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Appointment.prototype, "reason", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: 'scheduled', enum: ['scheduled', 'confirmed', 'completed', 'cancelled'] }),
-    __metadata("design:type", String)
-], Appointment.prototype, "status", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Appointment.prototype, "notes", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Appointment.prototype, "vetPhone", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Appointment.prototype, "vetEmail", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], Appointment.prototype, "isActive", void 0);
-exports.Appointment = Appointment = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], Appointment);
-exports.AppointmentSchema = mongoose_1.SchemaFactory.createForClass(Appointment);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/auth.controller.ts":
-/*!*********************************************!*\
-  !*** ./src/modules/auth/auth.controller.ts ***!
-  \*********************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AuthController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
-const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/modules/auth/auth.service.ts");
-const register_dto_1 = __webpack_require__(/*! ./dto/register.dto */ "./src/modules/auth/dto/register.dto.ts");
-const login_dto_1 = __webpack_require__(/*! ./dto/login.dto */ "./src/modules/auth/dto/login.dto.ts");
-let AuthController = class AuthController {
-    constructor(authService) {
-        this.authService = authService;
-    }
-    async register(registerDto) {
-        return this.authService.register(registerDto);
-    }
-    async login(loginDto) {
-        return this.authService.login(loginDto);
-    }
-    getProfile(req) {
-        return req.user;
-    }
-};
-exports.AuthController = AuthController;
-__decorate([
-    (0, common_1.Post)('register'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof register_dto_1.RegisterDto !== "undefined" && register_dto_1.RegisterDto) === "function" ? _b : Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "register", null);
-__decorate([
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
-    (0, common_1.Post)('login'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _c : Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "login", null);
-__decorate([
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    (0, common_1.Get)('profile'),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], AuthController.prototype, "getProfile", null);
-exports.AuthController = AuthController = __decorate([
-    (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
-], AuthController);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/auth.module.ts":
-/*!*****************************************!*\
-  !*** ./src/modules/auth/auth.module.ts ***!
-  \*****************************************/
+/* 50 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -699,717 +2058,31 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AuthModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
-const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/modules/auth/auth.service.ts");
-const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/modules/auth/auth.controller.ts");
-const user_schema_1 = __webpack_require__(/*! ./schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
-const jwt_strategy_1 = __webpack_require__(/*! ./strategies/jwt.strategy */ "./src/modules/auth/strategies/jwt.strategy.ts");
-const local_strategy_1 = __webpack_require__(/*! ./strategies/local.strategy */ "./src/modules/auth/strategies/local.strategy.ts");
-let AuthModule = class AuthModule {
+exports.HealthRecordsModule = void 0;
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const health_records_controller_1 = __webpack_require__(51);
+const health_records_service_1 = __webpack_require__(52);
+const health_record_schema_1 = __webpack_require__(53);
+const pets_module_1 = __webpack_require__(37);
+let HealthRecordsModule = class HealthRecordsModule {
 };
-exports.AuthModule = AuthModule;
-exports.AuthModule = AuthModule = __decorate([
+exports.HealthRecordsModule = HealthRecordsModule;
+exports.HealthRecordsModule = HealthRecordsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            passport_1.PassportModule,
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET || 'your-secret-key',
-                signOptions: { expiresIn: '24h' },
-            }),
-            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
+            mongoose_1.MongooseModule.forFeature([{ name: health_record_schema_1.HealthRecord.name, schema: health_record_schema_1.HealthRecordSchema }]),
+            pets_module_1.PetsModule,
         ],
-        controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, local_strategy_1.LocalStrategy],
-        exports: [auth_service_1.AuthService],
+        controllers: [health_records_controller_1.HealthRecordsController],
+        providers: [health_records_service_1.HealthRecordsService],
+        exports: [health_records_service_1.HealthRecordsService],
     })
-], AuthModule);
+], HealthRecordsModule);
 
 
 /***/ }),
-
-/***/ "./src/modules/auth/auth.service.ts":
-/*!******************************************!*\
-  !*** ./src/modules/auth/auth.service.ts ***!
-  \******************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AuthService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
-const bcrypt = __webpack_require__(/*! bcrypt */ "bcrypt");
-const crypto = __webpack_require__(/*! crypto */ "crypto");
-const user_schema_1 = __webpack_require__(/*! ./schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
-let AuthService = class AuthService {
-    constructor(userModel, jwtService) {
-        this.userModel = userModel;
-        this.jwtService = jwtService;
-    }
-    async register(registerDto) {
-        const { email, password, firstName, lastName, phone, address } = registerDto;
-        const existingUser = await this.userModel.findOne({ email });
-        if (existingUser) {
-            throw new common_1.ConflictException('User with this email already exists');
-        }
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-        const user = new this.userModel({
-            email,
-            password: hashedPassword,
-            firstName,
-            lastName,
-            phone,
-            address,
-            emailVerificationToken,
-        });
-        await user.save();
-        const payload = { email: user.email, sub: user._id };
-        const token = this.jwtService.sign(payload);
-        return {
-            access_token: token,
-            user: {
-                id: user._id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role,
-                isEmailVerified: user.isEmailVerified,
-            },
-        };
-    }
-    async login(loginDto) {
-        const { email, password } = loginDto;
-        const user = await this.validateUser(email, password);
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
-        await this.userModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-        const payload = { email: user.email, sub: user._id };
-        const token = this.jwtService.sign(payload);
-        return {
-            access_token: token,
-            user: {
-                id: user._id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role,
-                isEmailVerified: user.isEmailVerified,
-                lastLogin: new Date(),
-            },
-        };
-    }
-    async validateUser(email, password) {
-        const user = await this.userModel.findOne({ email });
-        if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user.toObject();
-            return result;
-        }
-        return null;
-    }
-    async findById(id) {
-        return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
-    }
-    async forgotPassword(forgotPasswordDto) {
-        const { email } = forgotPasswordDto;
-        const user = await this.userModel.findOne({ email });
-        if (!user) {
-            return { message: 'If email exists, password reset link has been sent' };
-        }
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetExpires = new Date(Date.now() + 10 * 60 * 1000);
-        await this.userModel.findByIdAndUpdate(user._id, {
-            passwordResetToken: resetToken,
-            passwordResetExpires: resetExpires,
-        });
-        return { message: 'If email exists, password reset link has been sent', resetToken };
-    }
-    async resetPassword(resetPasswordDto) {
-        const { token, newPassword } = resetPasswordDto;
-        const user = await this.userModel.findOne({
-            passwordResetToken: token,
-            passwordResetExpires: { $gt: new Date() },
-        });
-        if (!user) {
-            throw new common_1.BadRequestException('Invalid or expired reset token');
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
-        await this.userModel.findByIdAndUpdate(user._id, {
-            password: hashedPassword,
-            passwordResetToken: undefined,
-            passwordResetExpires: undefined,
-        });
-        return { message: 'Password reset successfully' };
-    }
-    async changePassword(userId, changePasswordDto) {
-        const { currentPassword, newPassword } = changePasswordDto;
-        const user = await this.userModel.findById(userId);
-        if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
-            throw new common_1.UnauthorizedException('Current password is incorrect');
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
-        await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
-        return { message: 'Password changed successfully' };
-    }
-    async verifyEmail(token) {
-        const user = await this.userModel.findOne({ emailVerificationToken: token });
-        if (!user) {
-            throw new common_1.BadRequestException('Invalid verification token');
-        }
-        await this.userModel.findByIdAndUpdate(user._id, {
-            isEmailVerified: true,
-            emailVerificationToken: undefined,
-        });
-        return { message: 'Email verified successfully' };
-    }
-    async updateProfile(userId, updateData) {
-        const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'profileImage'];
-        const filteredData = Object.keys(updateData)
-            .filter(key => allowedFields.includes(key))
-            .reduce((obj, key) => ({ ...obj, [key]: updateData[key] }), {});
-        return this.userModel.findByIdAndUpdate(userId, filteredData, { new: true })
-            .select('-password -emailVerificationToken -passwordResetToken');
-    }
-};
-exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _b : Object])
-], AuthService);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/dto/login.dto.ts":
-/*!*******************************************!*\
-  !*** ./src/modules/auth/dto/login.dto.ts ***!
-  \*******************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LoginDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class LoginDto {
-}
-exports.LoginDto = LoginDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'user@example.com' }),
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User password' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/dto/register.dto.ts":
-/*!**********************************************!*\
-  !*** ./src/modules/auth/dto/register.dto.ts ***!
-  \**********************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class RegisterDto {
-}
-exports.RegisterDto = RegisterDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User email address', example: 'user@example.com' }),
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Password (min 8 chars, must contain uppercase, lowercase, number)',
-        minLength: 8
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MinLength)(8),
-    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-        message: 'Password must contain uppercase, lowercase and number'
-    }),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'First name', example: 'John' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "firstName", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Last name', example: 'Doe' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "lastName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Phone number' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "phone", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Address' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "address", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/guards/jwt-auth.guard.ts":
-/*!***************************************************!*\
-  !*** ./src/modules/auth/guards/jwt-auth.guard.ts ***!
-  \***************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JwtAuthGuard = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
-let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
-};
-exports.JwtAuthGuard = JwtAuthGuard;
-exports.JwtAuthGuard = JwtAuthGuard = __decorate([
-    (0, common_1.Injectable)()
-], JwtAuthGuard);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/schemas/user.schema.ts":
-/*!*************************************************!*\
-  !*** ./src/modules/auth/schemas/user.schema.ts ***!
-  \*************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserSchema = exports.User = void 0;
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-let User = class User {
-};
-exports.User = User;
-__decorate([
-    (0, mongoose_1.Prop)({ required: true, unique: true }),
-    __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], User.prototype, "password", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], User.prototype, "firstName", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], User.prototype, "lastName", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: 'user', enum: ['user', 'vet', 'admin'] }),
-    __metadata("design:type", String)
-], User.prototype, "role", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], User.prototype, "phone", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], User.prototype, "address", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], User.prototype, "profileImage", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: false }),
-    __metadata("design:type", Boolean)
-], User.prototype, "isEmailVerified", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], User.prototype, "emailVerificationToken", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], User.prototype, "passwordResetToken", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
-], User.prototype, "passwordResetExpires", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
-], User.prototype, "lastLogin", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], User.prototype, "isActive", void 0);
-exports.User = User = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], User);
-exports.UserSchema = mongoose_1.SchemaFactory.createForClass(User);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/strategies/jwt.strategy.ts":
-/*!*****************************************************!*\
-  !*** ./src/modules/auth/strategies/jwt.strategy.ts ***!
-  \*****************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JwtStrategy = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
-const passport_jwt_1 = __webpack_require__(/*! passport-jwt */ "passport-jwt");
-const auth_service_1 = __webpack_require__(/*! ../auth.service */ "./src/modules/auth/auth.service.ts");
-let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
-    constructor(authService) {
-        super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
-        });
-        this.authService = authService;
-    }
-    async validate(payload) {
-        const user = await this.authService.findById(payload.sub);
-        if (!user) {
-            throw new common_1.UnauthorizedException();
-        }
-        return user;
-    }
-};
-exports.JwtStrategy = JwtStrategy;
-exports.JwtStrategy = JwtStrategy = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
-], JwtStrategy);
-
-
-/***/ }),
-
-/***/ "./src/modules/auth/strategies/local.strategy.ts":
-/*!*******************************************************!*\
-  !*** ./src/modules/auth/strategies/local.strategy.ts ***!
-  \*******************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LocalStrategy = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
-const passport_local_1 = __webpack_require__(/*! passport-local */ "passport-local");
-const auth_service_1 = __webpack_require__(/*! ../auth.service */ "./src/modules/auth/auth.service.ts");
-let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
-    constructor(authService) {
-        super({ usernameField: 'email' });
-        this.authService = authService;
-    }
-    async validate(email, password) {
-        const user = await this.authService.validateUser(email, password);
-        if (!user) {
-            throw new common_1.UnauthorizedException();
-        }
-        return user;
-    }
-};
-exports.LocalStrategy = LocalStrategy;
-exports.LocalStrategy = LocalStrategy = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
-], LocalStrategy);
-
-
-/***/ }),
-
-/***/ "./src/modules/consultations/consultations.module.ts":
-/*!***********************************************************!*\
-  !*** ./src/modules/consultations/consultations.module.ts ***!
-  \***********************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ConsultationsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-let ConsultationsModule = class ConsultationsModule {
-};
-exports.ConsultationsModule = ConsultationsModule;
-exports.ConsultationsModule = ConsultationsModule = __decorate([
-    (0, common_1.Module)({})
-], ConsultationsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/forum/forum.module.ts":
-/*!*******************************************!*\
-  !*** ./src/modules/forum/forum.module.ts ***!
-  \*******************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ForumModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-let ForumModule = class ForumModule {
-};
-exports.ForumModule = ForumModule;
-exports.ForumModule = ForumModule = __decorate([
-    (0, common_1.Module)({})
-], ForumModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/health-records/dto/create-health-record.dto.ts":
-/*!********************************************************************!*\
-  !*** ./src/modules/health-records/dto/create-health-record.dto.ts ***!
-  \********************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CreateHealthRecordDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class CreateHealthRecordDto {
-}
-exports.CreateHealthRecordDto = CreateHealthRecordDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Pet ID' }),
-    (0, class_validator_1.IsMongoId)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "petId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Record type',
-        enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "type", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Record title', example: 'Annual Vaccination' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "title", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Detailed description' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "description", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Record date', example: '2024-01-15' }),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "date", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Veterinarian name' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "veterinarian", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Clinic name' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "clinic", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Attachment URLs' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsString)({ each: true }),
-    __metadata("design:type", Array)
-], CreateHealthRecordDto.prototype, "attachments", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Next due date for follow-up' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "nextDueDate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet weight in kg' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], CreateHealthRecordDto.prototype, "weight", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Body temperature in Celsius' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateHealthRecordDto.prototype, "temperature", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Heart rate (BPM)' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], CreateHealthRecordDto.prototype, "heartRate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Cost of treatment' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], CreateHealthRecordDto.prototype, "cost", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Additional notes' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateHealthRecordDto.prototype, "notes", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/health-records/dto/update-health-record.dto.ts":
-/*!********************************************************************!*\
-  !*** ./src/modules/health-records/dto/update-health-record.dto.ts ***!
-  \********************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateHealthRecordDto = void 0;
-const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
-const create_health_record_dto_1 = __webpack_require__(/*! ./create-health-record.dto */ "./src/modules/health-records/dto/create-health-record.dto.ts");
-class UpdateHealthRecordDto extends (0, mapped_types_1.PartialType)(create_health_record_dto_1.CreateHealthRecordDto) {
-}
-exports.UpdateHealthRecordDto = UpdateHealthRecordDto;
-
-
-/***/ }),
-
-/***/ "./src/modules/health-records/health-records.controller.ts":
-/*!*****************************************************************!*\
-  !*** ./src/modules/health-records/health-records.controller.ts ***!
-  \*****************************************************************/
+/* 51 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1428,13 +2101,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordsController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
-const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
-const health_records_service_1 = __webpack_require__(/*! ./health-records.service */ "./src/modules/health-records/health-records.service.ts");
-const create_health_record_dto_1 = __webpack_require__(/*! ./dto/create-health-record.dto */ "./src/modules/health-records/dto/create-health-record.dto.ts");
-const update_health_record_dto_1 = __webpack_require__(/*! ./dto/update-health-record.dto */ "./src/modules/health-records/dto/update-health-record.dto.ts");
+const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(24);
+const mongoose_1 = __webpack_require__(15);
+const jwt_auth_guard_1 = __webpack_require__(34);
+const health_records_service_1 = __webpack_require__(52);
+const create_health_record_dto_1 = __webpack_require__(54);
+const update_health_record_dto_1 = __webpack_require__(55);
 let HealthRecordsController = class HealthRecordsController {
     constructor(healthRecordsService) {
         this.healthRecordsService = healthRecordsService;
@@ -1642,50 +2315,7 @@ exports.HealthRecordsController = HealthRecordsController = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/health-records/health-records.module.ts":
-/*!*************************************************************!*\
-  !*** ./src/modules/health-records/health-records.module.ts ***!
-  \*************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HealthRecordsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const health_records_controller_1 = __webpack_require__(/*! ./health-records.controller */ "./src/modules/health-records/health-records.controller.ts");
-const health_records_service_1 = __webpack_require__(/*! ./health-records.service */ "./src/modules/health-records/health-records.service.ts");
-const health_record_schema_1 = __webpack_require__(/*! ./schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts");
-const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
-let HealthRecordsModule = class HealthRecordsModule {
-};
-exports.HealthRecordsModule = HealthRecordsModule;
-exports.HealthRecordsModule = HealthRecordsModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: health_record_schema_1.HealthRecord.name, schema: health_record_schema_1.HealthRecordSchema }]),
-            pets_module_1.PetsModule,
-        ],
-        controllers: [health_records_controller_1.HealthRecordsController],
-        providers: [health_records_service_1.HealthRecordsService],
-        exports: [health_records_service_1.HealthRecordsService],
-    })
-], HealthRecordsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/health-records/health-records.service.ts":
-/*!**************************************************************!*\
-  !*** ./src/modules/health-records/health-records.service.ts ***!
-  \**************************************************************/
+/* 52 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1704,11 +2334,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordsService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-const health_record_schema_1 = __webpack_require__(/*! ./schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts");
-const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const common_1 = __webpack_require__(2);
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
+const health_record_schema_1 = __webpack_require__(53);
+const pets_service_1 = __webpack_require__(39);
 let HealthRecordsService = class HealthRecordsService {
     constructor(healthRecordModel, petsService) {
         this.healthRecordModel = healthRecordModel;
@@ -1869,11 +2499,7 @@ exports.HealthRecordsService = HealthRecordsService = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/health-records/schemas/health-record.schema.ts":
-/*!********************************************************************!*\
-  !*** ./src/modules/health-records/schemas/health-record.schema.ts ***!
-  \********************************************************************/
+/* 53 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1889,8 +2515,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordSchema = exports.HealthRecord = void 0;
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const mongoose_1 = __webpack_require__(5);
+const mongoose_2 = __webpack_require__(15);
 let HealthRecord = class HealthRecord extends mongoose_2.Document {
 };
 exports.HealthRecord = HealthRecord;
@@ -1965,11 +2591,188 @@ exports.HealthRecordSchema = mongoose_1.SchemaFactory.createForClass(HealthRecor
 
 
 /***/ }),
+/* 54 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-/***/ "./src/modules/health-reminders/health-reminders.controller.ts":
-/*!*********************************************************************!*\
-  !*** ./src/modules/health-reminders/health-reminders.controller.ts ***!
-  \*********************************************************************/
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateHealthRecordDto = void 0;
+const class_validator_1 = __webpack_require__(23);
+const swagger_1 = __webpack_require__(24);
+class CreateHealthRecordDto {
+}
+exports.CreateHealthRecordDto = CreateHealthRecordDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Pet ID' }),
+    (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "petId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Record type',
+        enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Record title', example: 'Annual Vaccination' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Detailed description' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Record date', example: '2024-01-15' }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "date", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Veterinarian name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "veterinarian", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Clinic name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "clinic", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Attachment URLs' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], CreateHealthRecordDto.prototype, "attachments", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Next due date for follow-up' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "nextDueDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet weight in kg' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateHealthRecordDto.prototype, "weight", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Body temperature in Celsius' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateHealthRecordDto.prototype, "temperature", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Heart rate (BPM)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateHealthRecordDto.prototype, "heartRate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Cost of treatment' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateHealthRecordDto.prototype, "cost", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Additional notes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHealthRecordDto.prototype, "notes", void 0);
+
+
+/***/ }),
+/* 55 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateHealthRecordDto = void 0;
+const mapped_types_1 = __webpack_require__(43);
+const create_health_record_dto_1 = __webpack_require__(54);
+class UpdateHealthRecordDto extends (0, mapped_types_1.PartialType)(create_health_record_dto_1.CreateHealthRecordDto) {
+}
+exports.UpdateHealthRecordDto = UpdateHealthRecordDto;
+
+
+/***/ }),
+/* 56 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MedicationsModule = void 0;
+const common_1 = __webpack_require__(2);
+let MedicationsModule = class MedicationsModule {
+};
+exports.MedicationsModule = MedicationsModule;
+exports.MedicationsModule = MedicationsModule = __decorate([
+    (0, common_1.Module)({})
+], MedicationsModule);
+
+
+/***/ }),
+/* 57 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HealthRemindersModule = void 0;
+const common_1 = __webpack_require__(2);
+const health_reminders_controller_1 = __webpack_require__(58);
+const health_reminders_service_1 = __webpack_require__(59);
+const health_records_module_1 = __webpack_require__(50);
+const pets_module_1 = __webpack_require__(37);
+let HealthRemindersModule = class HealthRemindersModule {
+};
+exports.HealthRemindersModule = HealthRemindersModule;
+exports.HealthRemindersModule = HealthRemindersModule = __decorate([
+    (0, common_1.Module)({
+        imports: [health_records_module_1.HealthRecordsModule, pets_module_1.PetsModule],
+        controllers: [health_reminders_controller_1.HealthRemindersController],
+        providers: [health_reminders_service_1.HealthRemindersService],
+        exports: [health_reminders_service_1.HealthRemindersService],
+    })
+], HealthRemindersModule);
+
+
+/***/ }),
+/* 58 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1988,10 +2791,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRemindersController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
-const health_reminders_service_1 = __webpack_require__(/*! ./health-reminders.service */ "./src/modules/health-reminders/health-reminders.service.ts");
+const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(24);
+const jwt_auth_guard_1 = __webpack_require__(34);
+const health_reminders_service_1 = __webpack_require__(59);
 let HealthRemindersController = class HealthRemindersController {
     constructor(healthRemindersService) {
         this.healthRemindersService = healthRemindersService;
@@ -2033,46 +2836,7 @@ exports.HealthRemindersController = HealthRemindersController = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/health-reminders/health-reminders.module.ts":
-/*!*****************************************************************!*\
-  !*** ./src/modules/health-reminders/health-reminders.module.ts ***!
-  \*****************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HealthRemindersModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const health_reminders_controller_1 = __webpack_require__(/*! ./health-reminders.controller */ "./src/modules/health-reminders/health-reminders.controller.ts");
-const health_reminders_service_1 = __webpack_require__(/*! ./health-reminders.service */ "./src/modules/health-reminders/health-reminders.service.ts");
-const health_records_module_1 = __webpack_require__(/*! ../health-records/health-records.module */ "./src/modules/health-records/health-records.module.ts");
-const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
-let HealthRemindersModule = class HealthRemindersModule {
-};
-exports.HealthRemindersModule = HealthRemindersModule;
-exports.HealthRemindersModule = HealthRemindersModule = __decorate([
-    (0, common_1.Module)({
-        imports: [health_records_module_1.HealthRecordsModule, pets_module_1.PetsModule],
-        controllers: [health_reminders_controller_1.HealthRemindersController],
-        providers: [health_reminders_service_1.HealthRemindersService],
-        exports: [health_reminders_service_1.HealthRemindersService],
-    })
-], HealthRemindersModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/health-reminders/health-reminders.service.ts":
-/*!******************************************************************!*\
-  !*** ./src/modules/health-reminders/health-reminders.service.ts ***!
-  \******************************************************************/
+/* 59 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2088,10 +2852,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRemindersService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const schedule_1 = __webpack_require__(/*! @nestjs/schedule */ "@nestjs/schedule");
-const health_records_service_1 = __webpack_require__(/*! ../health-records/health-records.service */ "./src/modules/health-records/health-records.service.ts");
-const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const common_1 = __webpack_require__(2);
+const schedule_1 = __webpack_require__(6);
+const health_records_service_1 = __webpack_require__(52);
+const pets_service_1 = __webpack_require__(39);
 let HealthRemindersService = class HealthRemindersService {
     constructor(healthRecordsService, petsService) {
         this.healthRecordsService = healthRecordsService;
@@ -2177,11 +2941,29 @@ exports.HealthRemindersService = HealthRemindersService = __decorate([
 
 
 /***/ }),
+/* 60 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-/***/ "./src/modules/insurance/insurance.module.ts":
-/*!***************************************************!*\
-  !*** ./src/modules/insurance/insurance.module.ts ***!
-  \***************************************************/
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConsultationsModule = void 0;
+const common_1 = __webpack_require__(2);
+let ConsultationsModule = class ConsultationsModule {
+};
+exports.ConsultationsModule = ConsultationsModule;
+exports.ConsultationsModule = ConsultationsModule = __decorate([
+    (0, common_1.Module)({})
+], ConsultationsModule);
+
+
+/***/ }),
+/* 61 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2193,7 +2975,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const common_1 = __webpack_require__(2);
 let InsuranceModule = class InsuranceModule {
 };
 exports.InsuranceModule = InsuranceModule;
@@ -2203,561 +2985,7 @@ exports.InsuranceModule = InsuranceModule = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/medications/medications.module.ts":
-/*!*******************************************************!*\
-  !*** ./src/modules/medications/medications.module.ts ***!
-  \*******************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MedicationsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-let MedicationsModule = class MedicationsModule {
-};
-exports.MedicationsModule = MedicationsModule;
-exports.MedicationsModule = MedicationsModule = __decorate([
-    (0, common_1.Module)({})
-], MedicationsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/notifications/notifications.module.ts":
-/*!***********************************************************!*\
-  !*** ./src/modules/notifications/notifications.module.ts ***!
-  \***********************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NotificationsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-let NotificationsModule = class NotificationsModule {
-};
-exports.NotificationsModule = NotificationsModule;
-exports.NotificationsModule = NotificationsModule = __decorate([
-    (0, common_1.Module)({})
-], NotificationsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/dto/create-pet.dto.ts":
-/*!************************************************!*\
-  !*** ./src/modules/pets/dto/create-pet.dto.ts ***!
-  \************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CreatePetDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class CreatePetDto {
-}
-exports.CreatePetDto = CreatePetDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Pet name', example: 'Buddy' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Pet species',
-        enum: ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other']
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other']),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "species", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Pet breed', example: 'Golden Retriever' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "breed", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Pet age in years', minimum: 0, maximum: 30 }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    (0, class_validator_1.Max)(30),
-    __metadata("design:type", Number)
-], CreatePetDto.prototype, "age", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Pet gender', enum: ['male', 'female'] }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(['male', 'female']),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "gender", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet weight in kg' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], CreatePetDto.prototype, "weight", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet color' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "color", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Microchip ID' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "microchipId", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Profile image URL' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "profileImage", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Date of birth', example: '2020-01-15' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "dateOfBirth", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Medical notes' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "medicalNotes", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Emergency contact name' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "emergencyContactName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Emergency contact phone' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "emergencyContactPhone", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/dto/update-pet.dto.ts":
-/*!************************************************!*\
-  !*** ./src/modules/pets/dto/update-pet.dto.ts ***!
-  \************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdatePetDto = void 0;
-const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const create_pet_dto_1 = __webpack_require__(/*! ./create-pet.dto */ "./src/modules/pets/dto/create-pet.dto.ts");
-class UpdatePetDto extends (0, mapped_types_1.PartialType)(create_pet_dto_1.CreatePetDto) {
-}
-exports.UpdatePetDto = UpdatePetDto;
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Pet health status',
-        enum: ['healthy', 'sick', 'recovering', 'chronic']
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(['healthy', 'sick', 'recovering', 'chronic']),
-    __metadata("design:type", String)
-], UpdatePetDto.prototype, "healthStatus", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/pets.controller.ts":
-/*!*********************************************!*\
-  !*** ./src/modules/pets/pets.controller.ts ***!
-  \*********************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PetsController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
-const pets_service_1 = __webpack_require__(/*! ./pets.service */ "./src/modules/pets/pets.service.ts");
-const create_pet_dto_1 = __webpack_require__(/*! ./dto/create-pet.dto */ "./src/modules/pets/dto/create-pet.dto.ts");
-const update_pet_dto_1 = __webpack_require__(/*! ./dto/update-pet.dto */ "./src/modules/pets/dto/update-pet.dto.ts");
-let PetsController = class PetsController {
-    constructor(petsService) {
-        this.petsService = petsService;
-    }
-    async create(req, createPetDto) {
-        const petData = {
-            ...createPetDto,
-            ownerId: req.user._id,
-            dateOfBirth: createPetDto.dateOfBirth ? new Date(createPetDto.dateOfBirth) : undefined
-        };
-        return this.petsService.create(petData);
-    }
-    async findMyPets(req, species) {
-        return this.petsService.findByOwner(req.user._id, species);
-    }
-    async findOne(id, req) {
-        return this.petsService.findById(id, req.user._id);
-    }
-    async update(id, updatePetDto, req) {
-        const petData = { ...updatePetDto };
-        if (updatePetDto.dateOfBirth) {
-            petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
-        }
-        return this.petsService.update(id, req.user._id, petData);
-    }
-    async updateHealthStatus(id, status, req) {
-        return this.petsService.updateHealthStatus(id, req.user._id, status);
-    }
-    async remove(id, req) {
-        return this.petsService.delete(id, req.user._id);
-    }
-};
-exports.PetsController = PetsController;
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Add a new pet' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Pet created successfully' }),
-    (0, common_1.Post)(),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_pet_dto_1.CreatePetDto !== "undefined" && create_pet_dto_1.CreatePetDto) === "function" ? _b : Object]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "create", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get all user pets' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user pets' }),
-    (0, swagger_1.ApiQuery)({ name: 'species', required: false, description: 'Filter by species' }),
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Query)('species')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "findMyPets", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get pet by ID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet details' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Pet not found' }),
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "findOne", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Update pet information' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet updated successfully' }),
-    (0, common_1.Put)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_pet_dto_1.UpdatePetDto !== "undefined" && update_pet_dto_1.UpdatePetDto) === "function" ? _c : Object, Object]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "update", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Update pet health status' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Health status updated' }),
-    (0, common_1.Put)(':id/health-status'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)('status')),
-    __param(2, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "updateHealthStatus", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Delete pet' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet deleted successfully' }),
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], PetsController.prototype, "remove", null);
-exports.PetsController = PetsController = __decorate([
-    (0, swagger_1.ApiTags)('pets'),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('pets'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _a : Object])
-], PetsController);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/pets.module.ts":
-/*!*****************************************!*\
-  !*** ./src/modules/pets/pets.module.ts ***!
-  \*****************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PetsModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const pets_controller_1 = __webpack_require__(/*! ./pets.controller */ "./src/modules/pets/pets.controller.ts");
-const pets_service_1 = __webpack_require__(/*! ./pets.service */ "./src/modules/pets/pets.service.ts");
-const pet_schema_1 = __webpack_require__(/*! ./schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts");
-let PetsModule = class PetsModule {
-};
-exports.PetsModule = PetsModule;
-exports.PetsModule = PetsModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: pet_schema_1.Pet.name, schema: pet_schema_1.PetSchema }]),
-        ],
-        controllers: [pets_controller_1.PetsController],
-        providers: [pets_service_1.PetsService],
-        exports: [pets_service_1.PetsService],
-    })
-], PetsModule);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/pets.service.ts":
-/*!******************************************!*\
-  !*** ./src/modules/pets/pets.service.ts ***!
-  \******************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PetsService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-const pet_schema_1 = __webpack_require__(/*! ./schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts");
-let PetsService = class PetsService {
-    constructor(petModel) {
-        this.petModel = petModel;
-    }
-    async create(petData) {
-        const pet = new this.petModel(petData);
-        return pet.save();
-    }
-    async findByOwner(ownerId, species) {
-        const filter = { ownerId, isActive: true };
-        if (species)
-            filter.species = species;
-        return this.petModel.find(filter).sort({ name: 1 }).exec();
-    }
-    async findById(id, ownerId) {
-        const pet = await this.petModel.findById(id).exec();
-        if (!pet)
-            throw new common_1.NotFoundException('Pet not found');
-        if (ownerId && pet.ownerId.toString() !== ownerId) {
-            throw new common_1.ForbiddenException('Access denied');
-        }
-        return pet;
-    }
-    async update(id, ownerId, updateData) {
-        await this.findById(id, ownerId);
-        return this.petModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
-    }
-    async delete(id, ownerId) {
-        await this.findById(id, ownerId);
-        return this.petModel.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
-    }
-    async updateHealthStatus(id, ownerId, status) {
-        await this.findById(id, ownerId);
-        const validStatuses = ['healthy', 'sick', 'recovering', 'chronic'];
-        if (!validStatuses.includes(status)) {
-            throw new Error('Invalid health status');
-        }
-        return this.petModel.findByIdAndUpdate(id, { healthStatus: status }, { new: true }).exec();
-    }
-    async findByHealthStatus(ownerId, status) {
-        return this.petModel.find({ ownerId, healthStatus: status, isActive: true }).exec();
-    }
-};
-exports.PetsService = PetsService;
-exports.PetsService = PetsService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(pet_schema_1.Pet.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
-], PetsService);
-
-
-/***/ }),
-
-/***/ "./src/modules/pets/schemas/pet.schema.ts":
-/*!************************************************!*\
-  !*** ./src/modules/pets/schemas/pet.schema.ts ***!
-  \************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PetSchema = exports.Pet = void 0;
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-let Pet = class Pet extends mongoose_2.Document {
-};
-exports.Pet = Pet;
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Pet.prototype, "name", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Pet.prototype, "species", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Pet.prototype, "breed", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Number)
-], Pet.prototype, "age", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Pet.prototype, "gender", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], Pet.prototype, "weight", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "color", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "microchipId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "profileImage", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
-], Pet.prototype, "ownerId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
-], Pet.prototype, "dateOfBirth", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "medicalNotes", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "emergencyContactName", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
-], Pet.prototype, "emergencyContactPhone", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: 'healthy', enum: ['healthy', 'sick', 'recovering', 'chronic'] }),
-    __metadata("design:type", String)
-], Pet.prototype, "healthStatus", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], Pet.prototype, "isActive", void 0);
-exports.Pet = Pet = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], Pet);
-exports.PetSchema = mongoose_1.SchemaFactory.createForClass(Pet);
-
-
-/***/ }),
-
-/***/ "./src/modules/symptom-checker/symptom-checker.module.ts":
-/*!***************************************************************!*\
-  !*** ./src/modules/symptom-checker/symptom-checker.module.ts ***!
-  \***************************************************************/
+/* 62 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2769,7 +2997,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckerModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const common_1 = __webpack_require__(2);
 let SymptomCheckerModule = class SymptomCheckerModule {
 };
 exports.SymptomCheckerModule = SymptomCheckerModule;
@@ -2779,109 +3007,7 @@ exports.SymptomCheckerModule = SymptomCheckerModule = __decorate([
 
 
 /***/ }),
-
-/***/ "./src/modules/user/dto/update-user.dto.ts":
-/*!*************************************************!*\
-  !*** ./src/modules/user/dto/update-user.dto.ts ***!
-  \*************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UpdateUserDto = void 0;
-const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-class UpdateUserDto {
-}
-exports.UpdateUserDto = UpdateUserDto;
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateUserDto.prototype, "firstName", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateUserDto.prototype, "lastName", void 0);
-
-
-/***/ }),
-
-/***/ "./src/modules/user/user.controller.ts":
-/*!*********************************************!*\
-  !*** ./src/modules/user/user.controller.ts ***!
-  \*********************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserController = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
-const user_service_1 = __webpack_require__(/*! ./user.service */ "./src/modules/user/user.service.ts");
-const update_user_dto_1 = __webpack_require__(/*! ./dto/update-user.dto */ "./src/modules/user/dto/update-user.dto.ts");
-let UserController = class UserController {
-    constructor(userService) {
-        this.userService = userService;
-    }
-    async getProfile(req) {
-        return this.userService.findById(req.user._id);
-    }
-    async updateProfile(req, updateData) {
-        return this.userService.updateProfile(req.user._id, updateData);
-    }
-};
-exports.UserController = UserController;
-__decorate([
-    (0, common_1.Get)('profile'),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "getProfile", null);
-__decorate([
-    (0, common_1.Put)('profile'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof update_user_dto_1.UpdateUserDto !== "undefined" && update_user_dto_1.UpdateUserDto) === "function" ? _b : Object]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "updateProfile", null);
-exports.UserController = UserController = __decorate([
-    (0, common_1.Controller)('users'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof user_service_1.UserService !== "undefined" && user_service_1.UserService) === "function" ? _a : Object])
-], UserController);
-
-
-/***/ }),
-
-/***/ "./src/modules/user/user.module.ts":
-/*!*****************************************!*\
-  !*** ./src/modules/user/user.module.ts ***!
-  \*****************************************/
+/* 63 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2892,33 +3018,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserModule = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const user_controller_1 = __webpack_require__(/*! ./user.controller */ "./src/modules/user/user.controller.ts");
-const user_service_1 = __webpack_require__(/*! ./user.service */ "./src/modules/user/user.service.ts");
-const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
-let UserModule = class UserModule {
+exports.ForumModule = void 0;
+const common_1 = __webpack_require__(2);
+let ForumModule = class ForumModule {
 };
-exports.UserModule = UserModule;
-exports.UserModule = UserModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
-        ],
-        controllers: [user_controller_1.UserController],
-        providers: [user_service_1.UserService],
-        exports: [user_service_1.UserService],
-    })
-], UserModule);
+exports.ForumModule = ForumModule;
+exports.ForumModule = ForumModule = __decorate([
+    (0, common_1.Module)({})
+], ForumModule);
 
 
 /***/ }),
-
-/***/ "./src/modules/user/user.service.ts":
-/*!******************************************!*\
-  !*** ./src/modules/user/user.service.ts ***!
-  \******************************************/
+/* 64 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2928,211 +3039,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserService = void 0;
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
-const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
-let UserService = class UserService {
-    constructor(userModel) {
-        this.userModel = userModel;
-    }
-    async findById(id) {
-        return this.userModel.findById(id).select('-password').exec();
-    }
-    async updateProfile(id, updateData) {
-        return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password').exec();
-    }
+exports.NotificationsModule = void 0;
+const common_1 = __webpack_require__(2);
+let NotificationsModule = class NotificationsModule {
 };
-exports.UserService = UserService;
-exports.UserService = UserService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
-], UserService);
+exports.NotificationsModule = NotificationsModule;
+exports.NotificationsModule = NotificationsModule = __decorate([
+    (0, common_1.Module)({})
+], NotificationsModule);
 
 
 /***/ }),
-
-/***/ "@nestjs/bull":
-/*!*******************************!*\
-  !*** external "@nestjs/bull" ***!
-  \*******************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/bull");
-
-/***/ }),
-
-/***/ "@nestjs/common":
-/*!*********************************!*\
-  !*** external "@nestjs/common" ***!
-  \*********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/common");
-
-/***/ }),
-
-/***/ "@nestjs/config":
-/*!*********************************!*\
-  !*** external "@nestjs/config" ***!
-  \*********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/config");
-
-/***/ }),
-
-/***/ "@nestjs/core":
-/*!*******************************!*\
-  !*** external "@nestjs/core" ***!
-  \*******************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/core");
-
-/***/ }),
-
-/***/ "@nestjs/jwt":
-/*!******************************!*\
-  !*** external "@nestjs/jwt" ***!
-  \******************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/jwt");
-
-/***/ }),
-
-/***/ "@nestjs/mapped-types":
-/*!***************************************!*\
-  !*** external "@nestjs/mapped-types" ***!
-  \***************************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/mapped-types");
-
-/***/ }),
-
-/***/ "@nestjs/mongoose":
-/*!***********************************!*\
-  !*** external "@nestjs/mongoose" ***!
-  \***********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/mongoose");
-
-/***/ }),
-
-/***/ "@nestjs/passport":
-/*!***********************************!*\
-  !*** external "@nestjs/passport" ***!
-  \***********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/passport");
-
-/***/ }),
-
-/***/ "@nestjs/schedule":
-/*!***********************************!*\
-  !*** external "@nestjs/schedule" ***!
-  \***********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/schedule");
-
-/***/ }),
-
-/***/ "@nestjs/swagger":
-/*!**********************************!*\
-  !*** external "@nestjs/swagger" ***!
-  \**********************************/
-/***/ ((module) => {
-
-module.exports = require("@nestjs/swagger");
-
-/***/ }),
-
-/***/ "bcrypt":
-/*!*************************!*\
-  !*** external "bcrypt" ***!
-  \*************************/
-/***/ ((module) => {
-
-module.exports = require("bcrypt");
-
-/***/ }),
-
-/***/ "class-validator":
-/*!**********************************!*\
-  !*** external "class-validator" ***!
-  \**********************************/
-/***/ ((module) => {
-
-module.exports = require("class-validator");
-
-/***/ }),
-
-/***/ "mongoose":
-/*!***************************!*\
-  !*** external "mongoose" ***!
-  \***************************/
-/***/ ((module) => {
-
-module.exports = require("mongoose");
-
-/***/ }),
-
-/***/ "passport-jwt":
-/*!*******************************!*\
-  !*** external "passport-jwt" ***!
-  \*******************************/
-/***/ ((module) => {
-
-module.exports = require("passport-jwt");
-
-/***/ }),
-
-/***/ "passport-local":
-/*!*********************************!*\
-  !*** external "passport-local" ***!
-  \*********************************/
-/***/ ((module) => {
-
-module.exports = require("passport-local");
-
-/***/ }),
-
-/***/ "crypto":
-/*!*************************!*\
-  !*** external "crypto" ***!
-  \*************************/
-/***/ ((module) => {
-
-module.exports = require("crypto");
-
-/***/ }),
-
-/***/ "path":
-/*!***********************!*\
-  !*** external "path" ***!
-  \***********************/
+/* 65 */
 /***/ ((module) => {
 
 module.exports = require("path");
 
 /***/ })
-
-/******/ 	});
+/******/ 	]);
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
@@ -3163,15 +3088,12 @@ var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
 (() => {
 var exports = __webpack_exports__;
-/*!*********************!*\
-  !*** ./src/main.ts ***!
-  \*********************/
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const app_module_1 = __webpack_require__(/*! ./app.module */ "./src/app.module.ts");
-const path_1 = __webpack_require__(/*! path */ "path");
+const core_1 = __webpack_require__(1);
+const common_1 = __webpack_require__(2);
+const app_module_1 = __webpack_require__(3);
+const path_1 = __webpack_require__(65);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.useGlobalPipes(new common_1.ValidationPipe({

@@ -10,12 +10,14 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { MailService } from '../../common/utils/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -108,21 +110,30 @@ export class AuthService {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await this.userModel.findByIdAndUpdate(user._id, {
-      passwordResetToken: resetToken,
+      passwordResetToken: hashedToken,
       passwordResetExpires: resetExpires,
     });
 
-    return { message: 'If email exists, password reset link has been sent', resetToken };
+    // send email with the raw token
+    try {
+      await this.mailService.sendResetPassword(user.email, resetToken);
+    } catch (err) {
+      // Log/send but do not reveal to client
+    }
+
+    return { message: 'If email exists, password reset link has been sent' };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     const { token, newPassword } = resetPasswordDto;
     
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await this.userModel.findOne({
-      passwordResetToken: token,
+      passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: new Date() },
     });
 

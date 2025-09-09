@@ -5,6 +5,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
+  // Memory optimization for production
+  if (process.env.NODE_ENV === 'production') {
+    process.env.NODE_OPTIONS = '--max-old-space-size=400';
+  }
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
   app.useGlobalPipes(new ValidationPipe({
