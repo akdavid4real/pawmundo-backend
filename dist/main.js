@@ -3945,7 +3945,7 @@ async function bootstrap() {
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('api', app, document);
     const port = process.env.PORT || 3000;
-    await app.listen(port);
+    await app.listen(port, '0.0.0.0');
     common_1.Logger.log(`PawPromise Backend running on port ${port}`, 'Bootstrap');
     common_1.Logger.log(`Frontend available at http://localhost:${port}`, 'Bootstrap');
     common_1.Logger.log(`Swagger documentation available at http://localhost:${port}/api`, 'Bootstrap');
