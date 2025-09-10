@@ -11,6 +11,8 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MailService } from '../../common/utils/mail.service';
+import { ValidationUtil } from '../../common/utils/validation.util';
+import { DatabaseErrorHandler } from '../../common/utils/database-error.handler';
 
 @Injectable()
 export class AuthService {
@@ -21,27 +23,34 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, firstName, lastName, phone, address } = registerDto;
+    let user: UserDocument;
+    
+    try {
+      const { email, password, firstName, lastName, phone, address } = registerDto;
 
-    const existingUser = await this.userModel.findOne({ email });
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      const existingUser = await this.userModel.findOne({ email });
+      if (existingUser) {
+        throw new ConflictException('User with this email already exists');
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+      const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+
+      user = new this.userModel({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        phone,
+        address,
+        emailVerificationToken,
+      });
+
+      await user.save();
+    } catch (error) {
+      if (error instanceof ConflictException) throw error;
+      DatabaseErrorHandler.handle(error, 'User registration');
     }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-
-    const user = new this.userModel({
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      phone,
-      address,
-      emailVerificationToken,
-    });
-
-    await user.save();
 
     const payload = { email: user.email, sub: user._id };
     const token = this.jwtService.sign(payload);
@@ -60,31 +69,36 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    
-    const user = await this.validateUser(email, password);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+    try {
+      const { email, password } = loginDto;
+      
+      const user = await this.validateUser(email, password);
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const lastLogin = new Date();
+      await this.userModel.findByIdAndUpdate(user._id, { lastLogin });
+
+      const payload = { email: user.email, sub: user._id };
+      const token = this.jwtService.sign(payload);
+
+      return {
+        access_token: token,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+          lastLogin,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      DatabaseErrorHandler.handle(error, 'User login');
     }
-
-    // Update last login
-    await this.userModel.findByIdAndUpdate(user._id, { lastLogin: new Date() });
-
-    const payload = { email: user.email, sub: user._id };
-    const token = this.jwtService.sign(payload);
-
-    return {
-      access_token: token,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
-        lastLogin: new Date(),
-      },
-    };
   }
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -97,7 +111,12 @@ export class AuthService {
   }
 
   async findById(id: string): Promise<User> {
-    return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+    try {
+      ValidationUtil.validateObjectId(id, 'User ID');
+      return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+    } catch (error) {
+      DatabaseErrorHandler.handle(error, 'Find user by ID');
+    }
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
@@ -129,41 +148,56 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    const { token, newPassword } = resetPasswordDto;
-    
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await this.userModel.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: new Date() },
-    });
+    try {
+      const { token, newPassword } = resetPasswordDto;
+      
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+      const user = await this.userModel.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: new Date() },
+      });
 
-    if (!user) {
-      throw new BadRequestException('Invalid or expired reset token');
+      if (!user) {
+        throw new BadRequestException('Invalid or expired reset token');
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      
+      await this.userModel.findByIdAndUpdate(user._id, {
+        password: hashedPassword,
+        passwordResetToken: undefined,
+        passwordResetExpires: undefined,
+      });
+
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      DatabaseErrorHandler.handle(error, 'Password reset');
     }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    
-    await this.userModel.findByIdAndUpdate(user._id, {
-      password: hashedPassword,
-      passwordResetToken: undefined,
-      passwordResetExpires: undefined,
-    });
-
-    return { message: 'Password reset successfully' };
   }
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
-    const { currentPassword, newPassword } = changePasswordDto;
-    
-    const user = await this.userModel.findById(userId);
-    if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
-      throw new UnauthorizedException('Current password is incorrect');
+    try {
+      ValidationUtil.validateObjectId(userId, 'User ID');
+      const { currentPassword, newPassword } = changePasswordDto;
+      
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+      
+      if (!(await bcrypt.compare(currentPassword, user.password))) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
+
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) throw error;
+      DatabaseErrorHandler.handle(error, 'Password change');
     }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
-
-    return { message: 'Password changed successfully' };
   }
 
   async verifyEmail(token: string) {
@@ -182,12 +216,17 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, updateData: Partial<User>) {
-    const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'profileImage'];
-    const filteredData = Object.keys(updateData)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => ({ ...obj, [key]: updateData[key] }), {});
+    try {
+      ValidationUtil.validateObjectId(userId, 'User ID');
+      const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'profileImage'];
+      const filteredData = Object.keys(updateData)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => ({ ...obj, [key]: updateData[key] }), {});
 
-    return this.userModel.findByIdAndUpdate(userId, filteredData, { new: true })
-      .select('-password -emailVerificationToken -passwordResetToken');
+      return this.userModel.findByIdAndUpdate(userId, filteredData, { new: true })
+        .select('-password -emailVerificationToken -passwordResetToken');
+    } catch (error) {
+      DatabaseErrorHandler.handle(error, 'Profile update');
+    }
   }
 }

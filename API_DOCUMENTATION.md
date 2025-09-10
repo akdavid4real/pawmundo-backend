@@ -11,6 +11,7 @@
 - [Pet Management](#pet-management)
 - [Appointments](#appointments)
 - [Health Records](#health-records)
+- [Medications](#medications)
 - [Error Handling](#error-handling)
 - [Rate Limiting](#rate-limiting)
 - [Postman Collection](#postman-collection)
@@ -714,6 +715,96 @@ Authorization: Bearer <token>
   "isActive": false,
   "updatedAt": "2024-01-15T12:30:00.000Z"
 }
+```
+
+## 💊 Medications
+
+### Create Medication
+
+Add a new medication for a pet.
+
+```http
+POST /medications
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "petId": "507f1f77bcf86cd799439012",
+  "name": "Antibiotics",
+  "dosage": "250mg",
+  "frequency": "daily",
+  "startDate": "2024-01-15",
+  "endDate": "2024-01-25",
+  "instructions": "Give with food",
+  "veterinarian": "Dr. Smith"
+}
+```
+
+**Response (201):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439015",
+  "petId": "507f1f77bcf86cd799439012",
+  "name": "Antibiotics",
+  "dosage": "250mg",
+  "frequency": "daily",
+  "startDate": "2024-01-15T00:00:00.000Z",
+  "endDate": "2024-01-25T00:00:00.000Z",
+  "instructions": "Give with food",
+  "veterinarian": "Dr. Smith",
+  "isActive": true,
+  "isCompleted": false
+}
+```
+
+### Get Active Medications
+
+Retrieve all active medications for user's pets.
+
+```http
+GET /medications/active
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+[
+  {
+    "_id": "507f1f77bcf86cd799439015",
+    "petId": {
+      "_id": "507f1f77bcf86cd799439012",
+      "name": "Buddy",
+      "species": "dog"
+    },
+    "name": "Antibiotics",
+    "dosage": "250mg",
+    "frequency": "daily",
+    "startDate": "2024-01-15T00:00:00.000Z",
+    "endDate": "2024-01-25T00:00:00.000Z",
+    "isCompleted": false
+  }
+]
+```
+
+### Get Pet Medications
+
+Retrieve all medications for a specific pet.
+
+```http
+GET /medications/pet/:petId
+Authorization: Bearer <token>
+```
+
+### Mark Medication Completed
+
+Mark a medication as completed.
+
+```http
+PATCH /medications/:id/complete
+Authorization: Bearer <token>
 ```
 
 ## 🏥 Health Records
