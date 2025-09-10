@@ -503,11 +503,11 @@ var MailService_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MailService = void 0;
 const common_1 = __webpack_require__(2);
-const nodemailer_1 = __webpack_require__(20);
+const nodemailer = __webpack_require__(20);
 let MailService = MailService_1 = class MailService {
     constructor() {
         this.logger = new common_1.Logger(MailService_1.name);
-        this.transporter = nodemailer_1.default.createTransport({
+        this.transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.example.com',
             port: Number(process.env.SMTP_PORT) || 587,
             secure: process.env.SMTP_SECURE === 'true',
@@ -3095,6 +3095,9 @@ const common_1 = __webpack_require__(2);
 const app_module_1 = __webpack_require__(3);
 const path_1 = __webpack_require__(65);
 async function bootstrap() {
+    if (process.env.NODE_ENV === 'production') {
+        process.env.NODE_OPTIONS = '--max-old-space-size=400';
+    }
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
