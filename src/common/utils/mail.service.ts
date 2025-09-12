@@ -23,9 +23,9 @@ export class MailService {
     const resetUrl = `${frontend}/reset-password?token=${encodeURIComponent(token)}`;
 
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'no-reply@pawpromise.app',
+      from: process.env.FROM_EMAIL || 'no-reply@PawMundo.app',
       to: email,
-      subject: 'PawPromise — Password reset',
+      subject: 'PawMundo — Password reset',
       html: `
         <p>You requested a password reset. Click the link below (expires in 10 minutes):</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>

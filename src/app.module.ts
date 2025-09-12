@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
+
 import { BullModule } from '@nestjs/bull';
 
 // Configuration
@@ -22,6 +22,7 @@ import { InsuranceModule } from '@modules/insurance/insurance.module';
 import { SymptomCheckerModule } from '@modules/symptom-checker/symptom-checker.module';
 import { ForumModule } from '@modules/forum/forum.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
+import { SeedModule } from '@modules/seed/seed.module';
 
 @Module({
   imports: [
@@ -32,6 +33,11 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
     MongooseModule.forRootAsync({
       useFactory: () => ({
         uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/pawpromise',
+        maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE || '10'),
+        minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE || '2'),
+        maxIdleTimeMS: parseInt(process.env.MONGODB_MAX_IDLE_TIME || '30000'),
+        serverSelectionTimeoutMS: parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT || '5000'),
+        socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
       }),
     }),
     BullModule.forRootAsync({
@@ -42,7 +48,7 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
         },
       }),
     }),
-    ScheduleModule.forRoot(),
+
     
     // Domain Modules
     AuthModule,
@@ -57,6 +63,7 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
     SymptomCheckerModule,
     ForumModule,
     NotificationsModule,
+    SeedModule,
   ],
 })
 export class AppModule {}

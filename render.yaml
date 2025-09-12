@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: pawpromise-backend
+    name: PawMundo-backend
     env: node
     buildCommand: pnpm install --no-frozen-lockfile && pnpm run build
     startCommand: pnpm run start
@@ -10,5 +10,5 @@ services:
       - key: PORT
         fromService:
           type: web
-          name: pawpromise-backend
+          name: PawMundo-backend
           property: port

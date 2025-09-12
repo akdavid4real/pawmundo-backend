@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPromise API Test UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .seed-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .loading {
+            color: #007bff;
+            font-style: italic;
+        }
+        
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid #4facfe;
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #28a745;
+        }
+        
+        .status-offline {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐾 PawPromise API Test UI</h1>
+            <p>Test your pet medical history API endpoints</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>🔐 Authentication & Setup</h2>
+                <div class="controls">
+                    <button onclick="login()">Login</button>
+                    <button onclick="logout()">Logout</button>
+                    <button class="seed-btn" onclick="seedDatabase()">Seed Database</button>
+                    <button onclick="checkConnection()">Check Connection</button>
+                </div>
+                <div id="setup-response" class="response" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>👥 Users & Pets</h2>
+                <div class="controls">
+                    <button onclick="getAllUsers()">Get All Users</button>
+                    <button onclick="getAllPets()">Get All Pets</button>
+                    <button onclick="getPetsByOwner()">Get Pets by Owner</button>
+                </div>
+                <div id="users-response" class="response" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>🏥 Health Records</h2>
+                <div class="controls">
+                    <button onclick="getAllHealthRecords()">Get All Health Records</button>
+                    <button onclick="getHealthRecordsByPet()">Get Records by Pet</button>
+                    <button onclick="getVaccinations()">Get Vaccinations</button>
+                    <button onclick="getTreatments()">Get Treatments</button>
+                </div>
+                <div id="health-response" class="response" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>💊 Medications</h2>
+                <div class="controls">
+                    <button onclick="getAllMedications()">Get All Medications</button>
+                    <button onclick="getActiveMedications()">Get Active Medications</button>
+                    <button onclick="getMedicationsByPet()">Get Medications by Pet</button>
+                </div>
+                <div id="medications-response" class="response" style="display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>🤖 Mistral AI Pet Chat</h2>
+                <div class="controls">
+                    <button onclick="loadPetContext()">Load Pet Context</button>
+                    <button onclick="clearChat()">Clear Chat</button>
+                </div>
+                <div style="margin-top: 20px;">
+                    <textarea id="chat-input" placeholder="Ask about your pets (e.g., 'What vaccinations does my dog need?' or 'Show me my pet's health history')" 
+                              style="width: 100%; height: 80px; padding: 10px; border-radius: 5px; border: 1px solid #ddd; resize: vertical;"></textarea>
+                    <button onclick="sendChatMessage()" style="margin-top: 10px;">Send Message</button>
+                </div>
+                <div id="chat-response" class="response" style="display: none; max-height: 500px;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>📊 API Status</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h3><span id="api-status" class="status-indicator status-offline"></span>API Server</h3>
+                        <p id="api-status-text">Checking...</p>
+                    </div>
+                    <div class="card">
+                        <h3><span id="db-status" class="status-indicator status-offline"></span>Database</h3>
+                        <p id="db-status-text">Checking...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        
+        // Utility functions
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `response ${isError ? 'error' : 'success'}`;
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+        
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'response loading';
+            element.textContent = 'Loading...';
+        }
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw new Error(`Request failed: ${error.message}`);
+            }
+        }
+        
+        // Database setup functions
+        async function seedDatabase() {
+            showLoading('setup-response');
+            try {
+                const data = await makeRequest(`${API_BASE}/seed`, {
+                    method: 'POST'
+                });
+                showResponse('setup-response', data);
+            } catch (error) {
+                showResponse('setup-response', error.message, true);
+            }
+        }
+        
+        async function checkConnection() {
+            showLoading('setup-response');
+            try {
+                // Check if server is running by trying to access Swagger docs
+                const response = await fetch(`${API_BASE}/api`, { method: 'GET' });
+                if (response.ok) {
+                    showResponse('setup-response', 'API server is running! Swagger docs available at /api');
+                    updateStatus('api-status', 'api-status-text', true, 'Connected');
+                } else {
+                    throw new Error('API server not responding');
+                }
+            } catch (error) {
+                showResponse('setup-response', `Connection failed: ${error.message}`, true);
+                updateStatus('api-status', 'api-status-text', false, 'Disconnected');
+            }
+        }
+        
+        // Authentication functions
+        let authToken = localStorage.getItem('authToken');
+        
+        function getAuthHeaders() {
+            return authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+        }
+        
+        async function login() {
+            const email = prompt('Enter email:');
+            const password = prompt('Enter password:');
+            
+            if (!email || !password) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('authToken', authToken);
+                    showResponse('setup-response', 'Login successful!');
+                } else {
+                    throw new Error('Login failed');
+                }
+            } catch (error) {
+                showResponse('setup-response', `Login failed: ${error.message}`, true);
+            }
+        }
+        
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('authToken');
+            showResponse('setup-response', 'Logged out successfully');
+        }
+        
+        function updateStatus(statusId, textId, isOnline, text) {
+            const statusEl = document.getElementById(statusId);
+            const textEl = document.getElementById(textId);
+            
+            statusEl.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
+            textEl.textContent = text;
+        }
+        
+        // Users functions
+        async function getAllUsers() {
+            showLoading('users-response');
+            try {
+                const data = await makeRequest(`${API_BASE}/users/profile`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('users-response', data);
+            } catch (error) {
+                showResponse('users-response', error.message, true);
+            }
+        }
+        
+        async function getAllPets() {
+            showLoading('users-response');
+            try {
+                const data = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('users-response', data);
+            } catch (error) {
+                showResponse('users-response', error.message, true);
+            }
+        }
+        
+        async function getPetsByOwner() {
+            showLoading('users-response');
+            try {
+                const data = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('users-response', data);
+            } catch (error) {
+                showResponse('users-response', error.message, true);
+            }
+        }
+        
+        // Health Records functions
+        async function getAllHealthRecords() {
+            showLoading('health-response');
+            try {
+                // Get pets first, then get health records for each pet
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('health-response', 'No pets found. Add pets first.');
+                    return;
+                }
+                
+                const allRecords = [];
+                for (const pet of pets) {
+                    try {
+                        const records = await makeRequest(`${API_BASE}/health-records/pet/${pet._id}`, {
+                            headers: getAuthHeaders()
+                        });
+                        allRecords.push(...records);
+                    } catch (error) {
+                        console.log(`No records for pet ${pet.name}`);
+                    }
+                }
+                
+                showResponse('health-response', allRecords);
+            } catch (error) {
+                showResponse('health-response', error.message, true);
+            }
+        }
+        
+        async function getHealthRecordsByPet() {
+            showLoading('health-response');
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('health-response', 'No pets found');
+                    return;
+                }
+                
+                const petId = pets[0]._id; // Use first pet
+                const data = await makeRequest(`${API_BASE}/health-records/pet/${petId}`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('health-response', data);
+            } catch (error) {
+                showResponse('health-response', error.message, true);
+            }
+        }
+        
+        async function getVaccinations() {
+            showLoading('health-response');
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('health-response', 'No pets found');
+                    return;
+                }
+                
+                const petId = pets[0]._id;
+                const data = await makeRequest(`${API_BASE}/health-records/pet/${petId}/vaccinations`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('health-response', data);
+            } catch (error) {
+                showResponse('health-response', error.message, true);
+            }
+        }
+        
+        async function getTreatments() {
+            showLoading('health-response');
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('health-response', 'No pets found');
+                    return;
+                }
+                
+                const petId = pets[0]._id;
+                const data = await makeRequest(`${API_BASE}/health-records/pet/${petId}?type=treatment`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('health-response', data);
+            } catch (error) {
+                showResponse('health-response', error.message, true);
+            }
+        }
+        
+        // Medications functions
+        async function getAllMedications() {
+            showLoading('medications-response');
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('medications-response', 'No pets found');
+                    return;
+                }
+                
+                const allMedications = [];
+                for (const pet of pets) {
+                    try {
+                        const medications = await makeRequest(`${API_BASE}/medications/pet/${pet._id}`, {
+                            headers: getAuthHeaders()
+                        });
+                        allMedications.push(...medications);
+                    } catch (error) {
+                        console.log(`No medications for pet ${pet.name}`);
+                    }
+                }
+                
+                showResponse('medications-response', allMedications);
+            } catch (error) {
+                showResponse('medications-response', error.message, true);
+            }
+        }
+        
+        async function getActiveMedications() {
+            showLoading('medications-response');
+            try {
+                const data = await makeRequest(`${API_BASE}/medications/active`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('medications-response', data);
+            } catch (error) {
+                showResponse('medications-response', error.message, true);
+            }
+        }
+        
+        async function getMedicationsByPet() {
+            showLoading('medications-response');
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (pets.length === 0) {
+                    showResponse('medications-response', 'No pets found');
+                    return;
+                }
+                
+                const petId = pets[0]._id;
+                const data = await makeRequest(`${API_BASE}/medications/pet/${petId}`, {
+                    headers: getAuthHeaders()
+                });
+                showResponse('medications-response', data);
+            } catch (error) {
+                showResponse('medications-response', error.message, true);
+            }
+        }
+        
+        // Mistral AI Chat functions
+        let petContext = null;
+        let chatHistory = [];
+        
+        async function loadPetContext() {
+            showLoading('chat-response');
+            try {
+                // Fetch all relevant pet data
+                const [pets, healthRecords, medications] = await Promise.all([
+                    makeRequest(`${API_BASE}/pets`, { headers: getAuthHeaders() }),
+                    getAllHealthRecordsData(),
+                    getAllMedicationsData()
+                ]);
+                
+                petContext = {
+                    pets: pets || [],
+                    healthRecords: healthRecords || [],
+                    medications: medications || []
+                };
+                
+                showResponse('chat-response', `Pet context loaded successfully!\n\nFound:\n- ${pets?.length || 0} pets\n- ${healthRecords?.length || 0} health records\n- ${medications?.length || 0} medications\n\nYou can now ask questions about your pets.`);
+            } catch (error) {
+                showResponse('chat-response', `Failed to load pet context: ${error.message}`, true);
+            }
+        }
+        
+        async function getAllHealthRecordsData() {
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, { headers: getAuthHeaders() });
+                const allRecords = [];
+                for (const pet of pets) {
+                    try {
+                        const records = await makeRequest(`${API_BASE}/health-records/pet/${pet._id}`, { headers: getAuthHeaders() });
+                        allRecords.push(...records);
+                    } catch (error) {
+                        console.log(`No records for pet ${pet.name}`);
+                    }
+                }
+                return allRecords;
+            } catch (error) {
+                return [];
+            }
+        }
+        
+        async function getAllMedicationsData() {
+            try {
+                const pets = await makeRequest(`${API_BASE}/pets`, { headers: getAuthHeaders() });
+                const allMedications = [];
+                for (const pet of pets) {
+                    try {
+                        const medications = await makeRequest(`${API_BASE}/medications/pet/${pet._id}`, { headers: getAuthHeaders() });
+                        allMedications.push(...medications);
+                    } catch (error) {
+                        console.log(`No medications for pet ${pet.name}`);
+                    }
+                }
+                return allMedications;
+            } catch (error) {
+                return [];
+            }
+        }
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            if (!petContext) {
+                alert('Please load pet context first');
+                return;
+            }
+            
+            showLoading('chat-response');
+            
+            try {
+                // Create context-aware prompt
+                const contextPrompt = `You are a helpful veterinary assistant. Here is the pet data context:\n\nPets: ${JSON.stringify(petContext.pets, null, 2)}\n\nHealth Records: ${JSON.stringify(petContext.healthRecords, null, 2)}\n\nMedications: ${JSON.stringify(petContext.medications, null, 2)}\n\nUser Question: ${message}\n\nPlease provide a helpful response based on the pet data above. If the question is about specific pets, reference their names and details from the data.`;
+                
+                // Call Mistral AI API (you'll need to replace with your actual API key)
+                const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer OWUGTe8WdkV3TJoqLFDRr7FvAZ2zUYev' // Replace with actual key
+                    },
+                    body: JSON.stringify({
+                        model: 'mistral-small',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a helpful veterinary assistant that can answer questions about pets based on their medical data.'
+                            },
+                            {
+                                role: 'user',
+                                content: contextPrompt
+                            }
+                        ],
+                        max_tokens: 1000
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Mistral API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                
+                // Add to chat history
+                chatHistory.push({ user: message, ai: aiResponse });
+                
+                // Display chat
+                displayChat();
+                
+                // Clear input
+                input.value = '';
+                
+            } catch (error) {
+                showResponse('chat-response', `Chat error: ${error.message}\n\nNote: You need to replace 'YOUR_MISTRAL_API_KEY' with your actual Mistral API key in the code.`, true);
+            }
+        }
+        
+        function displayChat() {
+            const chatDiv = document.getElementById('chat-response');
+            chatDiv.style.display = 'block';
+            chatDiv.className = 'response';
+            
+            let chatHtml = '';
+            chatHistory.forEach((chat, index) => {
+                chatHtml += `<div style="margin-bottom: 20px; padding: 15px; border-left: 3px solid #4facfe; background: #f8f9fa;">\n`;
+                chatHtml += `<strong>You:</strong> ${chat.user}\n\n`;
+                chatHtml += `<strong>AI:</strong> ${chat.ai}\n`;
+                chatHtml += `</div>\n`;
+            });
+            
+            chatDiv.innerHTML = chatHtml;
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        
+        function clearChat() {
+            chatHistory = [];
+            const chatDiv = document.getElementById('chat-response');
+            chatDiv.style.display = 'none';
+            document.getElementById('chat-input').value = '';
+        }
+        
+        // Handle Enter key in chat input
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
+        
+        // Initialize on page load
+        window.onload = function() {
+            if (authToken) {
+                showResponse('setup-response', 'Already logged in with saved token');
+            } else {
+                showResponse('setup-response', 'Please login first to access API endpoints');
+            }
+            checkConnection();
+        };
+    </script>
+</body>
+</html>

@@ -23,7 +23,7 @@ const testPet = {
 
 async function testAPI() {
   try {
-    console.log('🚀 Starting PawPromise API Tests...\n');
+    console.log('🚀 Starting PawMundo API Tests...\n');
 
     // Step 1: Register user
     console.log('1. Registering user...');

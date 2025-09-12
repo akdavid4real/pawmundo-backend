@@ -53,3 +53,10 @@ export class HealthRecord extends Document {
 }
 
 export const HealthRecordSchema = SchemaFactory.createForClass(HealthRecord);
+
+// Performance indexes
+HealthRecordSchema.index({ petId: 1, isActive: 1 });
+HealthRecordSchema.index({ petId: 1, type: 1, isActive: 1 });
+HealthRecordSchema.index({ petId: 1, date: -1 });
+HealthRecordSchema.index({ nextDueDate: 1, isActive: 1 });
+HealthRecordSchema.index({ petId: 1, nextDueDate: 1 });

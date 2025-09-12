@@ -1,4 +1,4 @@
-# 🐾 PawPromise Backend
+# 🐾 PawMundo Backend
 
 > A comprehensive pet management platform built with NestJS, MongoDB, and modern web technologies.
 
@@ -26,7 +26,7 @@
 
 ## 🎯 Overview
 
-PawPromise is a modern pet management platform that helps pet owners track their pets' health, schedule appointments, manage medical records, and connect with veterinarians. Built with a modular monolith architecture using NestJS, it provides a scalable and maintainable solution for comprehensive pet care management.
+PawMundo is a modern pet management platform that helps pet owners track their pets' health, schedule appointments, manage medical records, and connect with veterinarians. Built with a modular monolith architecture using NestJS, it provides a scalable and maintainable solution for comprehensive pet care management.
 
 ### Key Capabilities
 
@@ -130,8 +130,8 @@ Before running this application, make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/pawpromise-backend.git
-cd pawpromise-backend
+git clone https://github.com/yourusername/PawMundo-backend.git
+cd PawMundo-backend
 ```
 
 ### 2. Install Dependencies
@@ -158,7 +158,7 @@ PORT=3000
 NODE_ENV=development
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/pawpromise
+MONGODB_URI=mongodb://localhost:27017/PawMundo
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-here
@@ -211,7 +211,7 @@ brew services start redis  # macOS
 |----------|-------------|---------|----------|
 | `PORT` | Server port | 3000 | No |
 | `NODE_ENV` | Environment | development | No |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/pawpromise | Yes |
+| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/PawMundo | Yes |
 | `JWT_SECRET` | JWT signing secret | - | Yes |
 | `JWT_EXPIRES_IN` | JWT expiration time | 7d | No |
 | `REDIS_HOST` | Redis host | localhost | No |
@@ -311,7 +311,7 @@ curl -X POST http://localhost:3000/api/v1/pets \
 
 ### Postman Collection
 
-Import the included Postman collection (`PawPromise_API.postman_collection.json`) for easy API testing.
+Import the included Postman collection (`PawMundo_API.postman_collection.json`) for easy API testing.
 
 ## 🗄️ Database Schema
 
@@ -455,7 +455,7 @@ describe('AuthService', () => {
 
 1. **Build Docker image:**
 ```bash
-docker build -t pawpromise-backend .
+docker build -t PawMundo-backend .
 ```
 
 2. **Run with Docker Compose:**
@@ -486,7 +486,7 @@ pnpm run start:prod
 ## 📁 Project Structure
 
 ```
-pawpromise-backend/
+PawMundo-backend/
 ├── src/
 │   ├── common/              # Shared utilities
 │   │   ├── decorators/      # Custom decorators
@@ -527,7 +527,7 @@ pawpromise-backend/
 If you encounter any issues or have questions:
 
 1. Check the [API Documentation](./API_DOCUMENTATION.md)
-2. Search existing [GitHub Issues](https://github.com/yourusername/pawpromise-backend/issues)
+2. Search existing [GitHub Issues](https://github.com/yourusername/PawMundo-backend/issues)
 3. Create a new issue with detailed information
 4. Join our community discussions
 

@@ -6,34 +6,44 @@ import { join } from 'path';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
-  // Memory optimization for production
-  if (process.env.NODE_ENV === 'production') {
-    process.env.NODE_OPTIONS = '--max-old-space-size=400';
-  }
-  
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug', 'verbose']
+  });
   
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
   }));
   
-  app.enableCors();
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+  });
+  
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  const config = new DocumentBuilder()
-    .setTitle('PawPromise API')
-    .setDescription('The PawPromise API description')
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Only setup Swagger in development
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('PawMundo API')
+      .setDescription('The PawMundo API description')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
   
-  const port = process.env.PORT || 3000;
+  const port = parseInt(process.env.PORT || '3000', 10);
   await app.listen(port, '0.0.0.0');
-  Logger.log(`PawPromise Backend running on port ${port}`, 'Bootstrap');
-  Logger.log(`Frontend available at http://localhost:${port}`, 'Bootstrap');
-  Logger.log(`Swagger documentation available at http://localhost:${port}/api`, 'Bootstrap');
+  
+  Logger.log(`PawMundo Backend running on port ${port}`, 'Bootstrap');
+  if (process.env.NODE_ENV !== 'production') {
+    Logger.log(`Swagger documentation available at http://localhost:${port}/api`, 'Bootstrap');
+  }
 }
 bootstrap();

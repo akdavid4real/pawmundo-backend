@@ -53,3 +53,8 @@ export class Pet extends Document {
 }
 
 export const PetSchema = SchemaFactory.createForClass(Pet);
+
+// Performance indexes
+PetSchema.index({ ownerId: 1, isActive: 1 });
+PetSchema.index({ ownerId: 1, species: 1, isActive: 1 });
+PetSchema.index({ ownerId: 1, healthStatus: 1, isActive: 1 });

@@ -1,6 +1,6 @@
-# 🐾 PawPromise API Documentation
+# 🐾 PawMundo API Documentation
 
-> Comprehensive API documentation for the PawPromise pet management platform
+> Comprehensive API documentation for the PawMundo pet management platform
 
 **Base URL:** `http://localhost:3000/api/v1`
 
@@ -1174,7 +1174,7 @@ Import the included Postman collection for easy API testing:
 
 1. Open Postman
 2. Click "Import"
-3. Select `PawPromise_API.postman_collection.json`
+3. Select `PawMundo_API.postman_collection.json`
 4. Set up environment variables:
    - `baseUrl`: `http://localhost:3000/api/v1`
    - `token`: Your JWT token (set after login)

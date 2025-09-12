@@ -1,7 +1,7 @@
  {
   "info": {
-    "name": "PawPromise API",
-    "description": "Complete API collection for PawPromise Backend",
+    "name": "PawMundo API",
+    "description": "Complete API collection for PawMundo Backend",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {

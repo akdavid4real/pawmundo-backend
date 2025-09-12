@@ -30,10 +30,11 @@ export class HealthRecordsService {
   }
 
   async findById(id: string, userId: string): Promise<HealthRecord> {
-    const record = await this.healthRecordModel.findById(id).populate('petId').exec();
-    if (!record) throw new NotFoundException('Health record not found');
-    
-    const pet = await this.petsService.findById(record.petId.toString(), userId);
+    const record = await this.healthRecordModel.findById(id).populate({
+      path: 'petId',
+      match: { ownerId: userId, isActive: true }
+    }).exec();
+    if (!record || !record.petId) throw new NotFoundException('Health record not found');
     return record;
   }
 
@@ -48,20 +49,22 @@ export class HealthRecordsService {
   }
 
   async getUpcomingReminders(userId: string): Promise<HealthRecord[]> {
-    const userPets = await this.petsService.findByOwner(userId);
-    const petIds = userPets.map(pet => pet._id);
     const today = new Date();
     const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
     
     return this.healthRecordModel
       .find({
-        petId: { $in: petIds },
         nextDueDate: { $gte: today, $lte: nextMonth },
         isActive: true
       })
-      .populate('petId', 'name species breed')
+      .populate({
+        path: 'petId',
+        match: { ownerId: userId, isActive: true },
+        select: 'name species breed'
+      })
       .sort({ nextDueDate: 1 })
-      .exec();
+      .exec()
+      .then(records => records.filter(r => r.petId));
   }
 
   async getVaccinations(petId: string, userId: string): Promise<HealthRecord[]> {
@@ -73,42 +76,65 @@ export class HealthRecordsService {
   }
 
   async getHealthSummary(petId: string, userId: string) {
-    await this.petsService.findById(petId, userId);
-    const records = await this.healthRecordModel.find({ petId, isActive: true }).exec();
-    const now = new Date();
+    const [pet, records] = await Promise.all([
+      this.petsService.findById(petId, userId),
+      this.healthRecordModel.find({ petId, isActive: true }).sort({ date: -1 }).exec()
+    ]);
     
-    const upcomingReminders = records.filter(r => r.nextDueDate && r.nextDueDate > now);
-    const overdueReminders = records.filter(r => r.nextDueDate && r.nextDueDate < now);
+    const now = new Date();
+    let upcomingCount = 0, overdueCount = 0, totalCost = 0;
+    let nextReminder: Date | undefined;
+    const recordsByType = {};
+    const weightHistory = [];
+    let lastCheckup: Date | undefined;
+    
+    for (const record of records) {
+      recordsByType[record.type] = (recordsByType[record.type] || 0) + 1;
+      totalCost += record.cost || 0;
+      
+      if (record.type === 'checkup' && !lastCheckup) lastCheckup = record.date;
+      if (record.weight) weightHistory.push({ date: record.date, weight: record.weight });
+      
+      if (record.nextDueDate) {
+        if (record.nextDueDate > now) {
+          upcomingCount++;
+          if (!nextReminder || record.nextDueDate < nextReminder) {
+            nextReminder = record.nextDueDate;
+          }
+        } else {
+          overdueCount++;
+        }
+      }
+    }
     
     return {
       totalRecords: records.length,
-      recordsByType: records.reduce((acc, record) => {
-        acc[record.type] = (acc[record.type] || 0) + 1;
-        return acc;
-      }, {}),
-      lastCheckup: records.find(r => r.type === 'checkup')?.date,
-      nextReminder: upcomingReminders.sort((a, b) => a.nextDueDate.getTime() - b.nextDueDate.getTime())[0]?.nextDueDate,
-      upcomingCount: upcomingReminders.length,
-      overdueCount: overdueReminders.length,
-      totalCost: records.reduce((sum, r) => sum + (r.cost || 0), 0),
-      weightHistory: records.filter(r => r.weight).map(r => ({ date: r.date, weight: r.weight })).sort((a, b) => a.date.getTime() - b.date.getTime())
+      recordsByType,
+      lastCheckup,
+      nextReminder,
+      upcomingCount,
+      overdueCount,
+      totalCost,
+      weightHistory: weightHistory.sort((a, b) => a.date.getTime() - b.date.getTime())
     };
   }
 
   async getOverdueReminders(userId: string): Promise<HealthRecord[]> {
-    const userPets = await this.petsService.findByOwner(userId);
-    const petIds = userPets.map(pet => pet._id);
     const today = new Date();
     
     return this.healthRecordModel
       .find({
-        petId: { $in: petIds },
         nextDueDate: { $lt: today },
         isActive: true
       })
-      .populate('petId', 'name species breed')
+      .populate({
+        path: 'petId',
+        match: { ownerId: userId, isActive: true },
+        select: 'name species breed'
+      })
       .sort({ nextDueDate: 1 })
-      .exec();
+      .exec()
+      .then(records => records.filter(r => r.petId));
   }
 
   async addAttachment(recordId: string, userId: string, attachmentUrl: string): Promise<HealthRecord> {
@@ -146,41 +172,54 @@ export class HealthRecordsService {
   }
 
   async getHealthAnalytics(userId: string) {
-    const userPets = await this.petsService.findByOwner(userId);
-    const petIds = userPets.map(pet => pet._id);
-    const records = await this.healthRecordModel.find({ petId: { $in: petIds }, isActive: true }).exec();
     const now = new Date();
     const thisYear = new Date(now.getFullYear(), 0, 1);
+    const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     
-    const thisYearRecords = records.filter(r => r.date >= thisYear);
-    const upcomingReminders = records.filter(r => r.nextDueDate && r.nextDueDate > now && r.nextDueDate <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000));
+    const [userPets, records] = await Promise.all([
+      this.petsService.findByOwner(userId),
+      this.healthRecordModel.find({
+        isActive: true
+      }).populate({
+        path: 'petId',
+        match: { ownerId: userId, isActive: true }
+      }).exec().then(records => records.filter(r => r.petId))
+    ]);
+    
+    let totalSpent = 0, spentThisYear = 0, upcomingCount = 0;
+    const recordsByMonth = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, count: 0 }));
+    const typeCounts = {};
+    const thisYearRecords = [];
+    
+    for (const record of records) {
+      totalSpent += record.cost || 0;
+      typeCounts[record.type] = (typeCounts[record.type] || 0) + 1;
+      
+      if (record.date >= thisYear) {
+        thisYearRecords.push(record);
+        spentThisYear += record.cost || 0;
+        recordsByMonth[record.date.getMonth()].count++;
+      }
+      
+      if (record.nextDueDate && record.nextDueDate > now && record.nextDueDate <= nextMonth) {
+        upcomingCount++;
+      }
+    }
+    
+    const mostCommonType = Object.entries(typeCounts)
+      .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || null;
     
     return {
       totalPets: userPets.length,
       totalRecords: records.length,
       recordsThisYear: thisYearRecords.length,
-      upcomingReminders: upcomingReminders.length,
-      totalSpent: records.reduce((sum, r) => sum + (r.cost || 0), 0),
-      spentThisYear: thisYearRecords.reduce((sum, r) => sum + (r.cost || 0), 0),
-      recordsByMonth: this.getRecordsByMonth(thisYearRecords),
-      mostCommonType: this.getMostCommonRecordType(records)
+      upcomingReminders: upcomingCount,
+      totalSpent,
+      spentThisYear,
+      recordsByMonth,
+      mostCommonType
     };
   }
 
-  private getRecordsByMonth(records: HealthRecord[]) {
-    const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, count: 0 }));
-    records.forEach(record => {
-      const month = record.date.getMonth();
-      months[month].count++;
-    });
-    return months;
-  }
 
-  private getMostCommonRecordType(records: HealthRecord[]) {
-    const typeCounts = records.reduce((acc, record) => {
-      acc[record.type] = (acc[record.type] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(typeCounts).sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || null;
-  }
 }
