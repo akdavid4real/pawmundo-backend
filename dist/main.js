@@ -6537,12 +6537,13 @@ async function bootstrap() {
         credentials: true,
     });
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'public'));
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.ENABLE_SWAGGER === 'true') {
         const config = new swagger_1.DocumentBuilder()
             .setTitle('PawMundo API')
             .setDescription('The PawMundo API description')
             .setVersion('1.0')
             .addBearerAuth()
+            .addServer(process.env.BASE_URL || 'http://localhost:3000')
             .build();
         const document = swagger_1.SwaggerModule.createDocument(app, config);
         swagger_1.SwaggerModule.setup('api', app, document);

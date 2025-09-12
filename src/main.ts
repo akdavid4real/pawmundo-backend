@@ -26,13 +26,14 @@ async function bootstrap() {
   
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  // Only setup Swagger in development
-  if (process.env.NODE_ENV !== 'production') {
+  // Setup Swagger based on environment variable
+  if (process.env.ENABLE_SWAGGER === 'true') {
     const config = new DocumentBuilder()
       .setTitle('PawMundo API')
       .setDescription('The PawMundo API description')
       .setVersion('1.0')
       .addBearerAuth()
+      .addServer(process.env.BASE_URL || 'http://localhost:3000')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
@@ -42,8 +43,9 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   
   Logger.log(`PawMundo Backend running on port ${port}`, 'Bootstrap');
-  if (process.env.NODE_ENV !== 'production') {
-    Logger.log(`Swagger documentation available at http://localhost:${port}/api`, 'Bootstrap');
+  if (process.env.ENABLE_SWAGGER === 'true') {
+    const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+    Logger.log(`Swagger documentation available at ${baseUrl}/api`, 'Bootstrap');
   }
 }
 bootstrap();
