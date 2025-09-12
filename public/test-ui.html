@@ -296,10 +296,9 @@
         async function checkConnection() {
             showLoading('setup-response');
             try {
-                // Check if server is running by trying to access Swagger docs
-                const response = await fetch(`${API_BASE}/api`, { method: 'GET' });
+                const response = await fetch(`${API_BASE}/health`, { method: 'GET' });
                 if (response.ok) {
-                    showResponse('setup-response', 'API server is running! Swagger docs available at /api');
+                    showResponse('setup-response', 'API server is running!');
                     updateStatus('api-status', 'api-status-text', true, 'Connected');
                 } else {
                     throw new Error('API server not responding');
