@@ -21,7 +21,7 @@ export class PetsService {
   async findById(id: string, ownerId?: string): Promise<Pet> {
     const pet = await this.petModel.findById(id).exec();
     if (!pet) throw new NotFoundException('Pet not found');
-    if (ownerId && pet.ownerId.toString() !== ownerId) {
+    if (ownerId && pet.ownerId.toString() !== ownerId.toString()) {
       throw new ForbiddenException('Access denied');
     }
     return pet;
