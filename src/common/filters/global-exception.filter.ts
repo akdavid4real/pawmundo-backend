@@ -37,10 +37,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Add specific suggestions based on status code
       suggestions = this.getStatusSuggestions(status, message);
-    } else if (exception.name === 'MongoError' || exception.code) {
+    } else if (this.isMongoError(exception)) {
       status = HttpStatus.BAD_REQUEST;
-      message = this.getMongoErrorMessage(exception as any);
-      suggestions = this.getMongoSuggestions(exception as any);
+      message = this.getMongoErrorMessage(exception);
+      suggestions = this.getMongoSuggestions(exception);
     } else if (exception instanceof Error) {
       message = exception.message;
       suggestions = this.getGenericSuggestions(exception.message);
@@ -152,6 +152,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     return suggestions;
+  }
+
+  private isMongoError(exception: unknown): exception is any {
+    return exception && 
+           typeof exception === 'object' && 
+           ((exception as any).name === 'MongoError' || 
+            (exception as any).code !== undefined);
   }
 
   private extractDuplicateField(message: string): string {
