@@ -7,7 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { MongoError } from 'mongodb';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -38,10 +37,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Add specific suggestions based on status code
       suggestions = this.getStatusSuggestions(status, message);
-    } else if (exception instanceof MongoError) {
+    } else if (exception.name === 'MongoError' || exception.code) {
       status = HttpStatus.BAD_REQUEST;
-      message = this.getMongoErrorMessage(exception);
-      suggestions = this.getMongoSuggestions(exception);
+      message = this.getMongoErrorMessage(exception as any);
+      suggestions = this.getMongoSuggestions(exception as any);
     } else if (exception instanceof Error) {
       message = exception.message;
       suggestions = this.getGenericSuggestions(exception.message);
@@ -106,7 +105,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return suggestions;
   }
 
-  private getMongoErrorMessage(error: MongoError): string {
+  private getMongoErrorMessage(error: any): string {
     switch (error.code) {
       case 11000:
         const field = this.extractDuplicateField(error.message);
@@ -118,7 +117,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
   }
 
-  private getMongoSuggestions(error: MongoError): string[] {
+  private getMongoSuggestions(error: any): string[] {
     const suggestions: string[] = [];
 
     switch (error.code) {
