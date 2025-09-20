@@ -47,7 +47,7 @@ export class ConsultationsService {
       .populate('petId');
 
     if (!consultation) {
-      throw new NotFoundException('Consultation not found');
+      throw new NotFoundException(`Consultation with ID '${id}' does not exist or you don't have permission to access it`);
     }
 
     return consultation;

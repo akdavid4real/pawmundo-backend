@@ -71,7 +71,7 @@ export class MedicationsService {
       
       const medication = await this.medicationModel.findById(id).populate('petId');
       if (!medication) {
-        throw new NotFoundException('Medication not found');
+        throw new NotFoundException(`Medication with ID '${id}' does not exist`);
       }
 
       await this.petsService.findById(medication.petId.toString(), userId);

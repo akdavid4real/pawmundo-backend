@@ -32,10 +32,10 @@ export class AppointmentsService {
       .populate('petId', 'name species breed')
       .exec();
     
-    if (!appointment) throw new NotFoundException('Appointment not found');
+    if (!appointment) throw new NotFoundException(`Appointment with ID '${id}' does not exist`);
     
     if (userId && appointment.userId.toString() !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException(`You don't have permission to access this appointment (ID: ${id}). This appointment belongs to another user.`);
     }
     
     return appointment;

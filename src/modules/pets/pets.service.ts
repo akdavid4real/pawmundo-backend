@@ -20,10 +20,15 @@ export class PetsService {
 
   async findById(id: string, ownerId?: string): Promise<Pet> {
     const pet = await this.petModel.findById(id).exec();
-    if (!pet) throw new NotFoundException('Pet not found');
-    if (ownerId && pet.ownerId.toString() !== ownerId.toString()) {
-      throw new ForbiddenException('Access denied');
+    if (!pet) {
+      throw new NotFoundException(`Pet with ID '${id}' does not exist`);
     }
+
+    // If ownerId is provided, verify ownership
+    if (ownerId && !pet.ownerId.equals(ownerId)) {
+      throw new ForbiddenException(`Access denied`);
+    }
+
     return pet;
   }
 
@@ -41,7 +46,7 @@ export class PetsService {
     await this.findById(id, ownerId);
     const validStatuses = ['healthy', 'sick', 'recovering', 'chronic'];
     if (!validStatuses.includes(status)) {
-      throw new Error('Invalid health status');
+      throw new Error(`Invalid health status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
     }
     return this.petModel.findByIdAndUpdate(id, { healthStatus: status }, { new: true }).exec();
   }

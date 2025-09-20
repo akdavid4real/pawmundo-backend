@@ -24,7 +24,7 @@ export class InsuranceService {
 
     // Validate dates
     if (insuranceData.startDate >= insuranceData.endDate) {
-      throw new BadRequestException('Start date must be before end date');
+      throw new BadRequestException(`Invalid date range: Start date (${createInsuranceDto.startDate}) must be before end date (${createInsuranceDto.endDate})`);
     }
 
     const insurance = new this.insuranceModel(insuranceData);
@@ -50,11 +50,11 @@ export class InsuranceService {
       .exec();
     
     if (!insurance) {
-      throw new NotFoundException('Insurance policy not found');
+      throw new NotFoundException(`Insurance policy with ID '${id}' does not exist`);
     }
     
     if (userId && insurance.userId.toString() !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException(`You don't have permission to access insurance policy '${id}'. This policy belongs to another user.`);
     }
     
     return insurance;
@@ -84,7 +84,7 @@ export class InsuranceService {
     
     const validStatuses = ['active', 'expired', 'cancelled', 'pending'];
     if (!validStatuses.includes(status)) {
-      throw new BadRequestException('Invalid status');
+      throw new BadRequestException(`Invalid insurance status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
     }
 
     return this.insuranceModel
@@ -166,7 +166,7 @@ export class InsuranceService {
     const insurance = await this.findById(claimDto.insuranceId, userId);
     
     if (insurance.status !== 'active') {
-      throw new BadRequestException('Cannot submit claim for inactive policy');
+      throw new BadRequestException(`Cannot submit claim for insurance policy '${claimDto.insuranceId}' because it has status '${insurance.status}'. Only active policies can accept claims.`);
     }
 
     const claimData = {
@@ -197,11 +197,11 @@ export class InsuranceService {
       .exec();
     
     if (!claim) {
-      throw new NotFoundException('Claim not found');
+      throw new NotFoundException(`Insurance claim with ID '${claimId}' does not exist`);
     }
     
     if (claim.userId.toString() !== userId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException(`You don't have permission to access insurance claim '${claimId}'. This claim belongs to another user.`);
     }
     
     return claim;

@@ -4,14 +4,14 @@ import { Types } from 'mongoose';
 export class ValidationUtil {
   static validateObjectId(id: string, fieldName = 'ID'): void {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException(`Invalid ${fieldName} format`);
+      throw new BadRequestException(`Invalid ${fieldName} format: '${id}' is not a valid MongoDB ObjectId`);
     }
   }
 
   static validateDate(dateString: string, fieldName = 'date'): Date {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      throw new BadRequestException(`Invalid ${fieldName} format`);
+      throw new BadRequestException(`Invalid ${fieldName} format: '${dateString}' is not a valid date. Use format: YYYY-MM-DD or ISO 8601`);
     }
     return date;
   }

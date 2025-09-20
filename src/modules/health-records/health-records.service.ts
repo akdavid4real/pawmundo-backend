@@ -34,7 +34,7 @@ export class HealthRecordsService {
       path: 'petId',
       match: { ownerId: userId, isActive: true }
     }).exec();
-    if (!record || !record.petId) throw new NotFoundException('Health record not found');
+    if (!record || !record.petId) throw new NotFoundException(`Health record with ID '${id}' does not exist or you don't have permission to access it`);
     return record;
   }
 

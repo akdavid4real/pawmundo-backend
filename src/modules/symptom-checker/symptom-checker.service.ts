@@ -17,8 +17,11 @@ export class SymptomCheckerService {
   async checkSymptoms(userId: string, symptomCheckDto: SymptomCheckDto) {
     // Get pet data
     const pet = await this.petModel.findById(symptomCheckDto.petId).exec();
-    if (!pet || pet.ownerId.toString() !== userId) {
-      throw new NotFoundException('Pet not found');
+    if (!pet) {
+      throw new NotFoundException(`Pet with ID '${symptomCheckDto.petId}' does not exist`);
+    }
+    if (pet.ownerId.toString() !== userId) {
+      throw new NotFoundException(`You don't have permission to access pet '${pet.name}' (ID: ${symptomCheckDto.petId}). This pet belongs to another user.`);
     }
 
     // Get medical history

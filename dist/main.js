@@ -98,20 +98,20 @@ const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 class DatabaseErrorHandler {
     static handle(error, operation = 'Database operation') {
         if (error.name === 'CastError') {
-            throw new common_1.BadRequestException('Invalid ID format');
+            throw new common_1.BadRequestException(`Invalid ID format: '${error.value}' is not a valid MongoDB ObjectId`);
         }
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map((err) => err.message);
-            throw new common_1.BadRequestException(`Validation failed: ${messages.join(', ')}`);
+            throw new common_1.BadRequestException(`Database validation failed: ${messages.join(', ')}`);
         }
         if (error.code === 11000) {
-            throw new common_1.BadRequestException('Duplicate entry found');
+            throw new common_1.BadRequestException(`Duplicate entry: A record with this ${Object.keys(error.keyPattern || {}).join(', ')} already exists`);
         }
         if (error.name === 'DocumentNotFoundError') {
-            throw new common_1.NotFoundException('Resource not found');
+            throw new common_1.NotFoundException(`Database resource not found: The requested document does not exist`);
         }
         console.error(`${operation} failed:`, error);
-        throw new common_1.InternalServerErrorException(`${operation} failed`);
+        throw new common_1.InternalServerErrorException(`${operation} failed due to an unexpected database error. Please try again or contact support if the issue persists`);
     }
 }
 exports.DatabaseErrorHandler = DatabaseErrorHandler;
@@ -200,13 +200,13 @@ const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
 class ValidationUtil {
     static validateObjectId(id, fieldName = 'ID') {
         if (!mongoose_1.Types.ObjectId.isValid(id)) {
-            throw new common_1.BadRequestException(`Invalid ${fieldName} format`);
+            throw new common_1.BadRequestException(`Invalid ${fieldName} format: '${id}' is not a valid MongoDB ObjectId`);
         }
     }
     static validateDate(dateString, fieldName = 'date') {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) {
-            throw new common_1.BadRequestException(`Invalid ${fieldName} format`);
+            throw new common_1.BadRequestException(`Invalid ${fieldName} format: '${dateString}' is not a valid date. Use format: YYYY-MM-DD or ISO 8601`);
         }
         return date;
     }
@@ -524,9 +524,9 @@ let AppointmentsService = class AppointmentsService {
             .populate('petId', 'name species breed')
             .exec();
         if (!appointment)
-            throw new common_1.NotFoundException('Appointment not found');
+            throw new common_1.NotFoundException(`Appointment with ID '${id}' does not exist`);
         if (userId && appointment.userId.toString() !== userId) {
-            throw new common_1.ForbiddenException('Access denied');
+            throw new common_1.ForbiddenException(`You don't have permission to access this appointment (ID: ${id}). This appointment belongs to another user.`);
         }
         return appointment;
     }
@@ -963,7 +963,7 @@ let AuthService = class AuthService {
             const { email, password, firstName, lastName, phone, address } = registerDto;
             const existingUser = await this.userModel.findOne({ email });
             if (existingUser) {
-                throw new common_1.ConflictException('User with this email already exists');
+                throw new common_1.ConflictException(`An account with email '${email}' already exists. Please use a different email or try logging in.`);
             }
             const hashedPassword = await bcrypt.hash(password, 12);
             const emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -1002,7 +1002,7 @@ let AuthService = class AuthService {
             const { email, password } = loginDto;
             const user = await this.validateUser(email, password);
             if (!user) {
-                throw new common_1.UnauthorizedException('Invalid credentials');
+                throw new common_1.UnauthorizedException(`Login failed: Invalid email or password. Please check your credentials and try again.`);
             }
             const lastLogin = new Date();
             await this.userModel.findByIdAndUpdate(user._id, { lastLogin });
@@ -1037,10 +1037,17 @@ let AuthService = class AuthService {
     }
     async findById(id) {
         try {
+            console.log('🔍 AuthService findById called with:', id, 'type:', typeof id);
             validation_util_1.ValidationUtil.validateObjectId(id, 'User ID');
-            return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+            const user = await this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+            console.log('🔍 AuthService findById result:', user ? 'User found' : 'User not found');
+            if (user) {
+                console.log('🔍 User _id:', user._id, 'type:', typeof user._id);
+            }
+            return user;
         }
         catch (error) {
+            console.log('🔍 AuthService findById error:', error.message);
             database_error_handler_1.DatabaseErrorHandler.handle(error, 'Find user by ID');
         }
     }
@@ -1073,7 +1080,7 @@ let AuthService = class AuthService {
                 passwordResetExpires: { $gt: new Date() },
             });
             if (!user) {
-                throw new common_1.BadRequestException('Invalid or expired reset token');
+                throw new common_1.BadRequestException(`Password reset token is invalid or has expired. Please request a new password reset link.`);
             }
             const hashedPassword = await bcrypt.hash(newPassword, 12);
             await this.userModel.findByIdAndUpdate(user._id, {
@@ -1095,10 +1102,10 @@ let AuthService = class AuthService {
             const { currentPassword, newPassword } = changePasswordDto;
             const user = await this.userModel.findById(userId);
             if (!user) {
-                throw new common_1.UnauthorizedException('User not found');
+                throw new common_1.UnauthorizedException(`User account not found. Please check if you're logged in correctly.`);
             }
             if (!(await bcrypt.compare(currentPassword, user.password))) {
-                throw new common_1.UnauthorizedException('Current password is incorrect');
+                throw new common_1.UnauthorizedException(`Current password is incorrect. Please enter your current password correctly.`);
             }
             const hashedPassword = await bcrypt.hash(newPassword, 12);
             await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
@@ -1113,7 +1120,7 @@ let AuthService = class AuthService {
     async verifyEmail(token) {
         const user = await this.userModel.findOne({ emailVerificationToken: token });
         if (!user) {
-            throw new common_1.BadRequestException('Invalid verification token');
+            throw new common_1.BadRequestException(`Email verification token is invalid or has already been used. Please request a new verification email.`);
         }
         await this.userModel.findByIdAndUpdate(user._id, {
             isEmailVerified: true,
@@ -1480,7 +1487,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const user = await this.authService.findById(payload.sub);
         if (!user) {
-            throw new common_1.UnauthorizedException();
+            throw new common_1.UnauthorizedException('User not found');
         }
         return user;
     }
@@ -1774,7 +1781,7 @@ let ConsultationsService = class ConsultationsService {
             .findOne({ _id: id, userId: new mongoose_2.Types.ObjectId(userId), isActive: true })
             .populate('petId');
         if (!consultation) {
-            throw new common_1.NotFoundException('Consultation not found');
+            throw new common_1.NotFoundException(`Consultation with ID '${id}' does not exist or you don't have permission to access it`);
         }
         return consultation;
     }
@@ -2377,7 +2384,7 @@ let ForumService = class ForumService {
             .populate('replies.authorId', 'name email')
             .exec();
         if (!post) {
-            throw new common_1.NotFoundException('Forum post not found');
+            throw new common_1.NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
         }
         return post;
     }
@@ -2385,7 +2392,7 @@ let ForumService = class ForumService {
         const userObjectId = new mongoose_2.Types.ObjectId(userId);
         const post = await this.forumPostModel.findById(postId);
         if (!post) {
-            throw new common_1.NotFoundException('Forum post not found');
+            throw new common_1.NotFoundException(`Forum post with ID '${postId}' does not exist or has been deleted`);
         }
         const likeIndex = post.likes.findIndex(id => id.equals(userObjectId));
         if (likeIndex > -1) {
@@ -2399,7 +2406,7 @@ let ForumService = class ForumService {
     async addReply(postId, createReplyDto, authorId) {
         const post = await this.forumPostModel.findById(postId);
         if (!post) {
-            throw new common_1.NotFoundException('Forum post not found');
+            throw new common_1.NotFoundException(`Forum post with ID '${postId}' does not exist or has been deleted`);
         }
         post.replies.push({
             content: createReplyDto.content,
@@ -2411,10 +2418,10 @@ let ForumService = class ForumService {
     async update(id, updateForumPostDto, userId) {
         const post = await this.forumPostModel.findById(id);
         if (!post) {
-            throw new common_1.NotFoundException('Forum post not found');
+            throw new common_1.NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
         }
         if (!post.authorId.equals(new mongoose_2.Types.ObjectId(userId))) {
-            throw new common_1.ForbiddenException('You can only edit your own posts');
+            throw new common_1.ForbiddenException(`You don't have permission to edit this forum post. You can only edit posts that you created.`);
         }
         Object.assign(post, updateForumPostDto);
         return post.save();
@@ -2469,10 +2476,10 @@ let ForumService = class ForumService {
     async delete(id, userId) {
         const post = await this.forumPostModel.findById(id);
         if (!post) {
-            throw new common_1.NotFoundException('Forum post not found');
+            throw new common_1.NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
         }
         if (!post.authorId.equals(new mongoose_2.Types.ObjectId(userId))) {
-            throw new common_1.ForbiddenException('You can only delete your own posts');
+            throw new common_1.ForbiddenException(`You don't have permission to delete this forum post. You can only delete posts that you created.`);
         }
         post.isActive = false;
         await post.save();
@@ -3025,7 +3032,7 @@ let HealthRecordsService = class HealthRecordsService {
             match: { ownerId: userId, isActive: true }
         }).exec();
         if (!record || !record.petId)
-            throw new common_1.NotFoundException('Health record not found');
+            throw new common_1.NotFoundException(`Health record with ID '${id}' does not exist or you don't have permission to access it`);
         return record;
     }
     async update(id, userId, updateData) {
@@ -3964,7 +3971,7 @@ let InsuranceService = class InsuranceService {
             endDate: new Date(createInsuranceDto.endDate),
         };
         if (insuranceData.startDate >= insuranceData.endDate) {
-            throw new common_1.BadRequestException('Start date must be before end date');
+            throw new common_1.BadRequestException(`Invalid date range: Start date (${createInsuranceDto.startDate}) must be before end date (${createInsuranceDto.endDate})`);
         }
         const insurance = new this.insuranceModel(insuranceData);
         return insurance.save();
@@ -3987,10 +3994,10 @@ let InsuranceService = class InsuranceService {
             .populate('petId', 'name species breed')
             .exec();
         if (!insurance) {
-            throw new common_1.NotFoundException('Insurance policy not found');
+            throw new common_1.NotFoundException(`Insurance policy with ID '${id}' does not exist`);
         }
         if (userId && insurance.userId.toString() !== userId) {
-            throw new common_1.ForbiddenException('Access denied');
+            throw new common_1.ForbiddenException(`You don't have permission to access insurance policy '${id}'. This policy belongs to another user.`);
         }
         return insurance;
     }
@@ -4012,7 +4019,7 @@ let InsuranceService = class InsuranceService {
         await this.findById(id, userId);
         const validStatuses = ['active', 'expired', 'cancelled', 'pending'];
         if (!validStatuses.includes(status)) {
-            throw new common_1.BadRequestException('Invalid status');
+            throw new common_1.BadRequestException(`Invalid insurance status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
         }
         return this.insuranceModel
             .findByIdAndUpdate(id, { status }, { new: true })
@@ -4081,7 +4088,7 @@ let InsuranceService = class InsuranceService {
     async submitClaim(userId, claimDto) {
         const insurance = await this.findById(claimDto.insuranceId, userId);
         if (insurance.status !== 'active') {
-            throw new common_1.BadRequestException('Cannot submit claim for inactive policy');
+            throw new common_1.BadRequestException(`Cannot submit claim for insurance policy '${claimDto.insuranceId}' because it has status '${insurance.status}'. Only active policies can accept claims.`);
         }
         const claimData = {
             ...claimDto,
@@ -4107,10 +4114,10 @@ let InsuranceService = class InsuranceService {
             .populate('insuranceId', 'provider policyNumber petId')
             .exec();
         if (!claim) {
-            throw new common_1.NotFoundException('Claim not found');
+            throw new common_1.NotFoundException(`Insurance claim with ID '${claimId}' does not exist`);
         }
         if (claim.userId.toString() !== userId) {
-            throw new common_1.ForbiddenException('Access denied');
+            throw new common_1.ForbiddenException(`You don't have permission to access insurance claim '${claimId}'. This claim belongs to another user.`);
         }
         return claim;
     }
@@ -4637,7 +4644,7 @@ let MedicationsService = class MedicationsService {
             validation_util_1.ValidationUtil.validateObjectId(id, 'Medication ID');
             const medication = await this.medicationModel.findById(id).populate('petId');
             if (!medication) {
-                throw new common_1.NotFoundException('Medication not found');
+                throw new common_1.NotFoundException(`Medication with ID '${id}' does not exist`);
             }
             await this.petsService.findById(medication.petId.toString(), userId);
             return medication;
@@ -4974,31 +4981,47 @@ let PetsController = class PetsController {
         this.petsService = petsService;
     }
     async create(req, createPetDto) {
+        const userId = req.user._id || req.user.id;
         const petData = {
             ...createPetDto,
-            ownerId: req.user._id,
+            ownerId: userId,
             dateOfBirth: createPetDto.dateOfBirth ? new Date(createPetDto.dateOfBirth) : undefined
         };
         return this.petsService.create(petData);
     }
     async findMyPets(req, species) {
-        return this.petsService.findByOwner(req.user._id, species);
+        const userId = req.user._id || req.user.id;
+        return this.petsService.findByOwner(userId, species);
     }
     async findOne(id, req) {
-        return this.petsService.findById(id, req.user._id);
+        console.log('🔍 Controller debug findOne:');
+        console.log('req.user object:', req.user);
+        console.log('typeof req.user:', typeof req.user);
+        if (req.user) {
+            console.log('req.user._id:', req.user._id);
+            console.log('typeof req.user._id:', typeof req.user._id);
+            console.log('req.user.id:', req.user.id);
+            console.log('typeof req.user.id:', typeof req.user.id);
+        }
+        const userId = req.user._id || req.user.id;
+        console.log('Final userId for service:', userId, 'type:', typeof userId);
+        return this.petsService.findById(id, userId);
     }
     async update(id, updatePetDto, req) {
+        const userId = req.user._id || req.user.id;
         const petData = { ...updatePetDto };
         if (updatePetDto.dateOfBirth) {
             petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
         }
-        return this.petsService.update(id, req.user._id, petData);
+        return this.petsService.update(id, userId, petData);
     }
     async updateHealthStatus(id, status, req) {
-        return this.petsService.updateHealthStatus(id, req.user._id, status);
+        const userId = req.user._id || req.user.id;
+        return this.petsService.updateHealthStatus(id, userId, status);
     }
     async remove(id, req) {
-        return this.petsService.delete(id, req.user._id);
+        const userId = req.user._id || req.user.id;
+        return this.petsService.delete(id, userId);
     }
 };
 exports.PetsController = PetsController;
@@ -5156,10 +5179,11 @@ let PetsService = class PetsService {
     }
     async findById(id, ownerId) {
         const pet = await this.petModel.findById(id).exec();
-        if (!pet)
-            throw new common_1.NotFoundException('Pet not found');
-        if (ownerId && pet.ownerId.toString() !== ownerId) {
-            throw new common_1.ForbiddenException('Access denied');
+        if (!pet) {
+            throw new common_1.NotFoundException(`Pet with ID '${id}' does not exist`);
+        }
+        if (ownerId && !pet.ownerId.equals(ownerId)) {
+            throw new common_1.ForbiddenException(`Access denied`);
         }
         return pet;
     }
@@ -5175,7 +5199,7 @@ let PetsService = class PetsService {
         await this.findById(id, ownerId);
         const validStatuses = ['healthy', 'sick', 'recovering', 'chronic'];
         if (!validStatuses.includes(status)) {
-            throw new Error('Invalid health status');
+            throw new Error(`Invalid health status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
         }
         return this.petModel.findByIdAndUpdate(id, { healthStatus: status }, { new: true }).exec();
     }
@@ -6002,8 +6026,11 @@ let SymptomCheckerService = class SymptomCheckerService {
     }
     async checkSymptoms(userId, symptomCheckDto) {
         const pet = await this.petModel.findById(symptomCheckDto.petId).exec();
-        if (!pet || pet.ownerId.toString() !== userId) {
-            throw new common_1.NotFoundException('Pet not found');
+        if (!pet) {
+            throw new common_1.NotFoundException(`Pet with ID '${symptomCheckDto.petId}' does not exist`);
+        }
+        if (pet.ownerId.toString() !== userId) {
+            throw new common_1.NotFoundException(`You don't have permission to access pet '${pet.name}' (ID: ${symptomCheckDto.petId}). This pet belongs to another user.`);
         }
         const healthRecords = await this.healthRecordModel
             .find({ petId: symptomCheckDto.petId, isActive: true })
@@ -6551,8 +6578,9 @@ async function bootstrap() {
     const port = parseInt(process.env.PORT || '3000', 10);
     await app.listen(port, '0.0.0.0');
     common_1.Logger.log(`PawMundo Backend running on port ${port}`, 'Bootstrap');
-    if (process.env.NODE_ENV !== 'production') {
-        common_1.Logger.log(`Swagger documentation available at http://localhost:${port}/api`, 'Bootstrap');
+    if (process.env.ENABLE_SWAGGER === 'true') {
+        const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+        common_1.Logger.log(`Swagger documentation available at ${baseUrl}/api`, 'Bootstrap');
     }
 }
 bootstrap();

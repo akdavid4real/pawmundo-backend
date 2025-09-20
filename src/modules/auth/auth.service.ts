@@ -30,7 +30,7 @@ export class AuthService {
 
       const existingUser = await this.userModel.findOne({ email });
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException(`An account with email '${email}' already exists. Please use a different email or try logging in.`);
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
@@ -74,7 +74,7 @@ export class AuthService {
       
       const user = await this.validateUser(email, password);
       if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException(`Login failed: Invalid email or password. Please check your credentials and try again.`);
       }
 
       const lastLogin = new Date();
@@ -112,9 +112,16 @@ export class AuthService {
 
   async findById(id: string): Promise<User> {
     try {
+      console.log('🔍 AuthService findById called with:', id, 'type:', typeof id);
       ValidationUtil.validateObjectId(id, 'User ID');
-      return this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+      const user = await this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
+      console.log('🔍 AuthService findById result:', user ? 'User found' : 'User not found');
+      if (user) {
+        console.log('🔍 User _id:', user._id, 'type:', typeof user._id);
+      }
+      return user;
     } catch (error) {
+      console.log('🔍 AuthService findById error:', error.message);
       DatabaseErrorHandler.handle(error, 'Find user by ID');
     }
   }
@@ -158,7 +165,7 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new BadRequestException('Invalid or expired reset token');
+        throw new BadRequestException(`Password reset token is invalid or has expired. Please request a new password reset link.`);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -183,11 +190,11 @@ export class AuthService {
       
       const user = await this.userModel.findById(userId);
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        throw new UnauthorizedException(`User account not found. Please check if you're logged in correctly.`);
       }
       
       if (!(await bcrypt.compare(currentPassword, user.password))) {
-        throw new UnauthorizedException('Current password is incorrect');
+        throw new UnauthorizedException(`Current password is incorrect. Please enter your current password correctly.`);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -204,7 +211,7 @@ export class AuthService {
     const user = await this.userModel.findOne({ emailVerificationToken: token });
     
     if (!user) {
-      throw new BadRequestException('Invalid verification token');
+      throw new BadRequestException(`Email verification token is invalid or has already been used. Please request a new verification email.`);
     }
 
     await this.userModel.findByIdAndUpdate(user._id, {

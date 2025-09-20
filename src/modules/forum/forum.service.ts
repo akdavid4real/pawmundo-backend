@@ -52,7 +52,7 @@ export class ForumService {
       .exec();
 
     if (!post) {
-      throw new NotFoundException('Forum post not found');
+      throw new NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
     }
     return post;
   }
@@ -62,7 +62,7 @@ export class ForumService {
     const post = await this.forumPostModel.findById(postId);
     
     if (!post) {
-      throw new NotFoundException('Forum post not found');
+      throw new NotFoundException(`Forum post with ID '${postId}' does not exist or has been deleted`);
     }
 
     const likeIndex = post.likes.findIndex(id => id.equals(userObjectId));
@@ -80,7 +80,7 @@ export class ForumService {
     const post = await this.forumPostModel.findById(postId);
     
     if (!post) {
-      throw new NotFoundException('Forum post not found');
+      throw new NotFoundException(`Forum post with ID '${postId}' does not exist or has been deleted`);
     }
 
     post.replies.push({
@@ -96,11 +96,11 @@ export class ForumService {
     const post = await this.forumPostModel.findById(id);
     
     if (!post) {
-      throw new NotFoundException('Forum post not found');
+      throw new NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
     }
 
     if (!post.authorId.equals(new Types.ObjectId(userId))) {
-      throw new ForbiddenException('You can only edit your own posts');
+      throw new ForbiddenException(`You don't have permission to edit this forum post. You can only edit posts that you created.`);
     }
 
     Object.assign(post, updateForumPostDto);
@@ -165,11 +165,11 @@ export class ForumService {
     const post = await this.forumPostModel.findById(id);
     
     if (!post) {
-      throw new NotFoundException('Forum post not found');
+      throw new NotFoundException(`Forum post with ID '${id}' does not exist or has been deleted`);
     }
 
     if (!post.authorId.equals(new Types.ObjectId(userId))) {
-      throw new ForbiddenException('You can only delete your own posts');
+      throw new ForbiddenException(`You don't have permission to delete this forum post. You can only delete posts that you created.`);
     }
 
     post.isActive = false;
