@@ -39,6 +39,24 @@ export class Pet extends Document {
   @Prop()
   medicalNotes: string;
 
+  @Prop([String])
+  allergies: string[];
+
+  @Prop([String])
+  pastIllnesses: string[];
+
+  @Prop([String])
+  surgeries: string[];
+
+  @Prop()
+  dietaryPreferences: string;
+
+  @Prop([String])
+  dietaryRestrictions: string[];
+
+  @Prop()
+  behavioralNotes: string;
+
   @Prop()
   emergencyContactName: string;
 

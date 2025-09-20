@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min, Max, IsDateString, IsEmail, IsPhoneNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min, Max, IsDateString, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePetDto {
@@ -63,6 +63,36 @@ export class CreatePetDto {
   @IsOptional()
   @IsString()
   medicalNotes?: string;
+
+  @ApiPropertyOptional({ description: 'Known allergies', type: [String] })
+  @IsOptional()
+  @IsArray()
+  allergies?: string[];
+
+  @ApiPropertyOptional({ description: 'Past illnesses', type: [String] })
+  @IsOptional()
+  @IsArray()
+  pastIllnesses?: string[];
+
+  @ApiPropertyOptional({ description: 'Previous surgeries', type: [String] })
+  @IsOptional()
+  @IsArray()
+  surgeries?: string[];
+
+  @ApiPropertyOptional({ description: 'Dietary preferences' })
+  @IsOptional()
+  @IsString()
+  dietaryPreferences?: string;
+
+  @ApiPropertyOptional({ description: 'Dietary restrictions', type: [String] })
+  @IsOptional()
+  @IsArray()
+  dietaryRestrictions?: string[];
+
+  @ApiPropertyOptional({ description: 'Behavioral notes and quirky details' })
+  @IsOptional()
+  @IsString()
+  behavioralNotes?: string;
 
   @ApiPropertyOptional({ description: 'Emergency contact name' })
   @IsOptional()
