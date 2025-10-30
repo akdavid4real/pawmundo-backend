@@ -14,6 +14,9 @@ async function bootstrap() {
   // Global exception filter for detailed error messages
   app.useGlobalFilters(new GlobalExceptionFilter());
   
+  // Set global API prefix
+  app.setGlobalPrefix('api/v1');
+  
   // Enhanced validation pipe with detailed error messages
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
