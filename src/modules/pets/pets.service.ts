@@ -54,4 +54,12 @@ export class PetsService {
   async findByHealthStatus(ownerId: string, status: string): Promise<Pet[]> {
     return this.petModel.find({ ownerId, healthStatus: status, isActive: true }).exec();
   }
+
+  async findByName(ownerId: string, name: string): Promise<Pet | null> {
+    return this.petModel.findOne({ 
+      ownerId, 
+      name: { $regex: new RegExp(name, 'i') }, 
+      isActive: true 
+    }).exec();
+  }
 }

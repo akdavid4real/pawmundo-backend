@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SymptomCheckerController } from './symptom-checker.controller';
-import { SymptomCheckerService } from './symptom-checker.service';
+import { AiChatController } from './ai-chat.controller';
+import { AiChatService } from './ai-chat.service';
+import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
 import { Pet, PetSchema } from '../pets/schemas/pet.schema';
 import { HealthRecord, HealthRecordSchema } from '../health-records/schemas/health-record.schema';
 import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
@@ -16,8 +17,7 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  controllers: [SymptomCheckerController],
-  providers: [SymptomCheckerService],
-  exports: [SymptomCheckerService],
+  controllers: [AiChatController],
+  providers: [AiChatService, SymptomCheckerService],
 })
-export class SymptomCheckerModule {}
+export class AiChatModule {}

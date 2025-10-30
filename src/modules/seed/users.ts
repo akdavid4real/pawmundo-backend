@@ -1,7 +1,23 @@
 import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
+const akdavidUserId = new Types.ObjectId();
+
 const sampleUsers = [
+  {
+    _id: akdavidUserId,
+    email: 'akdavid4real@gmail.com',
+    password: bcrypt.hashSync('Shadowfight@2', 12),
+    firstName: 'David',
+    lastName: 'Ak',
+    phone: '+1234567890',
+    address: '123 Main St, City, State 12345',
+    isActive: true,
+    isEmailVerified: true,
+    role: 'user',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
   {
     _id: new Types.ObjectId(),
     email: 'john.doe@example.com',
@@ -32,4 +48,5 @@ const sampleUsers = [
   }
 ];
 
-export { sampleUsers };
+export { sampleUsers, akdavidUserId };
+

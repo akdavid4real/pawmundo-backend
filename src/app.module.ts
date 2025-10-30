@@ -20,6 +20,7 @@ import { HealthRemindersModule } from '@modules/health-reminders/health-reminder
 import { ConsultationsModule } from '@modules/consultations/consultations.module';
 import { InsuranceModule } from '@modules/insurance/insurance.module';
 import { SymptomCheckerModule } from '@modules/symptom-checker/symptom-checker.module';
+import { AiChatModule } from '@modules/ai-chat/ai-chat.module';
 import { ForumModule } from '@modules/forum/forum.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { ActivityTrackingModule } from '@modules/activity-tracking/activity-tracking.module';
@@ -62,6 +63,7 @@ import { SeedModule } from '@modules/seed/seed.module';
     ConsultationsModule,
     InsuranceModule,
     SymptomCheckerModule,
+    AiChatModule,
     ForumModule,
     NotificationsModule,
     ActivityTrackingModule,

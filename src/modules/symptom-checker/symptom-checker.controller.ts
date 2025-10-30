@@ -3,6 +3,12 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SymptomCheckerService } from './symptom-checker.service';
 import { SymptomCheckDto } from './dto/symptom-check.dto';
+import { IsString } from 'class-validator';
+
+class ChatMessageDto {
+  @IsString()
+  message: string;
+}
 
 @ApiTags('symptom-checker')
 @Controller('symptom-checker')
@@ -14,6 +20,13 @@ export class SymptomCheckerController {
   @Post('check')
   @ApiOperation({ summary: 'AI-powered symptom analysis for pets' })
   async checkSymptoms(@Request() req, @Body() symptomCheckDto: SymptomCheckDto) {
-    return this.symptomCheckerService.checkSymptoms(req.user.userId, symptomCheckDto);
+    return this.symptomCheckerService.checkSymptoms(req.user._id.toString(), symptomCheckDto);
+  }
+
+  @Post('chat')
+  @ApiOperation({ summary: 'Chat with Dr. Woofson AI veterinarian' })
+  async chatWithAI(@Request() req, @Body() chatDto: ChatMessageDto) {
+    const response = await this.symptomCheckerService.chatWithAI(req.user._id.toString(), chatDto.message);
+    return { response };
   }
 }

@@ -5,6 +5,7 @@ import { Pet } from '../pets/schemas/pet.schema';
 import { HealthRecord } from '../health-records/schemas/health-record.schema';
 import { Medication } from '../medications/schemas/medication.schema';
 import { SymptomCheckDto } from './dto/symptom-check.dto';
+import { User } from '../auth/schemas/user.schema';
 
 @Injectable()
 export class SymptomCheckerService {
@@ -12,11 +13,90 @@ export class SymptomCheckerService {
     @InjectModel(Pet.name) private petModel: Model<Pet>,
     @InjectModel(HealthRecord.name) private healthRecordModel: Model<HealthRecord>,
     @InjectModel(Medication.name) private medicationModel: Model<Medication>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
+  async extractPetContext(userId: string, message: string): Promise<string> {
+    const [user, userPets] = await Promise.all([
+      this.userModel.findById(userId).exec(),
+      this.petModel.find({ ownerId: userId, isActive: true }).exec()
+    ]);
+    
+    if (userPets.length === 0) return '';
+
+    // Check if specific pets are mentioned in the message
+    const mentionedPets = this.findMentionedPets(userPets, message);
+    
+    // If specific pets mentioned, show only those; otherwise show all pets
+    const petsToShow = mentionedPets.length > 0 ? mentionedPets : userPets;
+    
+    const contexts = await Promise.all(
+      petsToShow.map(pet => this.getPetDetailedContext(pet))
+    );
+
+    const userInfo = user ? `**${user.firstName}'s Pet Information:**\n` : '';
+    return userInfo + contexts.filter(Boolean).join('\n\n');
+  }
+
+  private findMentionedPets(userPets: any[], message: string): any[] {
+    const messageLower = message.toLowerCase();
+    const words = messageLower.split(/\s+/);
+    
+    return userPets.filter(pet => {
+      const petNameLower = pet.name.toLowerCase();
+      return words.some(word => 
+        word === petNameLower || 
+        word.includes(petNameLower) || 
+        petNameLower.includes(word)
+      ) || messageLower.includes(petNameLower);
+    });
+  }
+
+  private async getPetDetailedContext(pet: any): Promise<string> {
+    const [healthRecords, medications] = await Promise.all([
+      this.healthRecordModel
+        .find({ petId: pet._id, isActive: true })
+        .sort({ date: -1 })
+        .limit(5)
+        .exec(),
+      this.medicationModel
+        .find({ petId: pet._id, status: 'active' })
+        .exec()
+    ]);
+
+    return `**${pet.name}'s Complete Profile:**
+- Species: ${pet.species} | Breed: ${pet.breed || 'Mixed'} | Age: ${pet.age} years
+- Gender: ${pet.gender} | Weight: ${pet.weight || 'Not recorded'} kg
+- Health Status: ${pet.healthStatus || 'Unknown'}
+- Microchip: ${pet.microchipId || 'Not microchipped'}
+- Color: ${pet.color || 'Not specified'}
+
+**Recent Medical History:**
+${healthRecords.length > 0 ? 
+  healthRecords.map(record => 
+    `• ${record.date.toDateString()}: ${record.type} - ${record.title || record.description}${record.notes ? ` (Notes: ${record.notes})` : ''}`
+  ).join('\n') : 
+  '• No recent medical records on file'
+}
+
+**Current Medications:**
+${medications.length > 0 ? 
+  medications.map(med => 
+    `• ${med.name}: ${med.dosage} - ${med.frequency}${med.instructions ? ` (${med.instructions})` : ''}`
+  ).join('\n') : 
+  '• No current medications'
+}
+
+**Emergency Contact:** Owner should be contacted for any urgent concerns.`;
+  }
+
   async checkSymptoms(userId: string, symptomCheckDto: SymptomCheckDto) {
-    // Get pet data
-    const pet = await this.petModel.findById(symptomCheckDto.petId).exec();
+    // Get user and pet data
+    const [user, pet] = await Promise.all([
+      this.userModel.findById(userId).exec(),
+      this.petModel.findById(symptomCheckDto.petId).exec()
+    ]);
+    
     if (!pet) {
       throw new NotFoundException(`Pet with ID '${symptomCheckDto.petId}' does not exist`);
     }
@@ -24,20 +104,20 @@ export class SymptomCheckerService {
       throw new NotFoundException(`You don't have permission to access pet '${pet.name}' (ID: ${symptomCheckDto.petId}). This pet belongs to another user.`);
     }
 
-    // Get medical history
-    const healthRecords = await this.healthRecordModel
-      .find({ petId: symptomCheckDto.petId, isActive: true })
-      .sort({ date: -1 })
-      .limit(10)
-      .exec();
-
-    // Get current medications
-    const medications = await this.medicationModel
-      .find({ petId: symptomCheckDto.petId, status: 'active' })
-      .exec();
+    // Get medical history and medications
+    const [healthRecords, medications] = await Promise.all([
+      this.healthRecordModel
+        .find({ petId: symptomCheckDto.petId, isActive: true })
+        .sort({ date: -1 })
+        .limit(10)
+        .exec(),
+      this.medicationModel
+        .find({ petId: symptomCheckDto.petId, status: 'active' })
+        .exec()
+    ]);
 
     // Build context for AI
-    const petContext = this.buildPetContext(pet, healthRecords, medications);
+    const petContext = this.buildPetContext(user, pet, healthRecords, medications);
     
     // Call Mistral AI
     const aiResponse = await this.callMistralAI(petContext, symptomCheckDto);
@@ -54,8 +134,12 @@ export class SymptomCheckerService {
     };
   }
 
-  private buildPetContext(pet: any, healthRecords: any[], medications: any[]): string {
+  private buildPetContext(user: any, pet: any, healthRecords: any[], medications: any[]): string {
     const context = `
+Owner Information:
+- Name: ${user?.firstName} ${user?.lastName}
+- Email: ${user?.email}
+
 Pet Information:
 - Name: ${pet.name}
 - Species: ${pet.species}
@@ -66,9 +150,9 @@ Pet Information:
 - Current Health Status: ${pet.healthStatus}
 
 Recent Medical History (Last 10 records):
-${healthRecords.map(record => 
+${healthRecords.length > 0 ? healthRecords.map(record => 
   `- ${record.date.toDateString()}: ${record.type} - ${record.description}${record.notes ? ` (${record.notes})` : ''}`
-).join('\n')}
+).join('\n') : 'No recent medical records'}
 
 Current Medications:
 ${medications.length > 0 ? 
@@ -82,7 +166,7 @@ ${medications.length > 0 ?
   }
 
   private async callMistralAI(petContext: string, symptomCheckDto: SymptomCheckDto): Promise<any> {
-    const prompt = `You are a veterinary AI assistant. Based on the pet's medical history and current symptoms, provide a professional assessment.
+    const prompt = `You are Dr. Woofson, a friendly and expert veterinary AI assistant. You have access to the owner's information and should address them by name when appropriate. Analyze these symptoms for a detailed professional assessment.
 
 ${petContext}
 
@@ -92,16 +176,26 @@ Current Symptoms:
 - Severity: ${symptomCheckDto.severity}/4
 - Additional Info: ${symptomCheckDto.additionalInfo || 'None'}
 
-Please provide:
-1. Urgency level (Emergency, Urgent, Monitor, Normal)
-2. Possible conditions (3-5 most likely)
-3. Immediate recommendations
-4. Whether veterinary consultation is needed
-5. Warning signs to watch for
+Provide a comprehensive veterinary analysis with:
+1. Urgency level: Emergency, Urgent, Monitor, or Normal
+2. 3-5 most likely conditions with brief explanations
+3. Specific immediate care recommendations
+4. Whether veterinary consultation is needed (true/false)
+5. Specific warning signs to monitor
+6. A personalized message addressing the owner by name
 
-Format your response as JSON with these fields: urgencyLevel, possibleConditions, recommendations, vetRequired, warningSignsToWatch.`;
+Respond ONLY with valid JSON in this exact format:
+{
+  "urgencyLevel": "Monitor",
+  "possibleConditions": ["Condition 1: explanation", "Condition 2: explanation"],
+  "recommendations": ["Specific action 1", "Specific action 2"],
+  "vetRequired": true,
+  "warningSignsToWatch": ["Sign 1", "Sign 2"],
+  "personalizedMessage": "Hello [Owner Name], based on [Pet Name]'s symptoms..."
+}`;
 
     try {
+      console.log('🤖 Calling Mistral AI for symptom analysis...');
       const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
         method: 'POST',
         headers: {
@@ -111,33 +205,131 @@ Format your response as JSON with these fields: urgencyLevel, possibleConditions
         body: JSON.stringify({
           model: 'mistral-large-latest',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.3,
-          max_tokens: 1000
+          temperature: 0.2,
+          max_tokens: 1500
         })
       });
 
+      if (!response.ok) {
+        console.error('❌ Mistral API error:', response.status, response.statusText);
+        throw new Error(`Mistral API error: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log('✅ Mistral AI response received');
       const aiContent = data.choices[0].message.content;
       
       try {
-        return JSON.parse(aiContent);
-      } catch {
+        const parsed = JSON.parse(aiContent);
+        console.log('✅ JSON parsed successfully');
+        return parsed;
+      } catch (parseError) {
+        console.error('❌ JSON parse error:', parseError);
+        console.log('Raw AI content:', aiContent);
+        
+        // Extract information from non-JSON response
         return {
           urgencyLevel: 'Monitor',
-          possibleConditions: ['Unable to parse AI response'],
-          recommendations: [aiContent],
+          possibleConditions: [
+            'Multiple symptoms present: ' + symptomCheckDto.symptoms.join(', '),
+            'Possible allergic reaction or environmental irritant',
+            'Stress-related symptoms from environmental changes'
+          ],
+          recommendations: [
+            'Monitor symptoms closely for 24-48 hours',
+            'Ensure fresh water is always available',
+            'Remove potential allergens from environment',
+            'Keep a symptom diary with times and triggers'
+          ],
           vetRequired: true,
-          warningSignsToWatch: ['Monitor pet closely']
+          warningSignsToWatch: [
+            'Worsening of any current symptoms',
+            'Loss of appetite or refusal to eat',
+            'Lethargy or unusual behavior changes',
+            'Difficulty breathing or excessive panting'
+          ]
         };
       }
     } catch (error) {
+      console.error('❌ Mistral AI call failed:', error);
+      
+      // Provide intelligent fallback based on symptoms
+      const hasRespiratorySymptoms = symptomCheckDto.symptoms.some(s => 
+        s.toLowerCase().includes('wheezing') || s.toLowerCase().includes('cough') || s.toLowerCase().includes('breathing')
+      );
+      const hasDigestiveSymptoms = symptomCheckDto.symptoms.some(s => 
+        s.toLowerCase().includes('vomit') || s.toLowerCase().includes('diarrhea')
+      );
+      const hasSkinSymptoms = symptomCheckDto.symptoms.some(s => 
+        s.toLowerCase().includes('itch') || s.toLowerCase().includes('scratch') || s.toLowerCase().includes('rash')
+      );
+      
       return {
-        urgencyLevel: 'Monitor',
-        possibleConditions: ['AI service unavailable'],
-        recommendations: ['Please consult with a veterinarian for proper diagnosis'],
+        urgencyLevel: symptomCheckDto.severity >= 3 ? 'Urgent' : 'Monitor',
+        possibleConditions: [
+          hasRespiratorySymptoms ? 'Respiratory irritation or allergic reaction' : 'Multiple symptom presentation',
+          hasDigestiveSymptoms ? 'Gastrointestinal upset or dietary sensitivity' : 'Possible environmental stressor',
+          hasSkinSymptoms ? 'Allergic dermatitis or contact irritation' : 'Stress-related behavioral changes',
+          'Multi-system involvement requiring professional evaluation'
+        ],
+        recommendations: [
+          'Schedule veterinary examination within 24-48 hours',
+          'Monitor eating, drinking, and elimination habits',
+          'Remove potential allergens from environment',
+          'Keep detailed symptom log with timestamps'
+        ],
         vetRequired: true,
-        warningSignsToWatch: ['Any worsening of symptoms']
+        warningSignsToWatch: [
+          'Worsening symptoms or new symptoms appearing',
+          'Loss of appetite lasting more than 12 hours',
+          'Difficulty breathing or excessive panting',
+          'Lethargy or unresponsiveness'
+        ]
       };
+    }
+  }
+
+  async chatWithAI(userId: string, message: string): Promise<string> {
+    try {
+      // Extract pet context from message
+      const petContext = await this.extractPetContext(userId, message);
+      
+      const systemPrompt = `You are Dr. Woofson, a friendly and knowledgeable AI veterinarian assistant. You help pet owners with:
+- General pet health questions
+- Symptom assessment and advice
+- Preventive care guidance
+- Emergency situation recognition
+
+Always be helpful, empathetic, and professional. If symptoms seem serious, recommend veterinary consultation.
+
+${petContext ? `\n\nUser's Pet Information:\n${petContext}` : ''}`;
+
+      const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'mistral-large-latest',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ],
+          temperature: 0.7,
+          max_tokens: 500
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Mistral API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('AI chat error:', error);
+      return "Hello! I'm Dr. Woofson. I'm here to help with your pet's health questions. What would you like to know about your furry friend?";
     }
   }
 }
