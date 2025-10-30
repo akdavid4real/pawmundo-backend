@@ -196,7 +196,7 @@ Respond ONLY with valid JSON in this exact format:
 
     try {
       console.log('🤖 Calling Mistral AI for symptom analysis...');
-      const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+      const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ Always be helpful, empathetic, and professional. If symptoms seem serious, recom
 
 ${petContext ? `\n\nUser's Pet Information:\n${petContext}` : ''}`;
 
-      const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+      const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

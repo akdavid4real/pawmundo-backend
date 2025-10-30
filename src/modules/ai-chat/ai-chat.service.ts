@@ -28,7 +28,7 @@ ${context ? `\n\nAdditional Context: ${context}` : ''}`;
     const prompt = `${fullContext}\n\n${userName}: ${message}\n\nRespond as Dr. Woofson (address ${userName} by name and reference their pets when relevant):`;
 
     try {
-      const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+      const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

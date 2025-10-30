@@ -1222,7 +1222,7 @@ ${petContext ? `\n\nPet Information Available:\n${petContext}` : `\n\nNote: ${us
 ${context ? `\n\nAdditional Context: ${context}` : ''}`;
         const prompt = `${fullContext}\n\n${userName}: ${message}\n\nRespond as Dr. Woofson (address ${userName} by name and reference their pets when relevant):`;
         try {
-            const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+            const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -7588,7 +7588,7 @@ Respond ONLY with valid JSON in this exact format:
 }`;
         try {
             console.log('🤖 Calling Mistral AI for symptom analysis...');
-            const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+            const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -7680,7 +7680,7 @@ Respond ONLY with valid JSON in this exact format:
 Always be helpful, empathetic, and professional. If symptoms seem serious, recommend veterinary consultation.
 
 ${petContext ? `\n\nUser's Pet Information:\n${petContext}` : ''}`;
-            const response = await fetch(`${process.env.MISTRAL_API_BASE}/v1/chat/completions`, {
+            const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -8130,6 +8130,7 @@ async function bootstrap() {
         logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug', 'verbose']
     });
     app.useGlobalFilters(new global_exception_filter_1.GlobalExceptionFilter());
+    app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,
