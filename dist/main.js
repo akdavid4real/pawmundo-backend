@@ -1087,13 +1087,13 @@ let AiChatController = class AiChatController {
         this.aiChatService = aiChatService;
     }
     async chat(req, aiChatDto) {
-        return this.aiChatService.chat(req.user.userId, aiChatDto);
+        return this.aiChatService.chat(req.user._id.toString(), aiChatDto);
     }
     async getTypingIndicator() {
         return this.aiChatService.getTypingIndicator();
     }
     async getOfflineResponse(req, aiChatDto) {
-        return this.aiChatService.getOfflineResponse(req.user.userId, aiChatDto.message);
+        return this.aiChatService.getOfflineResponse(req.user._id.toString(), aiChatDto.message);
     }
 };
 exports.AiChatController = AiChatController;
@@ -1153,8 +1153,12 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const ai_chat_controller_1 = __webpack_require__(/*! ./ai-chat.controller */ "./src/modules/ai-chat/ai-chat.controller.ts");
 const ai_chat_service_1 = __webpack_require__(/*! ./ai-chat.service */ "./src/modules/ai-chat/ai-chat.service.ts");
 const symptom_checker_service_1 = __webpack_require__(/*! ../symptom-checker/symptom-checker.service */ "./src/modules/symptom-checker/symptom-checker.service.ts");
+const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const health_records_service_1 = __webpack_require__(/*! ../health-records/health-records.service */ "./src/modules/health-records/health-records.service.ts");
+const appointments_service_1 = __webpack_require__(/*! ../appointments/appointments.service */ "./src/modules/appointments/appointments.service.ts");
 const pet_schema_1 = __webpack_require__(/*! ../pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts");
 const health_record_schema_1 = __webpack_require__(/*! ../health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts");
+const appointment_schema_1 = __webpack_require__(/*! ../appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts");
 const medication_schema_1 = __webpack_require__(/*! ../medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
 let AiChatModule = class AiChatModule {
@@ -1166,12 +1170,13 @@ exports.AiChatModule = AiChatModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: pet_schema_1.Pet.name, schema: pet_schema_1.PetSchema },
                 { name: health_record_schema_1.HealthRecord.name, schema: health_record_schema_1.HealthRecordSchema },
+                { name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema },
                 { name: medication_schema_1.Medication.name, schema: medication_schema_1.MedicationSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
             ]),
         ],
         controllers: [ai_chat_controller_1.AiChatController],
-        providers: [ai_chat_service_1.AiChatService, symptom_checker_service_1.SymptomCheckerService],
+        providers: [ai_chat_service_1.AiChatService, symptom_checker_service_1.SymptomCheckerService, pets_service_1.PetsService, health_records_service_1.HealthRecordsService, appointments_service_1.AppointmentsService],
     })
 ], AiChatModule);
 
@@ -1197,30 +1202,88 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const symptom_checker_service_1 = __webpack_require__(/*! ../symptom-checker/symptom-checker.service */ "./src/modules/symptom-checker/symptom-checker.service.ts");
+const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const health_records_service_1 = __webpack_require__(/*! ../health-records/health-records.service */ "./src/modules/health-records/health-records.service.ts");
+const appointments_service_1 = __webpack_require__(/*! ../appointments/appointments.service */ "./src/modules/appointments/appointments.service.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
 let AiChatService = class AiChatService {
-    constructor(symptomCheckerService, userModel) {
+    constructor(symptomCheckerService, petsService, healthRecordsService, appointmentsService, userModel) {
         this.symptomCheckerService = symptomCheckerService;
+        this.petsService = petsService;
+        this.healthRecordsService = healthRecordsService;
+        this.appointmentsService = appointmentsService;
         this.userModel = userModel;
     }
     async chat(userId, aiChatDto) {
-        const [user, petContext] = await Promise.all([
-            this.userModel.findById(userId).exec(),
-            this.symptomCheckerService.extractPetContext(userId, aiChatDto.message)
-        ]);
         const { message, context } = aiChatDto;
+        const [user, pets, upcomingAppointments] = await Promise.all([
+            this.userModel.findById(userId).exec(),
+            this.petsService.findByOwner(userId),
+            this.appointmentsService.findUpcoming(userId)
+        ]);
         const userName = user ? user.firstName : 'there';
-        const fullContext = `You are Dr. Woofson, a friendly AI veterinarian assistant. Always address the user by their name (${userName}) when appropriate and be warm and personable. You have access to their pet information and should reference specific details when relevant.
-${petContext ? `\n\nPet Information Available:\n${petContext}` : `\n\nNote: ${userName} may have pets but no specific pet information was detected in this message.`}
-${context ? `\n\nAdditional Context: ${context}` : ''}`;
-        const prompt = `${fullContext}\n\n${userName}: ${message}\n\nRespond as Dr. Woofson (address ${userName} by name and reference their pets when relevant):`;
+        let petInfo = '';
+        if (pets.length > 0) {
+            const petDetails = [];
+            for (const pet of pets) {
+                try {
+                    const [healthSummary, healthRecords] = await Promise.all([
+                        this.healthRecordsService.getHealthSummary(pet._id.toString(), userId),
+                        this.healthRecordsService.findByPet(pet._id.toString(), userId)
+                    ]);
+                    let petDetail = `${pet.name}: ${pet.species} ${pet.breed}, ${pet.age}yo, ${pet.gender}, ${pet.healthStatus}`;
+                    if (pet.weight)
+                        petDetail += `, ${pet.weight}kg`;
+                    if (pet.color)
+                        petDetail += `, ${pet.color}`;
+                    if (pet.microchipId)
+                        petDetail += `, chip: ${pet.microchipId}`;
+                    if (pet.allergies?.length)
+                        petDetail += `, allergies: ${pet.allergies.join(', ')}`;
+                    if (pet.medicalNotes)
+                        petDetail += `, notes: ${pet.medicalNotes}`;
+                    petDetail += `. Health: ${healthSummary.totalRecords} records`;
+                    if (healthSummary.lastCheckup)
+                        petDetail += `, last checkup: ${new Date(healthSummary.lastCheckup).toLocaleDateString()}`;
+                    if (healthSummary.upcomingCount)
+                        petDetail += `, ${healthSummary.upcomingCount} upcoming`;
+                    if (healthSummary.overdueCount)
+                        petDetail += `, ${healthSummary.overdueCount} overdue`;
+                    if (healthRecords.length > 0) {
+                        const recentRecords = healthRecords.slice(0, 3).map(r => `${r.type}: ${r.title} (${new Date(r.date).toLocaleDateString()})`);
+                        petDetail += `. Recent: ${recentRecords.join('; ')}`;
+                    }
+                    petDetails.push(petDetail);
+                }
+                catch (error) {
+                    let petDetail = `${pet.name}: ${pet.species} ${pet.breed}, ${pet.age}yo, ${pet.gender}, ${pet.healthStatus}`;
+                    if (pet.allergies?.length)
+                        petDetail += `, allergies: ${pet.allergies.join(', ')}`;
+                    petDetails.push(petDetail);
+                }
+            }
+            petInfo = petDetails.join('\n\n');
+        }
+        else {
+            petInfo = 'No pets registered';
+        }
+        let appointmentInfo = '';
+        if (upcomingAppointments.length > 0) {
+            const appointmentDetails = upcomingAppointments.map(apt => `${apt.petId?.name || 'Pet'}: ${apt.reason} with ${apt.vetName} at ${apt.vetClinic} on ${new Date(apt.appointmentDate).toLocaleDateString()} (${apt.status})`);
+            appointmentInfo = `\n\nUpcoming Appointments: ${appointmentDetails.join('; ')}`;
+        }
+        const fullContext = `You are Dr. Woofson, a professional AI veterinarian. Be helpful and concise. Keep responses under 100 words. Address ${userName} by name. Reference specific pet details when relevant.
+
+${petInfo}${appointmentInfo}
+${context ? `Context: ${context}` : ''}`;
+        const prompt = `${fullContext}\n\n${userName}: ${message}\n\nDr. Woofson (be brief and professional):`;
         try {
             const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
                 method: 'POST',
@@ -1232,7 +1295,7 @@ ${context ? `\n\nAdditional Context: ${context}` : ''}`;
                     model: 'mistral-large-latest',
                     messages: [{ role: 'user', content: prompt }],
                     temperature: 0.7,
-                    max_tokens: 500
+                    max_tokens: 150
                 })
             });
             if (!response.ok) {
@@ -1251,42 +1314,12 @@ ${context ? `\n\nAdditional Context: ${context}` : ''}`;
         }
         catch (error) {
             console.error('AI Chat Error:', error);
-            const messageLower = message.toLowerCase();
-            let fallbackResponse = `**Dr. Woofson here!** 🐾 Hello ${userName}! `;
-            if (messageLower.includes('records') || messageLower.includes('database') || messageLower.includes('db')) {
-                if (petContext) {
-                    fallbackResponse += `You're absolutely right! I do have access to Luna's records in our database. Here's what I can see:\n\n${petContext.substring(0, 300)}...\n\nI'm having API connectivity issues right now, but your pet data is safely stored and accessible. `;
-                }
-                else {
-                    fallbackResponse += `You're right that I should have database access, but I'm not finding any pet records for your account right now. `;
-                }
-            }
-            else if (messageLower.includes('name') && messageLower.includes('luna')) {
-                fallbackResponse += `Your name is ${userName}, and I can see you're asking about Luna! `;
-                if (petContext.includes('Luna')) {
-                    fallbackResponse += `From your records, Luna appears to be a wonderful companion. `;
-                }
-            }
-            else if (messageLower.includes('luna')) {
-                fallbackResponse += `I can see you're asking about Luna! `;
-                if (petContext.includes('dog')) {
-                    fallbackResponse += `Luna seems like a special dog based on your profile. `;
-                }
-            }
-            else if (messageLower.includes('shadow')) {
-                fallbackResponse += `I can see you're asking about Shadow! `;
-                if (petContext.includes('cat')) {
-                    fallbackResponse += `Shadow sounds like a wonderful cat companion. `;
-                }
-            }
-            else if (messageLower.includes('name')) {
-                fallbackResponse += `Your name is ${userName}! `;
-            }
-            if (petContext) {
-                fallbackResponse += `I have access to your pet information, but I'm having connectivity issues right now. Please try again in a moment for detailed responses!`;
+            let fallbackResponse = `Hi ${userName}! `;
+            if (pets && pets.length > 0) {
+                fallbackResponse += `I can see your ${pets.length} pet${pets.length > 1 ? 's' : ''} (${pets.map(p => p.name).join(', ')}) but having connectivity issues. Please try again.`;
             }
             else {
-                fallbackResponse += `I'm here to help with your pet questions, but having connectivity issues. Please try again soon!`;
+                fallbackResponse += `I'm here to help with pet questions. Having connectivity issues - please try again.`;
             }
             return {
                 response: fallbackResponse,
@@ -1298,43 +1331,22 @@ ${context ? `\n\nAdditional Context: ${context}` : ''}`;
     async getTypingIndicator() {
         return {
             isTyping: true,
-            message: 'Dr. Woofson is thinking...',
+            message: 'Typing...',
             timestamp: new Date().toISOString()
         };
     }
     async getOfflineResponse(userId, message) {
-        const [user, petContext] = await Promise.all([
+        const [user, pets] = await Promise.all([
             this.userModel.findById(userId).exec(),
-            this.symptomCheckerService.extractPetContext(userId, message)
+            this.petsService.findByOwner(userId)
         ]);
         const userName = user ? user.firstName : 'there';
-        const messageLower = message.toLowerCase();
-        let response = `**Dr. Woofson here!** 🐾 Hello ${userName}! `;
-        if (messageLower.includes('records') || messageLower.includes('database') || messageLower.includes('db')) {
-            if (petContext) {
-                response += `You're absolutely right! I do have access to your pet records. Here's what I can see:\n\n${petContext}\n\nThis data is from our database. I'm having AI connectivity issues, but your pet information is safely stored and accessible!`;
-            }
-            else {
-                response += `You're right that I should have database access. I'm not finding any pet records for your account right now - you may need to add your pets to the system first.`;
-            }
-        }
-        else if (petContext) {
-            if (messageLower.includes('luna')) {
-                response += `I can see you're asking about Luna! Based on your pet records, Luna is a wonderful companion. `;
-            }
-            else if (messageLower.includes('shadow')) {
-                response += `I can see you're asking about Shadow! Based on your pet records, Shadow seems like a special pet. `;
-            }
-            else {
-                response += `I can see you have pets in your profile. `;
-            }
-            response += `While I'm having AI connectivity issues, I have access to your pet data.`;
+        let response = `Hi ${userName}! `;
+        if (pets.length > 0) {
+            response += `I can see your ${pets.length} pet${pets.length > 1 ? 's' : ''} (${pets.map(p => p.name).join(', ')}) but having connectivity issues. Please try again.`;
         }
         else {
-            response += `I'm here to help with pet health questions, but having connectivity issues. Please try again soon!`;
-        }
-        if (messageLower.includes('name')) {
-            response += ` Your name is ${userName}.`;
+            response += `I'm here to help with pet questions. Having connectivity issues - please try again.`;
         }
         return {
             response,
@@ -1346,8 +1358,8 @@ ${context ? `\n\nAdditional Context: ${context}` : ''}`;
 exports.AiChatService = AiChatService;
 exports.AiChatService = AiChatService = __decorate([
     (0, common_1.Injectable)(),
-    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof symptom_checker_service_1.SymptomCheckerService !== "undefined" && symptom_checker_service_1.SymptomCheckerService) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+    __param(4, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof symptom_checker_service_1.SymptomCheckerService !== "undefined" && symptom_checker_service_1.SymptomCheckerService) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object, typeof (_c = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _c : Object, typeof (_d = typeof appointments_service_1.AppointmentsService !== "undefined" && appointments_service_1.AppointmentsService) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
 ], AiChatService);
 
 
@@ -6484,7 +6496,7 @@ let PetsService = class PetsService {
         return pet.save();
     }
     async findByOwner(ownerId, species) {
-        const filter = { ownerId, isActive: true };
+        const filter = { ownerId: new mongoose_2.Types.ObjectId(ownerId), isActive: true };
         if (species)
             filter.species = species;
         return this.petModel.find(filter).sort({ name: 1 }).exec();

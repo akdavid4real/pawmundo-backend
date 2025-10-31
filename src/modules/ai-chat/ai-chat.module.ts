@@ -3,8 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AiChatController } from './ai-chat.controller';
 import { AiChatService } from './ai-chat.service';
 import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
+import { PetsService } from '../pets/pets.service';
+import { HealthRecordsService } from '../health-records/health-records.service';
+import { AppointmentsService } from '../appointments/appointments.service';
 import { Pet, PetSchema } from '../pets/schemas/pet.schema';
 import { HealthRecord, HealthRecordSchema } from '../health-records/schemas/health-record.schema';
+import { Appointment, AppointmentSchema } from '../appointments/schemas/appointment.schema';
 import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 
@@ -13,11 +17,12 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
     MongooseModule.forFeature([
       { name: Pet.name, schema: PetSchema },
       { name: HealthRecord.name, schema: HealthRecordSchema },
+      { name: Appointment.name, schema: AppointmentSchema },
       { name: Medication.name, schema: MedicationSchema },
       { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [AiChatController],
-  providers: [AiChatService, SymptomCheckerService],
+  providers: [AiChatService, SymptomCheckerService, PetsService, HealthRecordsService, AppointmentsService],
 })
 export class AiChatModule {}

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Pet } from './schemas/pet.schema';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class PetsService {
   }
 
   async findByOwner(ownerId: string, species?: string): Promise<Pet[]> {
-    const filter: any = { ownerId, isActive: true };
+    const filter: any = { ownerId: new Types.ObjectId(ownerId), isActive: true };
     if (species) filter.species = species;
     return this.petModel.find(filter).sort({ name: 1 }).exec();
   }
