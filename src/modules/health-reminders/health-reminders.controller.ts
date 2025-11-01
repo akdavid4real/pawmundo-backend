@@ -14,13 +14,13 @@ export class HealthRemindersController {
   @ApiResponse({ status: 200, description: 'User health reminders' })
   @Get()
   async getReminders(@Request() req) {
-    return this.healthRemindersService.getRemindersForUser(req.user._id);
+    return this.healthRemindersService.getRemindersForUser(req.user.userId);
   }
 
   @ApiOperation({ summary: 'Create vaccination reminders for pet' })
   @ApiResponse({ status: 201, description: 'Vaccination reminders created' })
   @Post('pet/:petId/vaccinations')
   async createVaccinationReminders(@Param('petId') petId: string, @Request() req) {
-    return this.healthRemindersService.createVaccinationReminders(petId, req.user._id);
+    return this.healthRemindersService.createVaccinationReminders(petId, req.user.userId);
   }
 }

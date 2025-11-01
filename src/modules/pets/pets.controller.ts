@@ -90,7 +90,7 @@ export class PetsController {
   })
   @Post()
   async create(@Request() req, @Body() createPetDto: CreatePetDto) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
     const petData = {
       ...createPetDto,
       ownerId: userId,
@@ -147,7 +147,8 @@ export class PetsController {
   })
   @Get()
   async findMyPets(@Request() req, @Query('species') species?: string) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
+    console.log('🐾 Finding pets for userId:', userId);
     return this.petsService.findByOwner(userId, species);
   }
 
@@ -234,7 +235,7 @@ export class PetsController {
   })
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
     return this.petsService.findById(id, userId);
   }
 
@@ -242,7 +243,7 @@ export class PetsController {
   @ApiResponse({ status: 200, description: 'Pet updated successfully' })
   @Put(':id')
   async update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto, @Request() req) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
     const petData: any = { ...updatePetDto };
     if (updatePetDto.dateOfBirth) {
       petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
@@ -254,7 +255,7 @@ export class PetsController {
   @ApiResponse({ status: 200, description: 'Health status updated' })
   @Put(':id/health-status')
   async updateHealthStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
     return this.petsService.updateHealthStatus(id, userId, status);
   }
 
@@ -262,7 +263,7 @@ export class PetsController {
   @ApiResponse({ status: 200, description: 'Pet deleted successfully' })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.userId;
     return this.petsService.delete(id, userId);
   }
 }

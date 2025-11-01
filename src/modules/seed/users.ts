@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
-const akdavidUserId = new Types.ObjectId();
+const akdavidUserId = new Types.ObjectId('507f1f77bcf86cd799439011');
 
 const sampleUsers = [
   {

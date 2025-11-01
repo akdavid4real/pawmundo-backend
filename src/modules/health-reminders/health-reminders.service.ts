@@ -18,15 +18,22 @@ export class HealthRemindersService {
   }
 
   async getRemindersForUser(userId: string) {
+    console.log('🔍 Getting reminders for userId:', userId);
+    const userPets = await this.petsService.findByOwner(userId);
+    console.log('🐾 User pets:', userPets.length);
+    
     const [upcoming, overdue] = await Promise.all([
       this.healthRecordsService.getUpcomingReminders(userId),
       this.healthRecordsService.getOverdueReminders(userId),
     ]);
+    
+    console.log('📅 Upcoming records:', upcoming.length);
+    console.log('⏰ Overdue records:', overdue.length);
 
     return {
       upcoming: upcoming.map(record => ({
         id: record._id,
-        petName: (record.petId as any)?.name,
+        petName: (record.petId as any)?.name || 'Unknown',
         type: record.type,
         title: record.title,
         dueDate: record.nextDueDate,
@@ -34,7 +41,7 @@ export class HealthRemindersService {
       })),
       overdue: overdue.map(record => ({
         id: record._id,
-        petName: (record.petId as any)?.name,
+        petName: (record.petId as any)?.name || 'Unknown',
         type: record.type,
         title: record.title,
         dueDate: record.nextDueDate,

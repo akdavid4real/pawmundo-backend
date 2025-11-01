@@ -9,11 +9,11 @@ export class CreateHealthRecordDto {
 
   @ApiProperty({ 
     description: 'Record type',
-    enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']
+    enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'grooming', 'other']
   })
   @IsString()
   @IsNotEmpty()
-  @IsEnum(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other'])
+  @IsEnum(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'grooming', 'other'])
   type: string;
 
   @ApiProperty({ description: 'Record title', example: 'Annual Vaccination' })
@@ -78,4 +78,8 @@ export class CreateHealthRecordDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({ description: 'Is this a reminder' })
+  @IsOptional()
+  isReminder?: boolean;
 }

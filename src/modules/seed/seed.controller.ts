@@ -14,3 +14,5 @@ export class SeedController {
     return this.seedService.seedDatabase();
   }
 }
+
+

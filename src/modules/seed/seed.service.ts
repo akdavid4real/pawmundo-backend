@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../auth/schemas/user.schema';
-import { sampleUsers, samplePets, sampleHealthRecords, sampleMedications } from './index';
+import { sampleUsers, samplePets, sampleHealthRecords, sampleMedications, sampleNotifications } from './index';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 
@@ -22,6 +22,7 @@ export class SeedService {
       await db.collection('pets').deleteMany({});
       await db.collection('healthrecords').deleteMany({});
       await db.collection('medications').deleteMany({});
+      await db.collection('notifications').deleteMany({});
 
       // Create users
       await this.userModel.insertMany(sampleUsers);
@@ -29,6 +30,7 @@ export class SeedService {
       await db.collection('pets').insertMany(samplePets);
       await db.collection('healthrecords').insertMany(sampleHealthRecords);
       await db.collection('medications').insertMany(sampleMedications);
+      await db.collection('notifications').insertMany(sampleNotifications);
 
       return {
         message: 'Database seeded successfully!',
@@ -37,6 +39,7 @@ export class SeedService {
           pets: samplePets.length,
           healthRecords: sampleHealthRecords.length,
           medications: sampleMedications.length,
+          notifications: sampleNotifications.length,
         },
       };
     } catch (error) {

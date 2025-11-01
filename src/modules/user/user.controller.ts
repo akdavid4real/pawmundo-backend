@@ -10,11 +10,13 @@ export class UserController {
 
   @Get('profile')
   async getProfile(@Request() req) {
-    return this.userService.findById(req.user._id);
+    const userId = req.user.userId || req.user._id || req.user.id;
+    return this.userService.findById(userId);
   }
 
   @Put('profile')
   async updateProfile(@Request() req, @Body() updateData: UpdateUserDto) {
-    return this.userService.updateProfile(req.user._id, updateData);
+    const userId = req.user.userId || req.user._id || req.user.id;
+    return this.userService.updateProfile(userId, updateData);
   }
 }

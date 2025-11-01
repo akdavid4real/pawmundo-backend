@@ -251,6 +251,33 @@ exports.GlobalExceptionFilter = GlobalExceptionFilter = GlobalExceptionFilter_1 
 
 /***/ }),
 
+/***/ "./src/common/guards/jwt-auth.guard.ts":
+/*!*********************************************!*\
+  !*** ./src/common/guards/jwt-auth.guard.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JwtAuthGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+};
+exports.JwtAuthGuard = JwtAuthGuard;
+exports.JwtAuthGuard = JwtAuthGuard = __decorate([
+    (0, common_1.Injectable)()
+], JwtAuthGuard);
+
+
+/***/ }),
+
 /***/ "./src/common/utils/database-error.handler.ts":
 /*!****************************************************!*\
   !*** ./src/common/utils/database-error.handler.ts ***!
@@ -1087,13 +1114,13 @@ let AiChatController = class AiChatController {
         this.aiChatService = aiChatService;
     }
     async chat(req, aiChatDto) {
-        return this.aiChatService.chat(req.user._id.toString(), aiChatDto);
+        return this.aiChatService.chat(req.user.userId, aiChatDto);
     }
     async getTypingIndicator() {
         return this.aiChatService.getTypingIndicator();
     }
     async getOfflineResponse(req, aiChatDto) {
-        return this.aiChatService.getOfflineResponse(req.user._id.toString(), aiChatDto.message);
+        return this.aiChatService.getOfflineResponse(req.user.userId, aiChatDto.message);
     }
 };
 exports.AiChatController = AiChatController;
@@ -2592,7 +2619,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         if (!user) {
             throw new common_1.UnauthorizedException('User not found');
         }
-        return user;
+        return { userId: user._id.toString(), email: user.email, role: user.role };
     }
 };
 exports.JwtStrategy = JwtStrategy;
@@ -3700,11 +3727,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Record type',
-        enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']
+        enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'grooming', 'other']
     }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'other']),
+    (0, class_validator_1.IsEnum)(['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'grooming', 'other']),
     __metadata("design:type", String)
 ], CreateHealthRecordDto.prototype, "type", void 0);
 __decorate([
@@ -3782,6 +3809,11 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateHealthRecordDto.prototype, "notes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is this a reminder' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], CreateHealthRecordDto.prototype, "isReminder", void 0);
 
 
 /***/ }),
@@ -3838,28 +3870,37 @@ let HealthRecordsController = class HealthRecordsController {
         this.healthRecordsService = healthRecordsService;
     }
     async create(req, createDto) {
-        const healthRecordData = {
-            ...createDto,
-            petId: new mongoose_1.Types.ObjectId(createDto.petId),
-            date: new Date(createDto.date),
-            nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : undefined
-        };
-        return this.healthRecordsService.create(req.user._id, healthRecordData);
+        console.log('📝 Create health record DTO:', createDto);
+        console.log('👤 User ID:', req.user.userId);
+        try {
+            const healthRecordData = {
+                ...createDto,
+                petId: new mongoose_1.Types.ObjectId(createDto.petId),
+                date: new Date(createDto.date),
+                nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : undefined
+            };
+            console.log('✅ Processed data:', healthRecordData);
+            return await this.healthRecordsService.create(req.user.userId, healthRecordData);
+        }
+        catch (error) {
+            console.error('❌ Controller error:', error);
+            throw error;
+        }
     }
     async findByPet(petId, type, req) {
-        return this.healthRecordsService.findByPet(petId, req.user._id, type);
+        return this.healthRecordsService.findByPet(petId, req.user.userId, type);
     }
     async getUpcomingReminders(req) {
-        return this.healthRecordsService.getUpcomingReminders(req.user._id);
+        return this.healthRecordsService.getUpcomingReminders(req.user.userId);
     }
     async getVaccinations(petId, req) {
-        return this.healthRecordsService.getVaccinations(petId, req.user._id);
+        return this.healthRecordsService.getVaccinations(petId, req.user.userId);
     }
     async getHealthSummary(petId, req) {
-        return this.healthRecordsService.getHealthSummary(petId, req.user._id);
+        return this.healthRecordsService.getHealthSummary(petId, req.user.userId);
     }
     async findOne(id, req) {
-        return this.healthRecordsService.findById(id, req.user._id);
+        return this.healthRecordsService.findById(id, req.user.userId);
     }
     async update(id, updateDto, req) {
         const healthRecordData = { ...updateDto };
@@ -3872,25 +3913,25 @@ let HealthRecordsController = class HealthRecordsController {
         if (updateDto.nextDueDate) {
             healthRecordData.nextDueDate = new Date(updateDto.nextDueDate);
         }
-        return this.healthRecordsService.update(id, req.user._id, healthRecordData);
+        return this.healthRecordsService.update(id, req.user.userId, healthRecordData);
     }
     async remove(id, req) {
-        return this.healthRecordsService.delete(id, req.user._id);
+        return this.healthRecordsService.delete(id, req.user.userId);
     }
     async getOverdueReminders(req) {
-        return this.healthRecordsService.getOverdueReminders(req.user._id);
+        return this.healthRecordsService.getOverdueReminders(req.user.userId);
     }
     async addAttachment(id, url, req) {
-        return this.healthRecordsService.addAttachment(id, req.user._id, url);
+        return this.healthRecordsService.addAttachment(id, req.user.userId, url);
     }
     async removeAttachment(id, url, req) {
-        return this.healthRecordsService.removeAttachment(id, req.user._id, url);
+        return this.healthRecordsService.removeAttachment(id, req.user.userId, url);
     }
     async getRecordsByDateRange(petId, startDate, endDate, req) {
-        return this.healthRecordsService.getRecordsByDateRange(petId, req.user._id, new Date(startDate), new Date(endDate));
+        return this.healthRecordsService.getRecordsByDateRange(petId, req.user.userId, new Date(startDate), new Date(endDate));
     }
     async getHealthAnalytics(req) {
-        return this.healthRecordsService.getHealthAnalytics(req.user._id);
+        return this.healthRecordsService.getHealthAnalytics(req.user.userId);
     }
 };
 exports.HealthRecordsController = HealthRecordsController;
@@ -4113,14 +4154,18 @@ let HealthRecordsService = class HealthRecordsService {
         this.petsService = petsService;
     }
     async create(userId, recordData) {
-        await this.petsService.findById(recordData.petId.toString(), userId);
-        const processedData = {
-            ...recordData,
-            date: new Date(recordData.date),
-            nextDueDate: recordData.nextDueDate ? new Date(recordData.nextDueDate) : undefined
-        };
-        const record = new this.healthRecordModel(processedData);
-        return record.save();
+        try {
+            const petIdStr = recordData.petId?.toString();
+            if (petIdStr) {
+                await this.petsService.findById(petIdStr, userId);
+            }
+            const record = new this.healthRecordModel(recordData);
+            return await record.save();
+        }
+        catch (error) {
+            console.error('Error creating health record:', error);
+            throw error;
+        }
     }
     async findByPet(petId, userId, type) {
         await this.petsService.findById(petId, userId);
@@ -4149,14 +4194,16 @@ let HealthRecordsService = class HealthRecordsService {
     async getUpcomingReminders(userId) {
         const today = new Date();
         const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const { Types } = __webpack_require__(/*! mongoose */ "mongoose");
         return this.healthRecordModel
             .find({
             nextDueDate: { $gte: today, $lte: nextMonth },
+            isReminder: true,
             isActive: true
         })
             .populate({
             path: 'petId',
-            match: { ownerId: userId, isActive: true },
+            match: { ownerId: new Types.ObjectId(userId), isActive: true },
             select: 'name species breed'
         })
             .sort({ nextDueDate: 1 })
@@ -4213,14 +4260,16 @@ let HealthRecordsService = class HealthRecordsService {
     }
     async getOverdueReminders(userId) {
         const today = new Date();
+        const { Types } = __webpack_require__(/*! mongoose */ "mongoose");
         return this.healthRecordModel
             .find({
             nextDueDate: { $lt: today },
+            isReminder: true,
             isActive: true
         })
             .populate({
             path: 'petId',
-            match: { ownerId: userId, isActive: true },
+            match: { ownerId: new Types.ObjectId(userId), isActive: true },
             select: 'name species breed'
         })
             .sort({ nextDueDate: 1 })
@@ -4435,10 +4484,10 @@ let HealthRemindersController = class HealthRemindersController {
         this.healthRemindersService = healthRemindersService;
     }
     async getReminders(req) {
-        return this.healthRemindersService.getRemindersForUser(req.user._id);
+        return this.healthRemindersService.getRemindersForUser(req.user.userId);
     }
     async createVaccinationReminders(petId, req) {
-        return this.healthRemindersService.createVaccinationReminders(petId, req.user._id);
+        return this.healthRemindersService.createVaccinationReminders(petId, req.user.userId);
     }
 };
 exports.HealthRemindersController = HealthRemindersController;
@@ -4539,14 +4588,19 @@ let HealthRemindersService = class HealthRemindersService {
         console.log('Checking for health reminders...');
     }
     async getRemindersForUser(userId) {
+        console.log('🔍 Getting reminders for userId:', userId);
+        const userPets = await this.petsService.findByOwner(userId);
+        console.log('🐾 User pets:', userPets.length);
         const [upcoming, overdue] = await Promise.all([
             this.healthRecordsService.getUpcomingReminders(userId),
             this.healthRecordsService.getOverdueReminders(userId),
         ]);
+        console.log('📅 Upcoming records:', upcoming.length);
+        console.log('⏰ Overdue records:', overdue.length);
         return {
             upcoming: upcoming.map(record => ({
                 id: record._id,
-                petName: record.petId?.name,
+                petName: record.petId?.name || 'Unknown',
                 type: record.type,
                 title: record.title,
                 dueDate: record.nextDueDate,
@@ -4554,7 +4608,7 @@ let HealthRemindersService = class HealthRemindersService {
             })),
             overdue: overdue.map(record => ({
                 id: record._id,
-                petName: record.petId?.name,
+                petName: record.petId?.name || 'Unknown',
                 type: record.type,
                 title: record.title,
                 dueDate: record.nextDueDate,
@@ -5875,6 +5929,207 @@ exports.MedicationSchema = mongoose_1.SchemaFactory.createForClass(Medication);
 
 /***/ }),
 
+/***/ "./src/modules/notifications/dto/update-preference.dto.ts":
+/*!****************************************************************!*\
+  !*** ./src/modules/notifications/dto/update-preference.dto.ts ***!
+  \****************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdatePreferenceDto = exports.PetNotificationSettingsDto = void 0;
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class PetNotificationSettingsDto {
+}
+exports.PetNotificationSettingsDto = PetNotificationSettingsDto;
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "appointments", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "medications", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "vaccinations", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "checkups", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "healthAlerts", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PetNotificationSettingsDto.prototype, "weightChanges", void 0);
+class UpdatePreferenceDto {
+}
+exports.UpdatePreferenceDto = UpdatePreferenceDto;
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdatePreferenceDto.prototype, "globalEnabled", void 0);
+__decorate([
+    (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdatePreferenceDto.prototype, "petId", void 0);
+__decorate([
+    (0, class_validator_1.IsObject)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", PetNotificationSettingsDto)
+], UpdatePreferenceDto.prototype, "petSettings", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdatePreferenceDto.prototype, "emailNotifications", void 0);
+__decorate([
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdatePreferenceDto.prototype, "pushNotifications", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdatePreferenceDto.prototype, "reminderHoursBefore", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/notifications/notifications.controller.ts":
+/*!***************************************************************!*\
+  !*** ./src/modules/notifications/notifications.controller.ts ***!
+  \***************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const notifications_service_1 = __webpack_require__(/*! ./notifications.service */ "./src/modules/notifications/notifications.service.ts");
+const update_preference_dto_1 = __webpack_require__(/*! ./dto/update-preference.dto */ "./src/modules/notifications/dto/update-preference.dto.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../../common/guards/jwt-auth.guard */ "./src/common/guards/jwt-auth.guard.ts");
+let NotificationsController = class NotificationsController {
+    constructor(notificationsService) {
+        this.notificationsService = notificationsService;
+    }
+    async getNotifications(req, petId) {
+        return this.notificationsService.findAllByUser(req.user.userId, petId);
+    }
+    async getUnreadCount(req) {
+        const count = await this.notificationsService.getUnreadCount(req.user.userId);
+        return { count };
+    }
+    async markAsRead(id, req) {
+        return this.notificationsService.markAsRead(id, req.user.userId);
+    }
+    async markAllAsRead(req) {
+        await this.notificationsService.markAllAsRead(req.user.userId);
+        return { success: true };
+    }
+    async getPreferences(req) {
+        return this.notificationsService.getPreferences(req.user.userId);
+    }
+    async updatePreferences(req, updateDto) {
+        try {
+            return await this.notificationsService.updatePreferences(req.user.userId, updateDto);
+        }
+        catch (error) {
+            console.error('Update preferences error:', error);
+            throw error;
+        }
+    }
+};
+exports.NotificationsController = NotificationsController;
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('petId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getNotifications", null);
+__decorate([
+    (0, common_1.Get)('unread-count'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getUnreadCount", null);
+__decorate([
+    (0, common_1.Patch)(':id/read'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "markAsRead", null);
+__decorate([
+    (0, common_1.Patch)('read-all'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "markAllAsRead", null);
+__decorate([
+    (0, common_1.Get)('preferences'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getPreferences", null);
+__decorate([
+    (0, common_1.Patch)('preferences'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_b = typeof update_preference_dto_1.UpdatePreferenceDto !== "undefined" && update_preference_dto_1.UpdatePreferenceDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updatePreferences", null);
+exports.NotificationsController = NotificationsController = __decorate([
+    (0, common_1.Controller)('notifications'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_a = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _a : Object])
+], NotificationsController);
+
+
+/***/ }),
+
 /***/ "./src/modules/notifications/notifications.module.ts":
 /*!***********************************************************!*\
   !*** ./src/modules/notifications/notifications.module.ts ***!
@@ -5891,12 +6146,304 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const notifications_controller_1 = __webpack_require__(/*! ./notifications.controller */ "./src/modules/notifications/notifications.controller.ts");
+const notifications_service_1 = __webpack_require__(/*! ./notifications.service */ "./src/modules/notifications/notifications.service.ts");
+const notification_schema_1 = __webpack_require__(/*! ./schemas/notification.schema */ "./src/modules/notifications/schemas/notification.schema.ts");
+const notification_preference_schema_1 = __webpack_require__(/*! ./schemas/notification-preference.schema */ "./src/modules/notifications/schemas/notification-preference.schema.ts");
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
 exports.NotificationsModule = NotificationsModule = __decorate([
-    (0, common_1.Module)({})
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([
+                { name: notification_schema_1.Notification.name, schema: notification_schema_1.NotificationSchema },
+                { name: notification_preference_schema_1.NotificationPreference.name, schema: notification_preference_schema_1.NotificationPreferenceSchema },
+            ]),
+        ],
+        controllers: [notifications_controller_1.NotificationsController],
+        providers: [notifications_service_1.NotificationsService],
+        exports: [notifications_service_1.NotificationsService],
+    })
 ], NotificationsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/notifications/notifications.service.ts":
+/*!************************************************************!*\
+  !*** ./src/modules/notifications/notifications.service.ts ***!
+  \************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationsService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const notification_schema_1 = __webpack_require__(/*! ./schemas/notification.schema */ "./src/modules/notifications/schemas/notification.schema.ts");
+const notification_preference_schema_1 = __webpack_require__(/*! ./schemas/notification-preference.schema */ "./src/modules/notifications/schemas/notification-preference.schema.ts");
+let NotificationsService = class NotificationsService {
+    constructor(notificationModel, preferenceModel) {
+        this.notificationModel = notificationModel;
+        this.preferenceModel = preferenceModel;
+    }
+    async create(createDto) {
+        const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
+        if (!shouldSend)
+            return null;
+        const notification = new this.notificationModel(createDto);
+        return notification.save();
+    }
+    async findAllByUser(userId, petId) {
+        const query = { userId: new mongoose_2.Types.ObjectId(userId), isActive: true };
+        if (petId)
+            query.petId = new mongoose_2.Types.ObjectId(petId);
+        return this.notificationModel.find(query).sort({ createdAt: -1 }).limit(50).exec();
+    }
+    async markAsRead(notificationId, userId) {
+        return this.notificationModel.findOneAndUpdate({ _id: new mongoose_2.Types.ObjectId(notificationId), userId: new mongoose_2.Types.ObjectId(userId) }, { isRead: true }, { new: true }).exec();
+    }
+    async markAllAsRead(userId) {
+        await this.notificationModel.updateMany({ userId: new mongoose_2.Types.ObjectId(userId), isRead: false }, { isRead: true }).exec();
+    }
+    async getUnreadCount(userId) {
+        return this.notificationModel.countDocuments({
+            userId: new mongoose_2.Types.ObjectId(userId),
+            isRead: false,
+            isActive: true
+        }).exec();
+    }
+    async getPreferences(userId) {
+        let prefs = await this.preferenceModel.findOne({ userId: new mongoose_2.Types.ObjectId(userId) }).exec();
+        if (!prefs) {
+            prefs = await this.preferenceModel.create({ userId: new mongoose_2.Types.ObjectId(userId), petSettings: {} });
+        }
+        return prefs;
+    }
+    async updatePreferences(userId, updateDto) {
+        try {
+            const prefs = await this.getPreferences(userId);
+            if (updateDto.globalEnabled !== undefined)
+                prefs.globalEnabled = updateDto.globalEnabled;
+            if (updateDto.emailNotifications !== undefined)
+                prefs.emailNotifications = updateDto.emailNotifications;
+            if (updateDto.pushNotifications !== undefined)
+                prefs.pushNotifications = updateDto.pushNotifications;
+            if (updateDto.reminderHoursBefore !== undefined)
+                prefs.reminderHoursBefore = updateDto.reminderHoursBefore;
+            if (updateDto.petId && updateDto.petSettings) {
+                if (!prefs.petSettings)
+                    prefs.petSettings = {};
+                prefs.petSettings[updateDto.petId] = updateDto.petSettings;
+                prefs.markModified('petSettings');
+            }
+            return await prefs.save();
+        }
+        catch (error) {
+            console.error('Service update preferences error:', error);
+            throw error;
+        }
+    }
+    async shouldSendNotification(userId, petId, type) {
+        const prefs = await this.getPreferences(userId);
+        if (!prefs.globalEnabled)
+            return false;
+        if (petId) {
+            const petSettings = prefs.petSettings[petId];
+            if (!petSettings)
+                return true;
+            const typeMap = {
+                'appointment': petSettings.appointments,
+                'medication': petSettings.medications,
+                'vaccination': petSettings.vaccinations,
+                'checkup': petSettings.checkups,
+                'health_alert': petSettings.healthAlerts,
+                'weight': petSettings.weightChanges,
+            };
+            return typeMap[type] !== false;
+        }
+        return true;
+    }
+    async notifyAppointment(userId, petId, appointmentDate, vetName) {
+        await this.create({
+            userId,
+            petId,
+            title: 'Upcoming Appointment',
+            message: `Appointment with ${vetName} on ${appointmentDate.toLocaleDateString()}`,
+            type: 'appointment',
+            actionUrl: `/appointments`,
+        });
+    }
+    async notifyMedication(userId, petId, medicationName) {
+        await this.create({
+            userId,
+            petId,
+            title: 'Medication Reminder',
+            message: `Time to give ${medicationName}`,
+            type: 'medication',
+            actionUrl: `/pets/${petId}/medications`,
+        });
+    }
+    async notifyVaccination(userId, petId, vaccineName, dueDate) {
+        await this.create({
+            userId,
+            petId,
+            title: 'Vaccination Due',
+            message: `${vaccineName} vaccination due on ${dueDate.toLocaleDateString()}`,
+            type: 'vaccination',
+            actionUrl: `/pets/${petId}/health-records`,
+        });
+    }
+};
+exports.NotificationsService = NotificationsService;
+exports.NotificationsService = NotificationsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
+    __param(1, (0, mongoose_1.InjectModel)(notification_preference_schema_1.NotificationPreference.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+], NotificationsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/notifications/schemas/notification-preference.schema.ts":
+/*!*****************************************************************************!*\
+  !*** ./src/modules/notifications/schemas/notification-preference.schema.ts ***!
+  \*****************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationPreferenceSchema = exports.NotificationPreference = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let NotificationPreference = class NotificationPreference {
+};
+exports.NotificationPreference = NotificationPreference;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true, unique: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], NotificationPreference.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], NotificationPreference.prototype, "globalEnabled", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.Mixed, default: {} }),
+    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+], NotificationPreference.prototype, "petSettings", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], NotificationPreference.prototype, "emailNotifications", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], NotificationPreference.prototype, "pushNotifications", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 24 }),
+    __metadata("design:type", Number)
+], NotificationPreference.prototype, "reminderHoursBefore", void 0);
+exports.NotificationPreference = NotificationPreference = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], NotificationPreference);
+exports.NotificationPreferenceSchema = mongoose_1.SchemaFactory.createForClass(NotificationPreference);
+
+
+/***/ }),
+
+/***/ "./src/modules/notifications/schemas/notification.schema.ts":
+/*!******************************************************************!*\
+  !*** ./src/modules/notifications/schemas/notification.schema.ts ***!
+  \******************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NotificationSchema = exports.Notification = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let Notification = class Notification {
+};
+exports.Notification = Notification;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], Notification.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet' }),
+    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+], Notification.prototype, "petId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Notification.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Notification.prototype, "message", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: ['appointment', 'medication', 'vaccination', 'checkup', 'weight', 'health_alert', 'reminder', 'info'] }),
+    __metadata("design:type", String)
+], Notification.prototype, "type", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Notification.prototype, "isRead", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Notification.prototype, "actionUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", typeof (_c = typeof Record !== "undefined" && Record) === "function" ? _c : Object)
+], Notification.prototype, "metadata", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], Notification.prototype, "isActive", void 0);
+exports.Notification = Notification = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], Notification);
+exports.NotificationSchema = mongoose_1.SchemaFactory.createForClass(Notification);
+exports.NotificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+exports.NotificationSchema.index({ userId: 1, petId: 1, type: 1 });
 
 
 /***/ }),
@@ -6120,7 +6667,7 @@ let PetsController = class PetsController {
         this.petsService = petsService;
     }
     async create(req, createPetDto) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
         const petData = {
             ...createPetDto,
             ownerId: userId,
@@ -6129,15 +6676,16 @@ let PetsController = class PetsController {
         return this.petsService.create(petData);
     }
     async findMyPets(req, species) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
+        console.log('🐾 Finding pets for userId:', userId);
         return this.petsService.findByOwner(userId, species);
     }
     async findOne(id, req) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
         return this.petsService.findById(id, userId);
     }
     async update(id, updatePetDto, req) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
         const petData = { ...updatePetDto };
         if (updatePetDto.dateOfBirth) {
             petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
@@ -6145,11 +6693,11 @@ let PetsController = class PetsController {
         return this.petsService.update(id, userId, petData);
     }
     async updateHealthStatus(id, status, req) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
         return this.petsService.updateHealthStatus(id, userId, status);
     }
     async remove(id, req) {
-        const userId = req.user._id || req.user.id;
+        const userId = req.user.userId;
         return this.petsService.delete(id, userId);
     }
 };
@@ -6820,7 +7368,7 @@ module.exports = { sampleHealthRecords: exports.sampleHealthRecords };
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sampleMedications = exports.sampleHealthRecords = exports.samplePets = exports.sampleUsers = void 0;
+exports.sampleNotifications = exports.sampleMedications = exports.sampleHealthRecords = exports.samplePets = exports.sampleUsers = void 0;
 const users_1 = __webpack_require__(/*! ./users */ "./src/modules/seed/users.ts");
 Object.defineProperty(exports, "sampleUsers", ({ enumerable: true, get: function () { return users_1.sampleUsers; } }));
 const pets_1 = __webpack_require__(/*! ./pets */ "./src/modules/seed/pets.ts");
@@ -6829,6 +7377,8 @@ const healthRecords_1 = __webpack_require__(/*! ./healthRecords */ "./src/module
 Object.defineProperty(exports, "sampleHealthRecords", ({ enumerable: true, get: function () { return healthRecords_1.sampleHealthRecords; } }));
 const medications_1 = __webpack_require__(/*! ./medications */ "./src/modules/seed/medications.ts");
 Object.defineProperty(exports, "sampleMedications", ({ enumerable: true, get: function () { return medications_1.sampleMedications; } }));
+const notifications_1 = __webpack_require__(/*! ./notifications */ "./src/modules/seed/notifications.ts");
+Object.defineProperty(exports, "sampleNotifications", ({ enumerable: true, get: function () { return notifications_1.sampleNotifications; } }));
 
 
 /***/ }),
@@ -6904,6 +7454,79 @@ exports.sampleMedications = [
     }
 ];
 module.exports = { sampleMedications: exports.sampleMedications };
+
+
+/***/ }),
+
+/***/ "./src/modules/seed/notifications.ts":
+/*!*******************************************!*\
+  !*** ./src/modules/seed/notifications.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sampleNotifications = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const users_1 = __webpack_require__(/*! ./users */ "./src/modules/seed/users.ts");
+const sampleNotifications = [
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId: users_1.akdavidUserId,
+        title: 'Vaccination Due',
+        message: 'Max is due for his annual rabies vaccination next week.',
+        type: 'vaccination',
+        isRead: false,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId: users_1.akdavidUserId,
+        title: 'Appointment Reminder',
+        message: 'You have a vet appointment tomorrow at 2:00 PM.',
+        type: 'appointment',
+        isRead: false,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId: users_1.akdavidUserId,
+        title: 'Medication Reminder',
+        message: 'Time to give Bella her heartworm medication.',
+        type: 'medication',
+        isRead: true,
+        isActive: true,
+        createdAt: new Date(Date.now() - 86400000),
+        updatedAt: new Date(Date.now() - 86400000)
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId: users_1.akdavidUserId,
+        title: 'Health Checkup',
+        message: 'Luna is due for her 6-month health checkup.',
+        type: 'checkup',
+        isRead: false,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId: users_1.akdavidUserId,
+        title: 'Weight Alert',
+        message: 'Max has gained 2 lbs since last checkup. Consider adjusting diet.',
+        type: 'weight',
+        isRead: false,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+    }
+];
+exports.sampleNotifications = sampleNotifications;
 
 
 /***/ }),
@@ -7149,10 +7772,12 @@ let SeedService = class SeedService {
             await db.collection('pets').deleteMany({});
             await db.collection('healthrecords').deleteMany({});
             await db.collection('medications').deleteMany({});
+            await db.collection('notifications').deleteMany({});
             await this.userModel.insertMany(index_1.sampleUsers);
             await db.collection('pets').insertMany(index_1.samplePets);
             await db.collection('healthrecords').insertMany(index_1.sampleHealthRecords);
             await db.collection('medications').insertMany(index_1.sampleMedications);
+            await db.collection('notifications').insertMany(index_1.sampleNotifications);
             return {
                 message: 'Database seeded successfully!',
                 summary: {
@@ -7160,6 +7785,7 @@ let SeedService = class SeedService {
                     pets: index_1.samplePets.length,
                     healthRecords: index_1.sampleHealthRecords.length,
                     medications: index_1.sampleMedications.length,
+                    notifications: index_1.sampleNotifications.length,
                 },
             };
         }
@@ -7190,7 +7816,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.akdavidUserId = exports.sampleUsers = void 0;
 const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
 const bcrypt = __webpack_require__(/*! bcrypt */ "bcrypt");
-const akdavidUserId = new mongoose_1.Types.ObjectId();
+const akdavidUserId = new mongoose_1.Types.ObjectId('507f1f77bcf86cd799439011');
 exports.akdavidUserId = akdavidUserId;
 const sampleUsers = [
     {
@@ -7341,10 +7967,10 @@ let SymptomCheckerController = class SymptomCheckerController {
         this.symptomCheckerService = symptomCheckerService;
     }
     async checkSymptoms(req, symptomCheckDto) {
-        return this.symptomCheckerService.checkSymptoms(req.user._id.toString(), symptomCheckDto);
+        return this.symptomCheckerService.checkSymptoms(req.user.userId, symptomCheckDto);
     }
     async chatWithAI(req, chatDto) {
-        const response = await this.symptomCheckerService.chatWithAI(req.user._id.toString(), chatDto.message);
+        const response = await this.symptomCheckerService.chatWithAI(req.user.userId, chatDto.message);
         return { response };
     }
 };
@@ -7800,10 +8426,12 @@ let UserController = class UserController {
         this.userService = userService;
     }
     async getProfile(req) {
-        return this.userService.findById(req.user._id);
+        const userId = req.user.userId || req.user._id || req.user.id;
+        return this.userService.findById(userId);
     }
     async updateProfile(req, updateData) {
-        return this.userService.updateProfile(req.user._id, updateData);
+        const userId = req.user.userId || req.user._id || req.user.id;
+        return this.userService.updateProfile(userId, updateData);
     }
 };
 exports.UserController = UserController;

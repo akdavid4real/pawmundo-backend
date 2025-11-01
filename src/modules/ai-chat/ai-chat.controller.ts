@@ -14,7 +14,7 @@ export class AiChatController {
   @Post()
   @ApiOperation({ summary: 'General AI chat with Mistral AI' })
   async chat(@Request() req, @Body() aiChatDto: AiChatDto) {
-    return this.aiChatService.chat(req.user._id.toString(), aiChatDto);
+    return this.aiChatService.chat(req.user.userId, aiChatDto);
   }
 
   @Post('typing')
@@ -26,6 +26,6 @@ export class AiChatController {
   @Post('offline')
   @ApiOperation({ summary: 'Get offline response with user context' })
   async getOfflineResponse(@Request() req, @Body() aiChatDto: AiChatDto) {
-    return this.aiChatService.getOfflineResponse(req.user._id.toString(), aiChatDto.message);
+    return this.aiChatService.getOfflineResponse(req.user.userId, aiChatDto.message);
   }
 }

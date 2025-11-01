@@ -12,14 +12,17 @@ export class HealthRecordsService {
   ) {}
 
   async create(userId: string, recordData: Partial<HealthRecord>): Promise<HealthRecord> {
-    await this.petsService.findById(recordData.petId.toString(), userId);
-    const processedData = {
-      ...recordData,
-      date: new Date(recordData.date),
-      nextDueDate: recordData.nextDueDate ? new Date(recordData.nextDueDate) : undefined
-    };
-    const record = new this.healthRecordModel(processedData);
-    return record.save();
+    try {
+      const petIdStr = recordData.petId?.toString();
+      if (petIdStr) {
+        await this.petsService.findById(petIdStr, userId);
+      }
+      const record = new this.healthRecordModel(recordData);
+      return await record.save();
+    } catch (error) {
+      console.error('Error creating health record:', error);
+      throw error;
+    }
   }
 
   async findByPet(petId: string, userId: string, type?: string): Promise<HealthRecord[]> {
@@ -51,15 +54,17 @@ export class HealthRecordsService {
   async getUpcomingReminders(userId: string): Promise<HealthRecord[]> {
     const today = new Date();
     const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const { Types } = require('mongoose');
     
     return this.healthRecordModel
       .find({
         nextDueDate: { $gte: today, $lte: nextMonth },
+        isReminder: true,
         isActive: true
       })
       .populate({
         path: 'petId',
-        match: { ownerId: userId, isActive: true },
+        match: { ownerId: new Types.ObjectId(userId), isActive: true },
         select: 'name species breed'
       })
       .sort({ nextDueDate: 1 })
@@ -121,15 +126,17 @@ export class HealthRecordsService {
 
   async getOverdueReminders(userId: string): Promise<HealthRecord[]> {
     const today = new Date();
+    const { Types } = require('mongoose');
     
     return this.healthRecordModel
       .find({
         nextDueDate: { $lt: today },
+        isReminder: true,
         isActive: true
       })
       .populate({
         path: 'petId',
-        match: { ownerId: userId, isActive: true },
+        match: { ownerId: new Types.ObjectId(userId), isActive: true },
         select: 'name species breed'
       })
       .sort({ nextDueDate: 1 })

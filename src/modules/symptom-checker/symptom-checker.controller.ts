@@ -20,13 +20,13 @@ export class SymptomCheckerController {
   @Post('check')
   @ApiOperation({ summary: 'AI-powered symptom analysis for pets' })
   async checkSymptoms(@Request() req, @Body() symptomCheckDto: SymptomCheckDto) {
-    return this.symptomCheckerService.checkSymptoms(req.user._id.toString(), symptomCheckDto);
+    return this.symptomCheckerService.checkSymptoms(req.user.userId, symptomCheckDto);
   }
 
   @Post('chat')
   @ApiOperation({ summary: 'Chat with Dr. Woofson AI veterinarian' })
   async chatWithAI(@Request() req, @Body() chatDto: ChatMessageDto) {
-    const response = await this.symptomCheckerService.chatWithAI(req.user._id.toString(), chatDto.message);
+    const response = await this.symptomCheckerService.chatWithAI(req.user.userId, chatDto.message);
     return { response };
   }
 }
