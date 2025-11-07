@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HealthRecordsService } from '../health-records/health-records.service';
 import { PetsService } from '../pets/pets.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class HealthRemindersService {
   constructor(
     private healthRecordsService: HealthRecordsService,
     private petsService: PetsService,
+    private notificationsService: NotificationsService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
@@ -30,9 +32,52 @@ export class HealthRemindersService {
     console.log('📅 Upcoming records:', upcoming.length);
     console.log('⏰ Overdue records:', overdue.length);
 
+    // Create notifications for overdue reminders (only if not already notified today)
+    for (const record of overdue) {
+      const petId = (record.petId as any)?._id || record.petId;
+      const petName = (record.petId as any)?.name || 'Your pet';
+      const daysOverdue = Math.ceil((Date.now() - record.nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      try {
+        await this.notificationsService.create({
+          userId,
+          petId: petId?.toString(),
+          title: `${record.title} Overdue`,
+          message: `${petName}'s ${record.title} is ${daysOverdue} days overdue`,
+          type: 'reminder',
+          actionUrl: `/pet/${petId}?tab=health`,
+        });
+      } catch (error) {
+        // Notification might already exist, ignore
+      }
+    }
+
+    // Create notifications for upcoming reminders (within 3 days)
+    for (const record of upcoming) {
+      const daysUntil = Math.ceil((record.nextDueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      if (daysUntil <= 3) {
+        const petId = (record.petId as any)?._id || record.petId;
+        const petName = (record.petId as any)?.name || 'Your pet';
+        
+        try {
+          await this.notificationsService.create({
+            userId,
+            petId: petId?.toString(),
+            title: `${record.title} Due Soon`,
+            message: `${petName}'s ${record.title} is due in ${daysUntil} days`,
+            type: 'reminder',
+            actionUrl: `/pet/${petId}?tab=health`,
+          });
+        } catch (error) {
+          // Notification might already exist, ignore
+        }
+      }
+    }
+
     return {
       upcoming: upcoming.map(record => ({
         id: record._id,
+        petId: (record.petId as any)?._id || record.petId,
         petName: (record.petId as any)?.name || 'Unknown',
         type: record.type,
         title: record.title,
@@ -41,6 +86,7 @@ export class HealthRemindersService {
       })),
       overdue: overdue.map(record => ({
         id: record._id,
+        petId: (record.petId as any)?._id || record.petId,
         petName: (record.petId as any)?.name || 'Unknown',
         type: record.type,
         title: record.title,

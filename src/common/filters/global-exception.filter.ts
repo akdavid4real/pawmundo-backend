@@ -42,11 +42,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message = this.getMongoErrorMessage(exception);
       suggestions = this.getMongoSuggestions(exception);
     } else if (exception instanceof Error) {
+      console.log('🔥 Error details:', { name: exception.name, message: exception.message, stack: exception.stack });
       message = exception.message;
       suggestions = this.getGenericSuggestions(exception.message);
+    } else {
+      console.log('🔥 Unknown exception type:', typeof exception, exception);
     }
 
     // Log the error for debugging
+    console.log('🔥 Full exception:', exception);
     this.logger.error(
       `${request.method} ${request.url} - ${status} - ${message}`,
       exception instanceof Error ? exception.stack : 'Unknown error'

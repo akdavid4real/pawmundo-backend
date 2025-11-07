@@ -38,6 +38,7 @@ const ai_chat_module_1 = __webpack_require__(/*! @modules/ai-chat/ai-chat.module
 const forum_module_1 = __webpack_require__(/*! @modules/forum/forum.module */ "./src/modules/forum/forum.module.ts");
 const notifications_module_1 = __webpack_require__(/*! @modules/notifications/notifications.module */ "./src/modules/notifications/notifications.module.ts");
 const activity_tracking_module_1 = __webpack_require__(/*! @modules/activity-tracking/activity-tracking.module */ "./src/modules/activity-tracking/activity-tracking.module.ts");
+const events_module_1 = __webpack_require__(/*! @modules/events/events.module */ "./src/modules/events/events.module.ts");
 const seed_module_1 = __webpack_require__(/*! @modules/seed/seed.module */ "./src/modules/seed/seed.module.ts");
 let AppModule = class AppModule {
 };
@@ -81,6 +82,7 @@ exports.AppModule = AppModule = __decorate([
             forum_module_1.ForumModule,
             notifications_module_1.NotificationsModule,
             activity_tracking_module_1.ActivityTrackingModule,
+            events_module_1.EventsModule,
             seed_module_1.SeedModule,
         ],
     })
@@ -137,9 +139,14 @@ let GlobalExceptionFilter = GlobalExceptionFilter_1 = class GlobalExceptionFilte
             suggestions = this.getMongoSuggestions(exception);
         }
         else if (exception instanceof Error) {
+            console.log('🔥 Error details:', { name: exception.name, message: exception.message, stack: exception.stack });
             message = exception.message;
             suggestions = this.getGenericSuggestions(exception.message);
         }
+        else {
+            console.log('🔥 Unknown exception type:', typeof exception, exception);
+        }
+        console.log('🔥 Full exception:', exception);
         this.logger.error(`${request.method} ${request.url} - ${status} - ${message}`, exception instanceof Error ? exception.stack : 'Unknown error');
         const errorResponse = {
             success: false,
@@ -2619,7 +2626,8 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         if (!user) {
             throw new common_1.UnauthorizedException('User not found');
         }
-        return { userId: user._id.toString(), email: user.email, role: user.role };
+        const userId = user._id.toString();
+        return { _id: userId, userId, email: user.email, role: user.role };
     }
 };
 exports.JwtStrategy = JwtStrategy;
@@ -3204,6 +3212,532 @@ exports.Consultation = Consultation = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Consultation);
 exports.ConsultationSchema = mongoose_1.SchemaFactory.createForClass(Consultation);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/dto/create-event.dto.ts":
+/*!****************************************************!*\
+  !*** ./src/modules/events/dto/create-event.dto.ts ***!
+  \****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CreateEventDto = void 0;
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class CreateEventDto {
+}
+exports.CreateEventDto = CreateEventDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pet ID associated with the event' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsMongoId)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "petId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Event title' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Event description' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Event date' }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "eventDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Event time' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "eventTime", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Event category', enum: ['appointment', 'vaccination', 'medication', 'grooming', 'training', 'other'] }),
+    (0, class_validator_1.IsEnum)(['appointment', 'vaccination', 'medication', 'grooming', 'training', 'other']),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "category", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Event location' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Additional notes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "notes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is recurring event', default: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateEventDto.prototype, "isRecurring", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Recurring type', enum: ['daily', 'weekly', 'monthly', 'yearly'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['daily', 'weekly', 'monthly', 'yearly']),
+    __metadata("design:type", String)
+], CreateEventDto.prototype, "recurringType", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/dto/update-event.dto.ts":
+/*!****************************************************!*\
+  !*** ./src/modules/events/dto/update-event.dto.ts ***!
+  \****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UpdateEventDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const create_event_dto_1 = __webpack_require__(/*! ./create-event.dto */ "./src/modules/events/dto/create-event.dto.ts");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class UpdateEventDto extends (0, swagger_1.PartialType)(create_event_dto_1.CreateEventDto) {
+}
+exports.UpdateEventDto = UpdateEventDto;
+__decorate([
+    (0, swagger_2.ApiPropertyOptional)({ description: 'Event status', enum: ['scheduled', 'completed', 'cancelled'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['scheduled', 'completed', 'cancelled']),
+    __metadata("design:type", String)
+], UpdateEventDto.prototype, "status", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/events.controller.ts":
+/*!*************************************************!*\
+  !*** ./src/modules/events/events.controller.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventsController = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
+const events_service_1 = __webpack_require__(/*! ./events.service */ "./src/modules/events/events.service.ts");
+const create_event_dto_1 = __webpack_require__(/*! ./dto/create-event.dto */ "./src/modules/events/dto/create-event.dto.ts");
+const update_event_dto_1 = __webpack_require__(/*! ./dto/update-event.dto */ "./src/modules/events/dto/update-event.dto.ts");
+let EventsController = class EventsController {
+    constructor(eventsService) {
+        this.eventsService = eventsService;
+    }
+    async create(req, createEventDto) {
+        try {
+            console.log('📍 Create - req.user:', req.user);
+            console.log('📍 Create - req.user._id:', req.user._id);
+            return await this.eventsService.create(req.user._id, createEventDto);
+        }
+        catch (error) {
+            console.error('Error creating event:', error);
+            throw error;
+        }
+    }
+    async findMyEvents(req) {
+        console.log('📍 Controller - req.user:', req.user);
+        console.log('📍 Controller - req.user._id:', req.user._id);
+        return this.eventsService.findByUser(req.user._id);
+    }
+    async findUpcoming(req) {
+        return this.eventsService.findUpcoming(req.user._id);
+    }
+    async findByCategory(req, category) {
+        return this.eventsService.findByCategory(req.user._id, category);
+    }
+    async findOne(id, req) {
+        return this.eventsService.findById(id, req.user._id);
+    }
+    async update(id, updateEventDto, req) {
+        try {
+            console.log('📝 Update event - id:', id);
+            console.log('📝 Update event - userId:', req.user._id);
+            console.log('📝 Update event - data:', updateEventDto);
+            return await this.eventsService.update(id, req.user._id, updateEventDto);
+        }
+        catch (error) {
+            console.error('❌ Error updating event:', error);
+            throw error;
+        }
+    }
+    async remove(id, req) {
+        return this.eventsService.delete(id, req.user._id);
+    }
+};
+exports.EventsController = EventsController;
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new event' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Event created successfully' }),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_event_dto_1.CreateEventDto !== "undefined" && create_event_dto_1.CreateEventDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "create", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all user events' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user events' }),
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "findMyEvents", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get upcoming events' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of upcoming events' }),
+    (0, common_1.Get)('upcoming'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "findUpcoming", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get events by category' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of events by category' }),
+    (0, swagger_1.ApiQuery)({ name: 'category', enum: ['appointment', 'vaccination', 'medication', 'grooming', 'training', 'other'] }),
+    (0, common_1.Get)('category'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('category')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "findByCategory", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get event by ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Event details' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Event not found' }),
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "findOne", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Update event' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Event updated successfully' }),
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof update_event_dto_1.UpdateEventDto !== "undefined" && update_event_dto_1.UpdateEventDto) === "function" ? _c : Object, Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "update", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete event' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Event deleted successfully' }),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], EventsController.prototype, "remove", null);
+exports.EventsController = EventsController = __decorate([
+    (0, swagger_1.ApiTags)('events'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.Controller)('events'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __metadata("design:paramtypes", [typeof (_a = typeof events_service_1.EventsService !== "undefined" && events_service_1.EventsService) === "function" ? _a : Object])
+], EventsController);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/events.module.ts":
+/*!*********************************************!*\
+  !*** ./src/modules/events/events.module.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const events_controller_1 = __webpack_require__(/*! ./events.controller */ "./src/modules/events/events.controller.ts");
+const events_service_1 = __webpack_require__(/*! ./events.service */ "./src/modules/events/events.service.ts");
+const event_schema_1 = __webpack_require__(/*! ./schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts");
+let EventsModule = class EventsModule {
+};
+exports.EventsModule = EventsModule;
+exports.EventsModule = EventsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: event_schema_1.Event.name, schema: event_schema_1.EventSchema }]),
+        ],
+        controllers: [events_controller_1.EventsController],
+        providers: [events_service_1.EventsService],
+        exports: [events_service_1.EventsService],
+    })
+], EventsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/events.service.ts":
+/*!**********************************************!*\
+  !*** ./src/modules/events/events.service.ts ***!
+  \**********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventsService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+const event_schema_1 = __webpack_require__(/*! ./schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts");
+let EventsService = class EventsService {
+    constructor(eventModel) {
+        this.eventModel = eventModel;
+    }
+    async create(userId, createEventDto) {
+        console.log('📝 Creating event with data:', { userId, createEventDto });
+        const event = new this.eventModel({
+            ...createEventDto,
+            userId: new mongoose_2.Types.ObjectId(userId),
+            petId: createEventDto.petId ? new mongoose_2.Types.ObjectId(createEventDto.petId) : undefined,
+        });
+        const saved = await event.save();
+        console.log('✅ Event saved:', saved);
+        return saved;
+    }
+    async findByUser(userId) {
+        console.log('🔍 Finding events for user:', userId);
+        const query = { userId: new mongoose_2.Types.ObjectId(userId), isActive: true };
+        console.log('🔍 Query:', query);
+        const allEvents = await this.eventModel.find({}).exec();
+        console.log('📊 Total events in DB:', allEvents.length);
+        console.log('📊 All events:', allEvents);
+        const events = await this.eventModel
+            .find(query)
+            .populate('petId', 'name breed')
+            .sort({ eventDate: 1 })
+            .exec();
+        console.log('📋 Found events for user:', events.length);
+        console.log('📋 Events:', events);
+        return events;
+    }
+    async findUpcoming(userId) {
+        const today = new Date();
+        return this.eventModel
+            .find({
+            userId: new mongoose_2.Types.ObjectId(userId),
+            eventDate: { $gte: today },
+            status: 'scheduled',
+            isActive: true,
+        })
+            .populate('petId', 'name breed')
+            .sort({ eventDate: 1 })
+            .limit(10)
+            .exec();
+    }
+    async findById(id, userId) {
+        const event = await this.eventModel
+            .findOne({ _id: new mongoose_2.Types.ObjectId(id), userId: new mongoose_2.Types.ObjectId(userId), isActive: true })
+            .populate('petId', 'name breed')
+            .exec();
+        if (!event) {
+            throw new common_1.NotFoundException('Event not found');
+        }
+        return event;
+    }
+    async update(id, userId, updateEventDto) {
+        try {
+            console.log('🔄 Updating event:', { id, userId, updateEventDto });
+            const updateData = { ...updateEventDto };
+            if (updateEventDto.petId) {
+                updateData.petId = new mongoose_2.Types.ObjectId(updateEventDto.petId);
+            }
+            const event = await this.eventModel
+                .findOneAndUpdate({ _id: new mongoose_2.Types.ObjectId(id), userId: new mongoose_2.Types.ObjectId(userId), isActive: true }, updateData, { new: true })
+                .populate('petId', 'name breed')
+                .exec();
+            if (!event) {
+                throw new common_1.NotFoundException('Event not found');
+            }
+            console.log('✅ Event updated:', event);
+            return event;
+        }
+        catch (error) {
+            console.error('❌ Update error:', error);
+            throw error;
+        }
+    }
+    async delete(id, userId) {
+        const result = await this.eventModel
+            .findOneAndUpdate({ _id: new mongoose_2.Types.ObjectId(id), userId: new mongoose_2.Types.ObjectId(userId) }, { isActive: false }, { new: true })
+            .exec();
+        if (!result) {
+            throw new common_1.NotFoundException('Event not found');
+        }
+    }
+    async findByCategory(userId, category) {
+        return this.eventModel
+            .find({ userId: new mongoose_2.Types.ObjectId(userId), category, isActive: true })
+            .populate('petId', 'name breed')
+            .sort({ eventDate: 1 })
+            .exec();
+    }
+};
+exports.EventsService = EventsService;
+exports.EventsService = EventsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, mongoose_1.InjectModel)(event_schema_1.Event.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+], EventsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/events/schemas/event.schema.ts":
+/*!****************************************************!*\
+  !*** ./src/modules/events/schemas/event.schema.ts ***!
+  \****************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventSchema = exports.Event = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let Event = class Event {
+};
+exports.Event = Event;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], Event.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet' }),
+    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+], Event.prototype, "petId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Event.prototype, "title", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], Event.prototype, "description", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], Event.prototype, "eventDate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Event.prototype, "eventTime", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, enum: ['appointment', 'vaccination', 'medication', 'grooming', 'training', 'other'] }),
+    __metadata("design:type", String)
+], Event.prototype, "category", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'scheduled', enum: ['scheduled', 'completed', 'cancelled'] }),
+    __metadata("design:type", String)
+], Event.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Event.prototype, "location", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], Event.prototype, "notes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Event.prototype, "isRecurring", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ enum: ['daily', 'weekly', 'monthly', 'yearly'] }),
+    __metadata("design:type", String)
+], Event.prototype, "recurringType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], Event.prototype, "isActive", void 0);
+exports.Event = Event = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], Event);
+exports.EventSchema = mongoose_1.SchemaFactory.createForClass(Event);
 
 
 /***/ }),
@@ -4541,12 +5075,13 @@ const health_reminders_controller_1 = __webpack_require__(/*! ./health-reminders
 const health_reminders_service_1 = __webpack_require__(/*! ./health-reminders.service */ "./src/modules/health-reminders/health-reminders.service.ts");
 const health_records_module_1 = __webpack_require__(/*! ../health-records/health-records.module */ "./src/modules/health-records/health-records.module.ts");
 const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
+const notifications_module_1 = __webpack_require__(/*! ../notifications/notifications.module */ "./src/modules/notifications/notifications.module.ts");
 let HealthRemindersModule = class HealthRemindersModule {
 };
 exports.HealthRemindersModule = HealthRemindersModule;
 exports.HealthRemindersModule = HealthRemindersModule = __decorate([
     (0, common_1.Module)({
-        imports: [health_records_module_1.HealthRecordsModule, pets_module_1.PetsModule],
+        imports: [health_records_module_1.HealthRecordsModule, pets_module_1.PetsModule, notifications_module_1.NotificationsModule],
         controllers: [health_reminders_controller_1.HealthRemindersController],
         providers: [health_reminders_service_1.HealthRemindersService],
         exports: [health_reminders_service_1.HealthRemindersService],
@@ -4572,17 +5107,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRemindersService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const schedule_1 = __webpack_require__(/*! @nestjs/schedule */ "@nestjs/schedule");
 const health_records_service_1 = __webpack_require__(/*! ../health-records/health-records.service */ "./src/modules/health-records/health-records.service.ts");
 const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const notifications_service_1 = __webpack_require__(/*! ../notifications/notifications.service */ "./src/modules/notifications/notifications.service.ts");
 let HealthRemindersService = class HealthRemindersService {
-    constructor(healthRecordsService, petsService) {
+    constructor(healthRecordsService, petsService, notificationsService) {
         this.healthRecordsService = healthRecordsService;
         this.petsService = petsService;
+        this.notificationsService = notificationsService;
     }
     async sendDailyReminders() {
         console.log('Checking for health reminders...');
@@ -4597,9 +5134,46 @@ let HealthRemindersService = class HealthRemindersService {
         ]);
         console.log('📅 Upcoming records:', upcoming.length);
         console.log('⏰ Overdue records:', overdue.length);
+        for (const record of overdue) {
+            const petId = record.petId?._id || record.petId;
+            const petName = record.petId?.name || 'Your pet';
+            const daysOverdue = Math.ceil((Date.now() - record.nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+            try {
+                await this.notificationsService.create({
+                    userId,
+                    petId: petId?.toString(),
+                    title: `${record.title} Overdue`,
+                    message: `${petName}'s ${record.title} is ${daysOverdue} days overdue`,
+                    type: 'reminder',
+                    actionUrl: `/pet/${petId}?tab=health`,
+                });
+            }
+            catch (error) {
+            }
+        }
+        for (const record of upcoming) {
+            const daysUntil = Math.ceil((record.nextDueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            if (daysUntil <= 3) {
+                const petId = record.petId?._id || record.petId;
+                const petName = record.petId?.name || 'Your pet';
+                try {
+                    await this.notificationsService.create({
+                        userId,
+                        petId: petId?.toString(),
+                        title: `${record.title} Due Soon`,
+                        message: `${petName}'s ${record.title} is due in ${daysUntil} days`,
+                        type: 'reminder',
+                        actionUrl: `/pet/${petId}?tab=health`,
+                    });
+                }
+                catch (error) {
+                }
+            }
+        }
         return {
             upcoming: upcoming.map(record => ({
                 id: record._id,
+                petId: record.petId?._id || record.petId,
                 petName: record.petId?.name || 'Unknown',
                 type: record.type,
                 title: record.title,
@@ -4608,6 +5182,7 @@ let HealthRemindersService = class HealthRemindersService {
             })),
             overdue: overdue.map(record => ({
                 id: record._id,
+                petId: record.petId?._id || record.petId,
                 petName: record.petId?.name || 'Unknown',
                 type: record.type,
                 title: record.title,
@@ -4664,7 +5239,7 @@ __decorate([
 ], HealthRemindersService.prototype, "sendDailyReminders", null);
 exports.HealthRemindersService = HealthRemindersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object, typeof (_c = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _c : Object])
 ], HealthRemindersService);
 
 
@@ -6207,7 +6782,11 @@ let NotificationsService = class NotificationsService {
         const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
         if (!shouldSend)
             return null;
-        const notification = new this.notificationModel(createDto);
+        const notification = new this.notificationModel({
+            ...createDto,
+            userId: new mongoose_2.Types.ObjectId(createDto.userId),
+            petId: createDto.petId ? new mongoose_2.Types.ObjectId(createDto.petId) : undefined,
+        });
         return notification.save();
     }
     async findAllByUser(userId, petId) {

@@ -17,7 +17,11 @@ export class NotificationsService {
     const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
     if (!shouldSend) return null;
 
-    const notification = new this.notificationModel(createDto);
+    const notification = new this.notificationModel({
+      ...createDto,
+      userId: new Types.ObjectId(createDto.userId),
+      petId: createDto.petId ? new Types.ObjectId(createDto.petId) : undefined,
+    });
     return notification.save();
   }
 

@@ -24,6 +24,7 @@ import { AiChatModule } from '@modules/ai-chat/ai-chat.module';
 import { ForumModule } from '@modules/forum/forum.module';
 import { NotificationsModule } from '@modules/notifications/notifications.module';
 import { ActivityTrackingModule } from '@modules/activity-tracking/activity-tracking.module';
+import { EventsModule } from '@modules/events/events.module';
 import { SeedModule } from '@modules/seed/seed.module';
 
 @Module({
@@ -67,6 +68,7 @@ import { SeedModule } from '@modules/seed/seed.module';
     ForumModule,
     NotificationsModule,
     ActivityTrackingModule,
+    EventsModule,
     SeedModule,
   ],
 })
