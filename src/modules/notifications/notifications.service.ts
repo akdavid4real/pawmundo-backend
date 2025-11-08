@@ -17,6 +17,20 @@ export class NotificationsService {
     const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
     if (!shouldSend) return null;
 
+    // Check for duplicate notification (same user, pet, type, and title within last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const existingNotification = await this.notificationModel.findOne({
+      userId: new Types.ObjectId(createDto.userId),
+      petId: createDto.petId ? new Types.ObjectId(createDto.petId) : undefined,
+      type: createDto.type,
+      title: createDto.title,
+      createdAt: { $gte: oneDayAgo },
+    }).exec();
+
+    if (existingNotification) {
+      return existingNotification; // Return existing instead of creating duplicate
+    }
+
     const notification = new this.notificationModel({
       ...createDto,
       userId: new Types.ObjectId(createDto.userId),
@@ -139,5 +153,29 @@ export class NotificationsService {
       type: 'vaccination',
       actionUrl: `/pets/${petId}/health-records`,
     });
+  }
+
+  async removeDuplicates(userId: string): Promise<number> {
+    const notifications = await this.notificationModel.find({ 
+      userId: new Types.ObjectId(userId) 
+    }).sort({ createdAt: -1 }).exec();
+
+    const seen = new Map<string, string>();
+    const duplicateIds: string[] = [];
+
+    for (const notif of notifications) {
+      const key = `${notif.userId}-${notif.petId}-${notif.type}-${notif.title}`;
+      if (seen.has(key)) {
+        duplicateIds.push(notif._id.toString());
+      } else {
+        seen.set(key, notif._id.toString());
+      }
+    }
+
+    if (duplicateIds.length > 0) {
+      await this.notificationModel.deleteMany({ _id: { $in: duplicateIds } }).exec();
+    }
+
+    return duplicateIds.length;
   }
 }

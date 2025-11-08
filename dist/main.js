@@ -1195,6 +1195,7 @@ const health_record_schema_1 = __webpack_require__(/*! ../health-records/schemas
 const appointment_schema_1 = __webpack_require__(/*! ../appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts");
 const medication_schema_1 = __webpack_require__(/*! ../medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
+const symptom_check_schema_1 = __webpack_require__(/*! ../symptom-checker/schemas/symptom-check.schema */ "./src/modules/symptom-checker/schemas/symptom-check.schema.ts");
 let AiChatModule = class AiChatModule {
 };
 exports.AiChatModule = AiChatModule;
@@ -1207,6 +1208,7 @@ exports.AiChatModule = AiChatModule = __decorate([
                 { name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema },
                 { name: medication_schema_1.Medication.name, schema: medication_schema_1.MedicationSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: symptom_check_schema_1.SymptomCheck.name, schema: symptom_check_schema_1.SymptomCheckSchema },
             ]),
         ],
         controllers: [ai_chat_controller_1.AiChatController],
@@ -1277,8 +1279,6 @@ let AiChatService = class AiChatService {
                         petDetail += `, ${pet.weight}kg`;
                     if (pet.color)
                         petDetail += `, ${pet.color}`;
-                    if (pet.microchipId)
-                        petDetail += `, chip: ${pet.microchipId}`;
                     if (pet.allergies?.length)
                         petDetail += `, allergies: ${pet.allergies.join(', ')}`;
                     if (pet.medicalNotes)
@@ -4346,8 +4346,15 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Is this a reminder' }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateHealthRecordDto.prototype, "isReminder", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is reminder completed' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateHealthRecordDto.prototype, "isCompleted", void 0);
 
 
 /***/ }),
@@ -4703,15 +4710,18 @@ let HealthRecordsService = class HealthRecordsService {
     }
     async findByPet(petId, userId, type) {
         await this.petsService.findById(petId, userId);
-        const filter = { petId, isActive: true };
+        const { Types } = __webpack_require__(/*! mongoose */ "mongoose");
+        const filter = { petId: new Types.ObjectId(petId), isActive: true };
         if (type)
             filter.type = type;
-        return this.healthRecordModel.find(filter).sort({ date: -1 }).exec();
+        const records = await this.healthRecordModel.find(filter).sort({ date: -1 }).exec();
+        return records;
     }
     async findById(id, userId) {
-        const record = await this.healthRecordModel.findById(id).populate({
+        const { Types } = __webpack_require__(/*! mongoose */ "mongoose");
+        const record = await this.healthRecordModel.findOne({ _id: id, isActive: true }).populate({
             path: 'petId',
-            match: { ownerId: userId, isActive: true }
+            match: { ownerId: new Types.ObjectId(userId), isActive: true }
         }).exec();
         if (!record || !record.petId)
             throw new common_1.NotFoundException(`Health record with ID '${id}' does not exist or you don't have permission to access it`);
@@ -4794,10 +4804,11 @@ let HealthRecordsService = class HealthRecordsService {
     }
     async getOverdueReminders(userId) {
         const today = new Date();
+        const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
         const { Types } = __webpack_require__(/*! mongoose */ "mongoose");
         return this.healthRecordModel
             .find({
-            nextDueDate: { $lt: today },
+            nextDueDate: { $lt: today, $gte: sevenDaysAgo },
             isReminder: true,
             isActive: true
         })
@@ -4970,6 +4981,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], HealthRecord.prototype, "isReminder", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], HealthRecord.prototype, "isCompleted", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)
@@ -6649,6 +6664,10 @@ let NotificationsController = class NotificationsController {
             throw error;
         }
     }
+    async removeDuplicates(req) {
+        const count = await this.notificationsService.removeDuplicates(req.user.userId);
+        return { success: true, removed: count };
+    }
 };
 exports.NotificationsController = NotificationsController;
 __decorate([
@@ -6696,6 +6715,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, typeof (_b = typeof update_preference_dto_1.UpdatePreferenceDto !== "undefined" && update_preference_dto_1.UpdatePreferenceDto) === "function" ? _b : Object]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "updatePreferences", null);
+__decorate([
+    (0, common_1.Post)('remove-duplicates'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "removeDuplicates", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -6782,6 +6808,17 @@ let NotificationsService = class NotificationsService {
         const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
         if (!shouldSend)
             return null;
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const existingNotification = await this.notificationModel.findOne({
+            userId: new mongoose_2.Types.ObjectId(createDto.userId),
+            petId: createDto.petId ? new mongoose_2.Types.ObjectId(createDto.petId) : undefined,
+            type: createDto.type,
+            title: createDto.title,
+            createdAt: { $gte: oneDayAgo },
+        }).exec();
+        if (existingNotification) {
+            return existingNotification;
+        }
         const notification = new this.notificationModel({
             ...createDto,
             userId: new mongoose_2.Types.ObjectId(createDto.userId),
@@ -6888,6 +6925,26 @@ let NotificationsService = class NotificationsService {
             type: 'vaccination',
             actionUrl: `/pets/${petId}/health-records`,
         });
+    }
+    async removeDuplicates(userId) {
+        const notifications = await this.notificationModel.find({
+            userId: new mongoose_2.Types.ObjectId(userId)
+        }).sort({ createdAt: -1 }).exec();
+        const seen = new Map();
+        const duplicateIds = [];
+        for (const notif of notifications) {
+            const key = `${notif.userId}-${notif.petId}-${notif.type}-${notif.title}`;
+            if (seen.has(key)) {
+                duplicateIds.push(notif._id.toString());
+            }
+            else {
+                seen.set(key, notif._id.toString());
+            }
+        }
+        if (duplicateIds.length > 0) {
+            await this.notificationModel.deleteMany({ _id: { $in: duplicateIds } }).exec();
+        }
+        return duplicateIds.length;
     }
 };
 exports.NotificationsService = NotificationsService;
@@ -7099,12 +7156,6 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreatePetDto.prototype, "color", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Microchip ID' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreatePetDto.prototype, "microchipId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Profile image URL' }),
     (0, class_validator_1.IsOptional)(),
@@ -7730,10 +7781,6 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
-], Pet.prototype, "microchipId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", String)
 ], Pet.prototype, "profileImage", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
@@ -7798,6 +7845,87 @@ exports.PetSchema.index({ ownerId: 1, healthStatus: 1, isActive: 1 });
 
 /***/ }),
 
+/***/ "./src/modules/seed/events.ts":
+/*!************************************!*\
+  !*** ./src/modules/seed/events.ts ***!
+  \************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sampleEvents = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const userId = new mongoose_1.Types.ObjectId('507f1f77bcf86cd799439011');
+const petIds = [
+    new mongoose_1.Types.ObjectId('690582532c8149e4fd0d51bc'),
+    new mongoose_1.Types.ObjectId('690582532c8149e4fd0d51bd'),
+];
+exports.sampleEvents = [
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId,
+        petId: petIds[0],
+        title: 'Annual Checkup',
+        description: 'Yearly health examination and vaccinations',
+        eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        eventTime: '10:00 AM',
+        location: 'Happy Paws Veterinary Clinic',
+        category: 'checkup',
+        status: 'scheduled',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId,
+        petId: petIds[1],
+        title: 'Grooming Appointment',
+        description: 'Full grooming service including bath and nail trim',
+        eventDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        eventTime: '2:30 PM',
+        location: 'Pampered Pets Spa',
+        category: 'grooming',
+        status: 'scheduled',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId,
+        petId: petIds[0],
+        title: 'Vaccination Booster',
+        description: 'Rabies and DHPP booster shots',
+        eventDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        eventTime: '11:30 AM',
+        location: 'City Animal Hospital',
+        category: 'vaccination',
+        status: 'scheduled',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        userId,
+        petId: petIds[0],
+        title: 'Dental Cleaning',
+        description: 'Professional teeth cleaning',
+        eventDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        eventTime: '9:00 AM',
+        location: 'Pet Dental Care Center',
+        category: 'checkup',
+        status: 'completed',
+        isActive: true,
+        createdAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    },
+];
+
+
+/***/ }),
+
 /***/ "./src/modules/seed/healthRecords.ts":
 /*!*******************************************!*\
   !*** ./src/modules/seed/healthRecords.ts ***!
@@ -7812,7 +7940,7 @@ const pets_1 = __webpack_require__(/*! ./pets */ "./src/modules/seed/pets.ts");
 exports.sampleHealthRecords = [
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[0]._id,
+        petId: pets_1.lunaId,
         type: 'vaccination',
         title: 'Annual Vaccination - DHPP',
         description: 'Distemper, Hepatitis, Parvovirus, Parainfluenza vaccination',
@@ -7824,13 +7952,15 @@ exports.sampleHealthRecords = [
         temperature: 101.2,
         cost: 85.00,
         notes: 'Pet responded well to vaccination. No adverse reactions.',
+        isReminder: true,
+        isCompleted: false,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[0]._id,
+        petId: pets_1.lunaId,
         type: 'checkup',
         title: 'Annual Health Checkup',
         description: 'Comprehensive physical examination and blood work',
@@ -7848,7 +7978,7 @@ exports.sampleHealthRecords = [
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[0]._id,
+        petId: pets_1.lunaId,
         type: 'treatment',
         title: 'Ear Infection Treatment',
         description: 'Treatment for bacterial ear infection',
@@ -7865,7 +7995,7 @@ exports.sampleHealthRecords = [
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[1]._id,
+        petId: pets_1.shadowId,
         type: 'vaccination',
         title: 'FVRCP Vaccination',
         description: 'Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia',
@@ -7877,13 +8007,15 @@ exports.sampleHealthRecords = [
         temperature: 101.8,
         cost: 75.00,
         notes: 'Vaccination completed successfully.',
+        isReminder: true,
+        isCompleted: false,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[1]._id,
+        petId: pets_1.shadowId,
         type: 'grooming',
         title: 'Professional Grooming',
         description: 'Full grooming service including bath, brush, and nail trim',
@@ -7899,7 +8031,7 @@ exports.sampleHealthRecords = [
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[2]._id,
+        petId: pets_1.buddyId,
         type: 'treatment',
         title: 'Arthritis Management',
         description: 'Joint pain assessment and treatment plan',
@@ -7916,7 +8048,7 @@ exports.sampleHealthRecords = [
     },
     {
         _id: new mongoose_1.Types.ObjectId(),
-        petId: pets_1.samplePets[2]._id,
+        petId: pets_1.buddyId,
         type: 'checkup',
         title: 'Senior Pet Wellness Exam',
         description: 'Comprehensive senior pet health evaluation',
@@ -7929,6 +8061,8 @@ exports.sampleHealthRecords = [
         heartRate: 110,
         cost: 200.00,
         notes: 'Arthritis progression noted. Adjusted medication dosage.',
+        isReminder: true,
+        isCompleted: false,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -7947,7 +8081,7 @@ module.exports = { sampleHealthRecords: exports.sampleHealthRecords };
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sampleNotifications = exports.sampleMedications = exports.sampleHealthRecords = exports.samplePets = exports.sampleUsers = void 0;
+exports.sampleReminders = exports.sampleEvents = exports.sampleNotifications = exports.sampleMedications = exports.sampleHealthRecords = exports.samplePets = exports.sampleUsers = void 0;
 const users_1 = __webpack_require__(/*! ./users */ "./src/modules/seed/users.ts");
 Object.defineProperty(exports, "sampleUsers", ({ enumerable: true, get: function () { return users_1.sampleUsers; } }));
 const pets_1 = __webpack_require__(/*! ./pets */ "./src/modules/seed/pets.ts");
@@ -7958,6 +8092,10 @@ const medications_1 = __webpack_require__(/*! ./medications */ "./src/modules/se
 Object.defineProperty(exports, "sampleMedications", ({ enumerable: true, get: function () { return medications_1.sampleMedications; } }));
 const notifications_1 = __webpack_require__(/*! ./notifications */ "./src/modules/seed/notifications.ts");
 Object.defineProperty(exports, "sampleNotifications", ({ enumerable: true, get: function () { return notifications_1.sampleNotifications; } }));
+const events_1 = __webpack_require__(/*! ./events */ "./src/modules/seed/events.ts");
+Object.defineProperty(exports, "sampleEvents", ({ enumerable: true, get: function () { return events_1.sampleEvents; } }));
+const reminders_1 = __webpack_require__(/*! ./reminders */ "./src/modules/seed/reminders.ts");
+Object.defineProperty(exports, "sampleReminders", ({ enumerable: true, get: function () { return reminders_1.sampleReminders; } }));
 
 
 /***/ }),
@@ -8118,12 +8256,22 @@ exports.sampleNotifications = sampleNotifications;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.samplePets = void 0;
+exports.maxId = exports.whiskersId = exports.buddyId = exports.shadowId = exports.lunaId = exports.samplePets = void 0;
 const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
 const users_1 = __webpack_require__(/*! ./users */ "./src/modules/seed/users.ts");
+const lunaId = new mongoose_1.Types.ObjectId('690e8da85db702e57de01ff9');
+exports.lunaId = lunaId;
+const shadowId = new mongoose_1.Types.ObjectId('690e8da85db702e57de01ffa');
+exports.shadowId = shadowId;
+const buddyId = new mongoose_1.Types.ObjectId('690e8da85db702e57de01ffb');
+exports.buddyId = buddyId;
+const whiskersId = new mongoose_1.Types.ObjectId('690e8da85db702e57de01ffc');
+exports.whiskersId = whiskersId;
+const maxId = new mongoose_1.Types.ObjectId('690e8da85db702e57de01ffd');
+exports.maxId = maxId;
 exports.samplePets = [
     {
-        _id: new mongoose_1.Types.ObjectId(),
+        _id: lunaId,
         name: 'Luna',
         species: 'dog',
         breed: 'Labrador Retriever',
@@ -8131,7 +8279,6 @@ exports.samplePets = [
         gender: 'female',
         weight: 25.0,
         color: 'Black',
-        microchipId: 'MC111222333',
         ownerId: users_1.sampleUsers[0]._id,
         dateOfBirth: new Date('2022-05-10'),
         medicalNotes: 'Very active and healthy. Loves swimming.',
@@ -8143,7 +8290,7 @@ exports.samplePets = [
         updatedAt: new Date()
     },
     {
-        _id: new mongoose_1.Types.ObjectId(),
+        _id: shadowId,
         name: 'Shadow',
         species: 'cat',
         breed: 'Maine Coon',
@@ -8151,7 +8298,6 @@ exports.samplePets = [
         gender: 'male',
         weight: 6.5,
         color: 'Gray',
-        microchipId: 'MC444555666',
         ownerId: users_1.sampleUsers[0]._id,
         dateOfBirth: new Date('2020-08-15'),
         medicalNotes: 'Indoor/outdoor cat. Regular flea prevention.',
@@ -8163,7 +8309,7 @@ exports.samplePets = [
         updatedAt: new Date()
     },
     {
-        _id: new mongoose_1.Types.ObjectId(),
+        _id: buddyId,
         name: 'Buddy',
         species: 'dog',
         breed: 'Golden Retriever',
@@ -8171,7 +8317,6 @@ exports.samplePets = [
         gender: 'male',
         weight: 30.5,
         color: 'Golden',
-        microchipId: 'MC123456789',
         ownerId: users_1.sampleUsers[1]._id,
         dateOfBirth: new Date('2021-03-15'),
         medicalNotes: 'Allergic to chicken. Prone to hip dysplasia.',
@@ -8183,7 +8328,7 @@ exports.samplePets = [
         updatedAt: new Date()
     },
     {
-        _id: new mongoose_1.Types.ObjectId(),
+        _id: whiskersId,
         name: 'Whiskers',
         species: 'cat',
         breed: 'Persian',
@@ -8191,7 +8336,6 @@ exports.samplePets = [
         gender: 'female',
         weight: 4.2,
         color: 'White',
-        microchipId: 'MC987654321',
         ownerId: users_1.sampleUsers[2]._id,
         dateOfBirth: new Date('2019-07-22'),
         medicalNotes: 'Indoor cat. Regular grooming required.',
@@ -8203,7 +8347,7 @@ exports.samplePets = [
         updatedAt: new Date()
     },
     {
-        _id: new mongoose_1.Types.ObjectId(),
+        _id: maxId,
         name: 'Max',
         species: 'dog',
         breed: 'German Shepherd',
@@ -8211,7 +8355,6 @@ exports.samplePets = [
         gender: 'male',
         weight: 35.0,
         color: 'Black and Tan',
-        microchipId: 'MC456789123',
         ownerId: users_1.sampleUsers[1]._id,
         dateOfBirth: new Date('2017-01-10'),
         medicalNotes: 'Senior dog. Arthritis in hind legs.',
@@ -8223,7 +8366,115 @@ exports.samplePets = [
         updatedAt: new Date()
     }
 ];
-module.exports = { samplePets: exports.samplePets };
+module.exports = { samplePets: exports.samplePets, lunaId, shadowId, buddyId, whiskersId, maxId };
+
+
+/***/ }),
+
+/***/ "./src/modules/seed/reminders.ts":
+/*!***************************************!*\
+  !*** ./src/modules/seed/reminders.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sampleReminders = void 0;
+const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
+const userId = new mongoose_1.Types.ObjectId('507f1f77bcf86cd799439011');
+const petIds = [
+    new mongoose_1.Types.ObjectId('690582532c8149e4fd0d51bc'),
+    new mongoose_1.Types.ObjectId('690582532c8149e4fd0d51bd'),
+];
+exports.sampleReminders = [
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[0],
+        type: 'vaccination',
+        title: 'Rabies Vaccination',
+        description: 'Annual rabies vaccination is due',
+        date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        nextDueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        veterinarian: 'Dr. Sarah Johnson',
+        clinic: 'Happy Paws Veterinary Clinic',
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[1],
+        type: 'checkup',
+        title: 'Annual Health Checkup',
+        description: 'Yearly comprehensive health examination',
+        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        nextDueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        veterinarian: 'Dr. Michael Chen',
+        clinic: 'City Animal Hospital',
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[0],
+        type: 'medication',
+        title: 'Heartworm Prevention',
+        description: 'Monthly heartworm preventive medication',
+        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        nextDueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[1],
+        type: 'grooming',
+        title: 'Grooming Session',
+        description: 'Regular grooming and nail trimming',
+        date: new Date(),
+        nextDueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        clinic: 'Pampered Pets Spa',
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[0],
+        type: 'vaccination',
+        title: 'DHPP Booster',
+        description: 'Distemper, Hepatitis, Parvovirus, Parainfluenza booster',
+        date: new Date(),
+        nextDueDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+        veterinarian: 'Dr. Sarah Johnson',
+        clinic: 'Happy Paws Veterinary Clinic',
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        petId: petIds[1],
+        type: 'checkup',
+        title: 'Dental Checkup',
+        description: 'Routine dental examination',
+        date: new Date(),
+        nextDueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        veterinarian: 'Dr. Emily Rodriguez',
+        clinic: 'Pet Dental Care Center',
+        isReminder: true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    },
+];
 
 
 /***/ }),
@@ -8347,24 +8598,64 @@ let SeedService = class SeedService {
     async seedDatabase() {
         try {
             const db = this.connection.db;
+            console.log('🗑️ Clearing existing data...');
             await this.userModel.deleteMany({});
             await db.collection('pets').deleteMany({});
             await db.collection('healthrecords').deleteMany({});
             await db.collection('medications').deleteMany({});
             await db.collection('notifications').deleteMany({});
+            await db.collection('notificationpreferences').deleteMany({});
+            await db.collection('events').deleteMany({});
+            console.log('✅ Existing data cleared');
+            console.log('👥 Creating users...');
             await this.userModel.insertMany(index_1.sampleUsers);
+            console.log('🐾 Creating pets...');
             await db.collection('pets').insertMany(index_1.samplePets);
-            await db.collection('healthrecords').insertMany(index_1.sampleHealthRecords);
+            console.log('🏥 Creating health records...');
+            const luna = await db.collection('pets').findOne({ name: 'Luna' });
+            const shadow = await db.collection('pets').findOne({ name: 'Shadow' });
+            const buddy = await db.collection('pets').findOne({ name: 'Buddy' });
+            console.log('Luna ID from DB:', luna?._id.toString());
+            console.log('Shadow ID from DB:', shadow?._id.toString());
+            console.log('Sample record petId:', index_1.sampleHealthRecords[0]?.petId.toString());
+            const healthRecordsWithCorrectPets = index_1.sampleHealthRecords.map(record => {
+                const recordPetIdStr = record.petId.toString();
+                if (luna && recordPetIdStr === luna._id.toString())
+                    return { ...record, petId: luna._id };
+                if (shadow && recordPetIdStr === shadow._id.toString())
+                    return { ...record, petId: shadow._id };
+                if (buddy && recordPetIdStr === buddy._id.toString())
+                    return { ...record, petId: buddy._id };
+                return record;
+            });
+            await db.collection('healthrecords').insertMany(healthRecordsWithCorrectPets);
+            console.log(`✅ Inserted ${healthRecordsWithCorrectPets.length} health records`);
+            console.log('💊 Creating medications...');
             await db.collection('medications').insertMany(index_1.sampleMedications);
+            console.log('🔔 Creating notifications...');
             await db.collection('notifications').insertMany(index_1.sampleNotifications);
+            console.log('📅 Creating events...');
+            await db.collection('events').insertMany(index_1.sampleEvents);
+            console.log('⏰ Creating additional reminders...');
+            if (luna && shadow) {
+                const remindersWithActualPets = index_1.sampleReminders.map((reminder, index) => ({
+                    ...reminder,
+                    petId: index % 2 === 0 ? luna._id : shadow._id,
+                }));
+                await db.collection('healthrecords').insertMany(remindersWithActualPets);
+                console.log(`✅ Assigned ${remindersWithActualPets.filter(r => r.petId.equals(luna._id)).length} reminders to Luna`);
+                console.log(`✅ Assigned ${remindersWithActualPets.filter(r => r.petId.equals(shadow._id)).length} reminders to Shadow`);
+            }
             return {
                 message: 'Database seeded successfully!',
                 summary: {
                     users: index_1.sampleUsers.length,
                     pets: index_1.samplePets.length,
-                    healthRecords: index_1.sampleHealthRecords.length,
+                    healthRecords: index_1.sampleHealthRecords.length + index_1.sampleReminders.length,
                     medications: index_1.sampleMedications.length,
                     notifications: index_1.sampleNotifications.length,
+                    events: index_1.sampleEvents.length,
+                    reminders: index_1.sampleReminders.length,
                 },
             };
         }
@@ -8507,6 +8798,90 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/symptom-checker/schemas/symptom-check.schema.ts":
+/*!*********************************************************************!*\
+  !*** ./src/modules/symptom-checker/schemas/symptom-check.schema.ts ***!
+  \*********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SymptomCheckSchema = exports.SymptomCheck = void 0;
+const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
+let SymptomCheck = class SymptomCheck extends mongoose_2.Document {
+};
+exports.SymptomCheck = SymptomCheck;
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+], SymptomCheck.prototype, "userId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
+    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+], SymptomCheck.prototype, "petId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "petName", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], required: true }),
+    __metadata("design:type", Array)
+], SymptomCheck.prototype, "symptoms", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "duration", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "severity", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "additionalInfo", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "urgencyLevel", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], required: true }),
+    __metadata("design:type", Array)
+], SymptomCheck.prototype, "possibleConditions", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], required: true }),
+    __metadata("design:type", Array)
+], SymptomCheck.prototype, "recommendations", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true }),
+    __metadata("design:type", Boolean)
+], SymptomCheck.prototype, "vetRequired", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String] }),
+    __metadata("design:type", Array)
+], SymptomCheck.prototype, "warningSignsToWatch", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
+], SymptomCheck.prototype, "personalizedMessage", void 0);
+exports.SymptomCheck = SymptomCheck = __decorate([
+    (0, mongoose_1.Schema)({ timestamps: true })
+], SymptomCheck);
+exports.SymptomCheckSchema = mongoose_1.SchemaFactory.createForClass(SymptomCheck);
+
+
+/***/ }),
+
 /***/ "./src/modules/symptom-checker/symptom-checker.controller.ts":
 /*!*******************************************************************!*\
   !*** ./src/modules/symptom-checker/symptom-checker.controller.ts ***!
@@ -8552,6 +8927,9 @@ let SymptomCheckerController = class SymptomCheckerController {
         const response = await this.symptomCheckerService.chatWithAI(req.user.userId, chatDto.message);
         return { response };
     }
+    async getHistory(req) {
+        return this.symptomCheckerService.getHistory(req.user.userId);
+    }
 };
 exports.SymptomCheckerController = SymptomCheckerController;
 __decorate([
@@ -8572,6 +8950,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, ChatMessageDto]),
     __metadata("design:returntype", Promise)
 ], SymptomCheckerController.prototype, "chatWithAI", null);
+__decorate([
+    (0, common_1.Get)('history'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get symptom check history' }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], SymptomCheckerController.prototype, "getHistory", null);
 exports.SymptomCheckerController = SymptomCheckerController = __decorate([
     (0, swagger_1.ApiTags)('symptom-checker'),
     (0, common_1.Controller)('symptom-checker'),
@@ -8606,6 +8992,7 @@ const pet_schema_1 = __webpack_require__(/*! ../pets/schemas/pet.schema */ "./sr
 const health_record_schema_1 = __webpack_require__(/*! ../health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts");
 const medication_schema_1 = __webpack_require__(/*! ../medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
+const symptom_check_schema_1 = __webpack_require__(/*! ./schemas/symptom-check.schema */ "./src/modules/symptom-checker/schemas/symptom-check.schema.ts");
 let SymptomCheckerModule = class SymptomCheckerModule {
 };
 exports.SymptomCheckerModule = SymptomCheckerModule;
@@ -8617,6 +9004,7 @@ exports.SymptomCheckerModule = SymptomCheckerModule = __decorate([
                 { name: health_record_schema_1.HealthRecord.name, schema: health_record_schema_1.HealthRecordSchema },
                 { name: medication_schema_1.Medication.name, schema: medication_schema_1.MedicationSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: symptom_check_schema_1.SymptomCheck.name, schema: symptom_check_schema_1.SymptomCheckSchema },
             ]),
         ],
         controllers: [symptom_checker_controller_1.SymptomCheckerController],
@@ -8647,7 +9035,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckerService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -8657,12 +9045,14 @@ const pet_schema_1 = __webpack_require__(/*! ../pets/schemas/pet.schema */ "./sr
 const health_record_schema_1 = __webpack_require__(/*! ../health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts");
 const medication_schema_1 = __webpack_require__(/*! ../medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
+const symptom_check_schema_1 = __webpack_require__(/*! ./schemas/symptom-check.schema */ "./src/modules/symptom-checker/schemas/symptom-check.schema.ts");
 let SymptomCheckerService = class SymptomCheckerService {
-    constructor(petModel, healthRecordModel, medicationModel, userModel) {
+    constructor(petModel, healthRecordModel, medicationModel, userModel, symptomCheckModel) {
         this.petModel = petModel;
         this.healthRecordModel = healthRecordModel;
         this.medicationModel = medicationModel;
         this.userModel = userModel;
+        this.symptomCheckModel = symptomCheckModel;
     }
     async extractPetContext(userId, message) {
         const [user, userPets] = await Promise.all([
@@ -8740,6 +9130,21 @@ ${medications.length > 0 ?
         ]);
         const petContext = this.buildPetContext(user, pet, healthRecords, medications);
         const aiResponse = await this.callMistralAI(petContext, symptomCheckDto);
+        await this.symptomCheckModel.create({
+            userId,
+            petId: symptomCheckDto.petId,
+            petName: pet.name,
+            symptoms: symptomCheckDto.symptoms,
+            duration: symptomCheckDto.duration,
+            severity: symptomCheckDto.severity.toString(),
+            additionalInfo: symptomCheckDto.additionalInfo,
+            urgencyLevel: aiResponse.urgencyLevel,
+            possibleConditions: aiResponse.possibleConditions,
+            recommendations: aiResponse.recommendations,
+            vetRequired: aiResponse.vetRequired,
+            warningSignsToWatch: aiResponse.warningSignsToWatch,
+            personalizedMessage: aiResponse.personalizedMessage,
+        });
         return {
             petInfo: {
                 name: pet.name,
@@ -8885,6 +9290,13 @@ Respond ONLY with valid JSON in this exact format:
             };
         }
     }
+    async getHistory(userId) {
+        return this.symptomCheckModel
+            .find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .exec();
+    }
     async chatWithAI(userId, message) {
         try {
             const petContext = await this.extractPetContext(userId, message);
@@ -8932,7 +9344,8 @@ exports.SymptomCheckerService = SymptomCheckerService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(health_record_schema_1.HealthRecord.name)),
     __param(2, (0, mongoose_1.InjectModel)(medication_schema_1.Medication.name)),
     __param(3, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object])
+    __param(4, (0, mongoose_1.InjectModel)(symptom_check_schema_1.SymptomCheck.name)),
+    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
 ], SymptomCheckerService);
 
 

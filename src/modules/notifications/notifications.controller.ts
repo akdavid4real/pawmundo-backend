@@ -44,4 +44,10 @@ export class NotificationsController {
       throw error;
     }
   }
+
+  @Post('remove-duplicates')
+  async removeDuplicates(@Request() req) {
+    const count = await this.notificationsService.removeDuplicates(req.user.userId);
+    return { success: true, removed: count };
+  }
 }

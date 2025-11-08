@@ -42,9 +42,8 @@ export class AiChatService {
           let petDetail = `${pet.name}: ${pet.species} ${pet.breed}, ${pet.age}yo, ${pet.gender}, ${pet.healthStatus}`;
           if (pet.weight) petDetail += `, ${pet.weight}kg`;
           if (pet.color) petDetail += `, ${pet.color}`;
-          if (pet.microchipId) petDetail += `, chip: ${pet.microchipId}`;
           if (pet.allergies?.length) petDetail += `, allergies: ${pet.allergies.join(', ')}`;
-          if (pet.medicalNotes) petDetail += `, notes: ${pet.medicalNotes}`;
+          if ((pet as any).medicalNotes) petDetail += `, notes: ${(pet as any).medicalNotes}`;
           
           petDetail += `. Health: ${healthSummary.totalRecords} records`;
           if (healthSummary.lastCheckup) petDetail += `, last checkup: ${new Date(healthSummary.lastCheckup).toLocaleDateString()}`;

@@ -25,9 +25,6 @@ export class Pet extends Document {
   color: string;
 
   @Prop()
-  microchipId: string;
-
-  @Prop()
   profileImage: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })

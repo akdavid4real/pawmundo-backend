@@ -11,6 +11,7 @@ import { HealthRecord, HealthRecordSchema } from '../health-records/schemas/heal
 import { Appointment, AppointmentSchema } from '../appointments/schemas/appointment.schema';
 import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
 import { User, UserSchema } from '../auth/schemas/user.schema';
+import { SymptomCheck, SymptomCheckSchema } from '../symptom-checker/schemas/symptom-check.schema';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: Appointment.name, schema: AppointmentSchema },
       { name: Medication.name, schema: MedicationSchema },
       { name: User.name, schema: UserSchema },
+      { name: SymptomCheck.name, schema: SymptomCheckSchema },
     ]),
   ],
   controllers: [AiChatController],

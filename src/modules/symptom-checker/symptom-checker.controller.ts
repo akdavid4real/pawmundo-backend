@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SymptomCheckerService } from './symptom-checker.service';
@@ -28,5 +28,11 @@ export class SymptomCheckerController {
   async chatWithAI(@Request() req, @Body() chatDto: ChatMessageDto) {
     const response = await this.symptomCheckerService.chatWithAI(req.user.userId, chatDto.message);
     return { response };
+  }
+
+  @Get('history')
+  @ApiOperation({ summary: 'Get symptom check history' })
+  async getHistory(@Request() req) {
+    return this.symptomCheckerService.getHistory(req.user.userId);
   }
 }

@@ -27,15 +27,18 @@ export class HealthRecordsService {
 
   async findByPet(petId: string, userId: string, type?: string): Promise<HealthRecord[]> {
     await this.petsService.findById(petId, userId);
-    const filter: any = { petId, isActive: true };
+    const { Types } = require('mongoose');
+    const filter: any = { petId: new Types.ObjectId(petId), isActive: true };
     if (type) filter.type = type;
-    return this.healthRecordModel.find(filter).sort({ date: -1 }).exec();
+    const records = await this.healthRecordModel.find(filter).sort({ date: -1 }).exec();
+    return records;
   }
 
   async findById(id: string, userId: string): Promise<HealthRecord> {
-    const record = await this.healthRecordModel.findById(id).populate({
+    const { Types } = require('mongoose');
+    const record = await this.healthRecordModel.findOne({ _id: id, isActive: true }).populate({
       path: 'petId',
-      match: { ownerId: userId, isActive: true }
+      match: { ownerId: new Types.ObjectId(userId), isActive: true }
     }).exec();
     if (!record || !record.petId) throw new NotFoundException(`Health record with ID '${id}' does not exist or you don't have permission to access it`);
     return record;
@@ -126,11 +129,12 @@ export class HealthRecordsService {
 
   async getOverdueReminders(userId: string): Promise<HealthRecord[]> {
     const today = new Date();
+    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const { Types } = require('mongoose');
     
     return this.healthRecordModel
       .find({
-        nextDueDate: { $lt: today },
+        nextDueDate: { $lt: today, $gte: sevenDaysAgo },
         isReminder: true,
         isActive: true
       })

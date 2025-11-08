@@ -6,6 +6,7 @@ import { Pet, PetSchema } from '../pets/schemas/pet.schema';
 import { HealthRecord, HealthRecordSchema } from '../health-records/schemas/health-record.schema';
 import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
 import { User, UserSchema } from '../auth/schemas/user.schema';
+import { SymptomCheck, SymptomCheckSchema } from './schemas/symptom-check.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: HealthRecord.name, schema: HealthRecordSchema },
       { name: Medication.name, schema: MedicationSchema },
       { name: User.name, schema: UserSchema },
+      { name: SymptomCheck.name, schema: SymptomCheckSchema },
     ]),
   ],
   controllers: [SymptomCheckerController],

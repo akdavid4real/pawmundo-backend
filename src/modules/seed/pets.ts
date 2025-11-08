@@ -1,10 +1,16 @@
 import { Types } from 'mongoose';
 import { sampleUsers } from './users';
 
+const lunaId = new Types.ObjectId('690e8da85db702e57de01ff9');
+const shadowId = new Types.ObjectId('690e8da85db702e57de01ffa');
+const buddyId = new Types.ObjectId('690e8da85db702e57de01ffb');
+const whiskersId = new Types.ObjectId('690e8da85db702e57de01ffc');
+const maxId = new Types.ObjectId('690e8da85db702e57de01ffd');
+
 export const samplePets = [
   // Pets for akdavid4real@gmail.com
   {
-    _id: new Types.ObjectId(),
+    _id: lunaId,
     name: 'Luna',
     species: 'dog',
     breed: 'Labrador Retriever',
@@ -12,7 +18,6 @@ export const samplePets = [
     gender: 'female',
     weight: 25.0,
     color: 'Black',
-    microchipId: 'MC111222333',
     ownerId: sampleUsers[0]._id,
     dateOfBirth: new Date('2022-05-10'),
     medicalNotes: 'Very active and healthy. Loves swimming.',
@@ -24,7 +29,7 @@ export const samplePets = [
     updatedAt: new Date()
   },
   {
-    _id: new Types.ObjectId(),
+    _id: shadowId,
     name: 'Shadow',
     species: 'cat',
     breed: 'Maine Coon',
@@ -32,7 +37,6 @@ export const samplePets = [
     gender: 'male',
     weight: 6.5,
     color: 'Gray',
-    microchipId: 'MC444555666',
     ownerId: sampleUsers[0]._id,
     dateOfBirth: new Date('2020-08-15'),
     medicalNotes: 'Indoor/outdoor cat. Regular flea prevention.',
@@ -44,7 +48,7 @@ export const samplePets = [
     updatedAt: new Date()
   },
   {
-    _id: new Types.ObjectId(),
+    _id: buddyId,
     name: 'Buddy',
     species: 'dog',
     breed: 'Golden Retriever',
@@ -52,7 +56,6 @@ export const samplePets = [
     gender: 'male',
     weight: 30.5,
     color: 'Golden',
-    microchipId: 'MC123456789',
     ownerId: sampleUsers[1]._id,
     dateOfBirth: new Date('2021-03-15'),
     medicalNotes: 'Allergic to chicken. Prone to hip dysplasia.',
@@ -64,7 +67,7 @@ export const samplePets = [
     updatedAt: new Date()
   },
   {
-    _id: new Types.ObjectId(),
+    _id: whiskersId,
     name: 'Whiskers',
     species: 'cat',
     breed: 'Persian',
@@ -72,7 +75,6 @@ export const samplePets = [
     gender: 'female',
     weight: 4.2,
     color: 'White',
-    microchipId: 'MC987654321',
     ownerId: sampleUsers[2]._id,
     dateOfBirth: new Date('2019-07-22'),
     medicalNotes: 'Indoor cat. Regular grooming required.',
@@ -84,7 +86,7 @@ export const samplePets = [
     updatedAt: new Date()
   },
   {
-    _id: new Types.ObjectId(),
+    _id: maxId,
     name: 'Max',
     species: 'dog',
     breed: 'German Shepherd',
@@ -92,7 +94,6 @@ export const samplePets = [
     gender: 'male',
     weight: 35.0,
     color: 'Black and Tan',
-    microchipId: 'MC456789123',
     ownerId: sampleUsers[1]._id,
     dateOfBirth: new Date('2017-01-10'),
     medicalNotes: 'Senior dog. Arthritis in hind legs.',
@@ -105,4 +106,5 @@ export const samplePets = [
   }
 ];
 
-module.exports = { samplePets };
+export { lunaId, shadowId, buddyId, whiskersId, maxId };
+module.exports = { samplePets, lunaId, shadowId, buddyId, whiskersId, maxId };

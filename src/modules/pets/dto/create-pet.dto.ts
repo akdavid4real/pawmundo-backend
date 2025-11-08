@@ -44,11 +44,6 @@ export class CreatePetDto {
   @IsString()
   color?: string;
 
-  @ApiPropertyOptional({ description: 'Microchip ID' })
-  @IsOptional()
-  @IsString()
-  microchipId?: string;
-
   @ApiPropertyOptional({ description: 'Profile image URL' })
   @IsOptional()
   @IsString()

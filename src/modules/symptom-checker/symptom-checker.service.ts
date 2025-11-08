@@ -6,6 +6,7 @@ import { HealthRecord } from '../health-records/schemas/health-record.schema';
 import { Medication } from '../medications/schemas/medication.schema';
 import { SymptomCheckDto } from './dto/symptom-check.dto';
 import { User } from '../auth/schemas/user.schema';
+import { SymptomCheck } from './schemas/symptom-check.schema';
 
 @Injectable()
 export class SymptomCheckerService {
@@ -14,6 +15,7 @@ export class SymptomCheckerService {
     @InjectModel(HealthRecord.name) private healthRecordModel: Model<HealthRecord>,
     @InjectModel(Medication.name) private medicationModel: Model<Medication>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(SymptomCheck.name) private symptomCheckModel: Model<SymptomCheck>,
   ) {}
 
   async extractPetContext(userId: string, message: string): Promise<string> {
@@ -121,6 +123,23 @@ ${medications.length > 0 ?
     
     // Call Mistral AI
     const aiResponse = await this.callMistralAI(petContext, symptomCheckDto);
+    
+    // Save symptom check to database
+    await this.symptomCheckModel.create({
+      userId,
+      petId: symptomCheckDto.petId,
+      petName: pet.name,
+      symptoms: symptomCheckDto.symptoms,
+      duration: symptomCheckDto.duration,
+      severity: symptomCheckDto.severity.toString(),
+      additionalInfo: symptomCheckDto.additionalInfo,
+      urgencyLevel: aiResponse.urgencyLevel,
+      possibleConditions: aiResponse.possibleConditions,
+      recommendations: aiResponse.recommendations,
+      vetRequired: aiResponse.vetRequired,
+      warningSignsToWatch: aiResponse.warningSignsToWatch,
+      personalizedMessage: aiResponse.personalizedMessage,
+    });
     
     return {
       petInfo: {
@@ -287,6 +306,14 @@ Respond ONLY with valid JSON in this exact format:
         ]
       };
     }
+  }
+
+  async getHistory(userId: string) {
+    return this.symptomCheckModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .exec();
   }
 
   async chatWithAI(userId: string, message: string): Promise<string> {

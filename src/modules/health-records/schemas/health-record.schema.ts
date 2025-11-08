@@ -48,6 +48,9 @@ export class HealthRecord extends Document {
   @Prop({ default: false })
   isReminder: boolean;
 
+  @Prop({ default: false })
+  isCompleted: boolean;
+
   @Prop({ default: true })
   isActive: boolean;
 }

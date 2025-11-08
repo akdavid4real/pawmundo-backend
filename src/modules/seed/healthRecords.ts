@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
-import { samplePets } from './pets';
+import { lunaId, shadowId, buddyId, whiskersId, maxId } from './pets';
 
 export const sampleHealthRecords = [
-  // Buddy's records
+  // Luna's records
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[0]._id,
+    petId: lunaId,
     type: 'vaccination',
     title: 'Annual Vaccination - DHPP',
     description: 'Distemper, Hepatitis, Parvovirus, Parainfluenza vaccination',
@@ -17,13 +17,15 @@ export const sampleHealthRecords = [
     temperature: 101.2,
     cost: 85.00,
     notes: 'Pet responded well to vaccination. No adverse reactions.',
+    isReminder: true,
+    isCompleted: false,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[0]._id,
+    petId: lunaId,
     type: 'checkup',
     title: 'Annual Health Checkup',
     description: 'Comprehensive physical examination and blood work',
@@ -41,7 +43,7 @@ export const sampleHealthRecords = [
   },
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[0]._id,
+    petId: lunaId,
     type: 'treatment',
     title: 'Ear Infection Treatment',
     description: 'Treatment for bacterial ear infection',
@@ -56,10 +58,10 @@ export const sampleHealthRecords = [
     createdAt: new Date(),
     updatedAt: new Date()
   },
-  // Whiskers' records
+  // Shadow's records
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[1]._id,
+    petId: shadowId,
     type: 'vaccination',
     title: 'FVRCP Vaccination',
     description: 'Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia',
@@ -71,13 +73,15 @@ export const sampleHealthRecords = [
     temperature: 101.8,
     cost: 75.00,
     notes: 'Vaccination completed successfully.',
+    isReminder: true,
+    isCompleted: false,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date()
   },
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[1]._id,
+    petId: shadowId,
     type: 'grooming',
     title: 'Professional Grooming',
     description: 'Full grooming service including bath, brush, and nail trim',
@@ -91,10 +95,10 @@ export const sampleHealthRecords = [
     createdAt: new Date(),
     updatedAt: new Date()
   },
-  // Max's records
+  // Buddy's records
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[2]._id,
+    petId: buddyId,
     type: 'treatment',
     title: 'Arthritis Management',
     description: 'Joint pain assessment and treatment plan',
@@ -111,7 +115,7 @@ export const sampleHealthRecords = [
   },
   {
     _id: new Types.ObjectId(),
-    petId: samplePets[2]._id,
+    petId: buddyId,
     type: 'checkup',
     title: 'Senior Pet Wellness Exam',
     description: 'Comprehensive senior pet health evaluation',
@@ -124,6 +128,8 @@ export const sampleHealthRecords = [
     heartRate: 110,
     cost: 200.00,
     notes: 'Arthritis progression noted. Adjusted medication dosage.',
+    isReminder: true,
+    isCompleted: false,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date()

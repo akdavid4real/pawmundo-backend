@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsArray, IsNumber, IsMongoId, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsArray, IsNumber, IsMongoId, Min, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateHealthRecordDto {
@@ -81,5 +81,11 @@ export class CreateHealthRecordDto {
 
   @ApiPropertyOptional({ description: 'Is this a reminder' })
   @IsOptional()
+  @IsBoolean()
   isReminder?: boolean;
+
+  @ApiPropertyOptional({ description: 'Is reminder completed' })
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean;
 }
