@@ -214,6 +214,11 @@ Respond ONLY with valid JSON in this exact format:
 }`;
 
     try {
+      if (!process.env.MISTRAL_API_KEY) {
+        console.log('⚠️ MISTRAL_API_KEY not configured, using fallback response');
+        throw new Error('Mistral API key not configured');
+      }
+      
       console.log('🤖 Calling Mistral AI for symptom analysis...');
       const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
         method: 'POST',
@@ -270,7 +275,8 @@ Respond ONLY with valid JSON in this exact format:
         };
       }
     } catch (error) {
-      console.error('❌ Mistral AI call failed:', error);
+      console.log('⚠️ Mistral AI unavailable, using intelligent fallback response');
+      console.error('Error details:', error.message);
       
       // Provide intelligent fallback based on symptoms
       const hasRespiratorySymptoms = symptomCheckDto.symptoms.some(s => 

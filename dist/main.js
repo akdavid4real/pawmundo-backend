@@ -7684,7 +7684,7 @@ let PetsService = class PetsService {
         if (!pet) {
             throw new common_1.NotFoundException(`Pet with ID '${id}' does not exist`);
         }
-        if (ownerId && !pet.ownerId.equals(ownerId)) {
+        if (ownerId && !pet.ownerId.equals(new mongoose_2.Types.ObjectId(ownerId))) {
             throw new common_1.ForbiddenException(`Access denied`);
         }
         return pet;
@@ -9209,6 +9209,10 @@ Respond ONLY with valid JSON in this exact format:
   "personalizedMessage": "Hello [Owner Name], based on [Pet Name]'s symptoms..."
 }`;
         try {
+            if (!process.env.MISTRAL_API_KEY) {
+                console.log('⚠️ MISTRAL_API_KEY not configured, using fallback response');
+                throw new Error('Mistral API key not configured');
+            }
             console.log('🤖 Calling Mistral AI for symptom analysis...');
             const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
                 method: 'POST',
@@ -9262,7 +9266,8 @@ Respond ONLY with valid JSON in this exact format:
             }
         }
         catch (error) {
-            console.error('❌ Mistral AI call failed:', error);
+            console.log('⚠️ Mistral AI unavailable, using intelligent fallback response');
+            console.error('Error details:', error.message);
             const hasRespiratorySymptoms = symptomCheckDto.symptoms.some(s => s.toLowerCase().includes('wheezing') || s.toLowerCase().includes('cough') || s.toLowerCase().includes('breathing'));
             const hasDigestiveSymptoms = symptomCheckDto.symptoms.some(s => s.toLowerCase().includes('vomit') || s.toLowerCase().includes('diarrhea'));
             const hasSkinSymptoms = symptomCheckDto.symptoms.some(s => s.toLowerCase().includes('itch') || s.toLowerCase().includes('scratch') || s.toLowerCase().includes('rash'));

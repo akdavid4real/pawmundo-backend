@@ -25,7 +25,7 @@ export class PetsService {
     }
 
     // If ownerId is provided, verify ownership
-    if (ownerId && !pet.ownerId.equals(ownerId)) {
+    if (ownerId && !pet.ownerId.equals(new Types.ObjectId(ownerId))) {
       throw new ForbiddenException(`Access denied`);
     }
 
