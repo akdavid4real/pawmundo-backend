@@ -1,0 +1,26 @@
+import { Types } from 'mongoose';
+declare const lunaId: Types.ObjectId;
+declare const shadowId: Types.ObjectId;
+declare const buddyId: Types.ObjectId;
+declare const whiskersId: Types.ObjectId;
+declare const maxId: Types.ObjectId;
+export declare const samplePets: {
+    _id: Types.ObjectId;
+    name: string;
+    species: string;
+    breed: string;
+    age: number;
+    gender: string;
+    weight: number;
+    color: string;
+    ownerId: Types.ObjectId;
+    dateOfBirth: Date;
+    medicalNotes: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    healthStatus: string;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}[];
+export { lunaId, shadowId, buddyId, whiskersId, maxId };

@@ -239,8 +239,36 @@ export class PetsController {
     return this.petsService.findById(id, userId);
   }
 
-  @ApiOperation({ summary: 'Update pet information' })
-  @ApiResponse({ status: 200, description: 'Pet updated successfully' })
+  @ApiOperation({ 
+    summary: 'Update pet information',
+    description: `
+      Update any field of a pet's profile. Only provided fields will be updated.
+      
+      **Updatable Fields:**
+      - Basic info (name, breed, age, weight, color)
+      - Medical info (allergies, past illnesses, surgeries)
+      - Dietary info (preferences, restrictions)
+      - Behavioral notes
+      - Emergency contacts
+      
+      **Note:** You can only update your own pets
+    `
+  })
+  @ApiParam({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Pet updated successfully',
+    schema: {
+      example: {
+        _id: '507f1f77bcf86cd799439012',
+        name: 'Buddy Updated',
+        weight: 32,
+        updatedAt: '2024-01-16T10:00:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Pet not found' })
   @Put(':id')
   async update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto, @Request() req) {
     const userId = req.user.userId;
@@ -251,16 +279,72 @@ export class PetsController {
     return this.petsService.update(id, userId, petData);
   }
 
-  @ApiOperation({ summary: 'Update pet health status' })
-  @ApiResponse({ status: 200, description: 'Health status updated' })
+  @ApiOperation({ 
+    summary: 'Update pet health status',
+    description: `
+      Update the current health status of a pet.
+      
+      **Valid Status Values:**
+      - healthy - Pet is in good health
+      - sick - Pet is currently ill
+      - recovering - Pet is recovering from illness
+      - chronic - Pet has chronic condition
+      
+      **Use Cases:**
+      - Track pet's health changes over time
+      - Alert for sick pets needing attention
+      - Monitor recovery progress
+    `
+  })
+  @ApiParam({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Health status updated',
+    schema: {
+      example: {
+        _id: '507f1f77bcf86cd799439012',
+        name: 'Buddy',
+        healthStatus: 'sick',
+        updatedAt: '2024-01-16T10:00:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Invalid health status' })
   @Put(':id/health-status')
   async updateHealthStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
     const userId = req.user.userId;
     return this.petsService.updateHealthStatus(id, userId, status);
   }
 
-  @ApiOperation({ summary: 'Delete pet' })
-  @ApiResponse({ status: 200, description: 'Pet deleted successfully' })
+  @ApiOperation({ 
+    summary: 'Delete pet (soft delete)',
+    description: `
+      Soft delete a pet profile. The pet is marked as inactive but not permanently removed.
+      
+      **Important:**
+      - Pet data is preserved for historical records
+      - Associated health records, appointments remain accessible
+      - Pet will not appear in active pet lists
+      - Can be restored by admin if needed
+      
+      **Security:** Only pet owner can delete their pets
+    `
+  })
+  @ApiParam({ name: 'id', description: 'Pet ID to delete', example: '507f1f77bcf86cd799439012' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Pet deleted successfully',
+    schema: {
+      example: {
+        _id: '507f1f77bcf86cd799439012',
+        name: 'Buddy',
+        isActive: false,
+        updatedAt: '2024-01-16T10:00:00.000Z'
+      }
+    }
+  })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'Pet not found' })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
     const userId = req.user.userId;

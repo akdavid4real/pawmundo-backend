@@ -317,7 +317,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesGuard = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -342,7 +341,7 @@ let RolesGuard = class RolesGuard {
 exports.RolesGuard = RolesGuard;
 exports.RolesGuard = RolesGuard = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [core_1.Reflector])
 ], RolesGuard);
 
 
@@ -582,9 +581,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityTrackingController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -688,10 +687,11 @@ __decorate([
         }
     }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/activity-tracking/schemas/activity.schema */ "./src/modules/activity-tracking/schemas/activity.schema.ts").Activity) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_activity_dto_1.CreateActivityDto !== "undefined" && create_activity_dto_1.CreateActivityDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_activity_dto_1.CreateActivityDto]),
     __metadata("design:returntype", Promise)
 ], ActivityTrackingController.prototype, "create", null);
 __decorate([
@@ -749,6 +749,7 @@ __decorate([
         }
     }),
     (0, common_1.Get)('pet/:petId'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/activity-tracking/schemas/activity.schema */ "./src/modules/activity-tracking/schemas/activity.schema.ts").Activity)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Query)('type')),
     __metadata("design:type", Function),
@@ -809,6 +810,7 @@ __decorate([
         }
     }),
     (0, common_1.Get)('pet/:petId/daily-stats'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Query)('date')),
     __metadata("design:type", Function),
@@ -862,6 +864,7 @@ __decorate([
         }
     }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/activity-tracking/schemas/activity.schema */ "./src/modules/activity-tracking/schemas/activity.schema.ts").Activity) }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -872,7 +875,7 @@ exports.ActivityTrackingController = ActivityTrackingController = __decorate([
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('activity-tracking'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof activity_tracking_service_1.ActivityTrackingService !== "undefined" && activity_tracking_service_1.ActivityTrackingService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [activity_tracking_service_1.ActivityTrackingService])
 ], ActivityTrackingController);
 
 
@@ -934,7 +937,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityTrackingService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -994,7 +996,7 @@ exports.ActivityTrackingService = ActivityTrackingService;
 exports.ActivityTrackingService = ActivityTrackingService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(activity_schema_1.Activity.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], ActivityTrackingService);
 
 
@@ -1018,9 +1020,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateActivityDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateActivityDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, type: { required: true, type: () => String }, date: { required: true, type: () => String }, duration: { required: false, type: () => Number, minimum: 0 }, distance: { required: false, type: () => Number, minimum: 0 }, foodAmount: { required: false, type: () => Number, minimum: 0 }, waterAmount: { required: false, type: () => Number, minimum: 0 }, notes: { required: false, type: () => String } };
+    }
 }
 exports.CreateActivityDto = CreateActivityDto;
 __decorate([
@@ -1098,7 +1104,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivitySchema = exports.Activity = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -1108,7 +1113,7 @@ let Activity = class Activity extends mongoose_2.Document {
 exports.Activity = Activity;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Activity.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true, enum: ['walk', 'play', 'feeding', 'water', 'exercise', 'other'] }),
@@ -1116,7 +1121,7 @@ __decorate([
 ], Activity.prototype, "type", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], Activity.prototype, "date", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -1171,9 +1176,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -1197,15 +1202,17 @@ exports.AiChatController = AiChatController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'General AI chat with Mistral AI' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof ai_chat_dto_1.AiChatDto !== "undefined" && ai_chat_dto_1.AiChatDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, ai_chat_dto_1.AiChatDto]),
     __metadata("design:returntype", Promise)
 ], AiChatController.prototype, "chat", null);
 __decorate([
     (0, common_1.Post)('typing'),
     (0, swagger_1.ApiOperation)({ summary: 'Get typing indicator' }),
+    openapi.ApiResponse({ status: 201 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -1213,10 +1220,11 @@ __decorate([
 __decorate([
     (0, common_1.Post)('offline'),
     (0, swagger_1.ApiOperation)({ summary: 'Get offline response with user context' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_c = typeof ai_chat_dto_1.AiChatDto !== "undefined" && ai_chat_dto_1.AiChatDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [Object, ai_chat_dto_1.AiChatDto]),
     __metadata("design:returntype", Promise)
 ], AiChatController.prototype, "getOfflineResponse", null);
 exports.AiChatController = AiChatController = __decorate([
@@ -1224,7 +1232,7 @@ exports.AiChatController = AiChatController = __decorate([
     (0, common_1.Controller)('ai-chat'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof ai_chat_service_1.AiChatService !== "undefined" && ai_chat_service_1.AiChatService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [ai_chat_service_1.AiChatService])
 ], AiChatController);
 
 
@@ -1301,7 +1309,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -1456,7 +1463,11 @@ exports.AiChatService = AiChatService;
 exports.AiChatService = AiChatService = __decorate([
     (0, common_1.Injectable)(),
     __param(4, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof symptom_checker_service_1.SymptomCheckerService !== "undefined" && symptom_checker_service_1.SymptomCheckerService) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object, typeof (_c = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _c : Object, typeof (_d = typeof appointments_service_1.AppointmentsService !== "undefined" && appointments_service_1.AppointmentsService) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
+    __metadata("design:paramtypes", [symptom_checker_service_1.SymptomCheckerService,
+        pets_service_1.PetsService,
+        health_records_service_1.HealthRecordsService,
+        appointments_service_1.AppointmentsService,
+        mongoose_2.Model])
 ], AiChatService);
 
 
@@ -1480,9 +1491,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class AiChatDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { message: { required: true, type: () => String }, context: { required: false, type: () => String } };
+    }
 }
 exports.AiChatDto = AiChatDto;
 __decorate([
@@ -1519,9 +1534,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppointmentsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -1559,16 +1574,18 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create a new appointment' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Appointment created successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_appointment_dto_1.CreateAppointmentDto !== "undefined" && create_appointment_dto_1.CreateAppointmentDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_appointment_dto_1.CreateAppointmentDto]),
     __metadata("design:returntype", Promise)
 ], AppointmentsController.prototype, "create", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all user appointments' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user appointments' }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -1578,6 +1595,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get upcoming appointments' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of upcoming appointments' }),
     (0, common_1.Get)('upcoming'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -1588,6 +1606,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Appointment details' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Appointment not found' }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -1598,17 +1617,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update appointment' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Appointment updated successfully' }),
     (0, common_1.Put)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_appointment_dto_1.UpdateAppointmentDto !== "undefined" && update_appointment_dto_1.UpdateAppointmentDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, update_appointment_dto_1.UpdateAppointmentDto, Object]),
     __metadata("design:returntype", Promise)
 ], AppointmentsController.prototype, "update", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Cancel appointment' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Appointment cancelled successfully' }),
     (0, common_1.Put)(':id/cancel'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -1619,6 +1640,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete appointment' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Appointment deleted successfully' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/appointments/schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts").Appointment) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -1630,7 +1652,7 @@ exports.AppointmentsController = AppointmentsController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('appointments'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof appointments_service_1.AppointmentsService !== "undefined" && appointments_service_1.AppointmentsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [appointments_service_1.AppointmentsService])
 ], AppointmentsController);
 
 
@@ -1692,7 +1714,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppointmentsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -1772,7 +1793,7 @@ exports.AppointmentsService = AppointmentsService;
 exports.AppointmentsService = AppointmentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(appointment_schema_1.Appointment.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], AppointmentsService);
 
 
@@ -1796,9 +1817,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateAppointmentDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateAppointmentDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, vetName: { required: true, type: () => String }, vetClinic: { required: true, type: () => String }, appointmentDate: { required: true, type: () => String }, appointmentTime: { required: true, type: () => String }, reason: { required: true, type: () => String }, notes: { required: false, type: () => String }, vetPhone: { required: false, type: () => String }, vetEmail: { required: false, type: () => String } };
+    }
 }
 exports.CreateAppointmentDto = CreateAppointmentDto;
 __decorate([
@@ -1877,11 +1902,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateAppointmentDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const create_appointment_dto_1 = __webpack_require__(/*! ./create-appointment.dto */ "./src/modules/appointments/dto/create-appointment.dto.ts");
 class UpdateAppointmentDto extends (0, mapped_types_1.PartialType)(create_appointment_dto_1.CreateAppointmentDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { status: { required: false, type: () => String } };
+    }
 }
 exports.UpdateAppointmentDto = UpdateAppointmentDto;
 __decorate([
@@ -1913,7 +1942,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppointmentSchema = exports.Appointment = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -1923,11 +1951,11 @@ let Appointment = class Appointment {
 exports.Appointment = Appointment;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Appointment.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Appointment.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -1939,7 +1967,7 @@ __decorate([
 ], Appointment.prototype, "vetClinic", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], Appointment.prototype, "appointmentDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -1996,9 +2024,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/modules/auth/auth.service.ts");
@@ -2029,22 +2057,25 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof register_dto_1.RegisterDto !== "undefined" && register_dto_1.RegisterDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
     (0, common_1.Post)('login'),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Get)('profile'),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2052,21 +2083,23 @@ __decorate([
 ], AuthController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('forgot-password'),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof forgot_password_dto_1.ForgotPasswordDto !== "undefined" && forgot_password_dto_1.ForgotPasswordDto) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
     (0, common_1.Post)('reset-password'),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof reset_password_dto_1.ResetPasswordDto !== "undefined" && reset_password_dto_1.ResetPasswordDto) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], AuthController);
 
 
@@ -2138,7 +2171,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -2348,7 +2380,9 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _b : Object, typeof (_c = typeof mail_service_1.MailService !== "undefined" && mail_service_1.MailService) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        jwt_1.JwtService,
+        mail_service_1.MailService])
 ], AuthService);
 
 
@@ -2372,9 +2406,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForgotPasswordDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class ForgotPasswordDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { email: { required: true, type: () => String } };
+    }
 }
 exports.ForgotPasswordDto = ForgotPasswordDto;
 __decorate([
@@ -2405,9 +2443,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoginDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class LoginDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { email: { required: true, type: () => String }, password: { required: true, type: () => String } };
+    }
 }
 exports.LoginDto = LoginDto;
 __decorate([
@@ -2444,9 +2486,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class RegisterDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { email: { required: true, type: () => String }, password: { required: true, type: () => String, minLength: 8, pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/" }, firstName: { required: true, type: () => String }, lastName: { required: true, type: () => String }, role: { required: false, type: () => String }, phone: { required: false, type: () => String }, address: { required: false, type: () => String } };
+    }
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
@@ -2520,9 +2566,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ResetPasswordDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class ResetPasswordDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { token: { required: true, type: () => String }, newPassword: { required: true, type: () => String, minLength: 8, pattern: "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/" } };
+    }
 }
 exports.ResetPasswordDto = ResetPasswordDto;
 __decorate([
@@ -2588,7 +2638,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UserSchema = exports.User = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -2641,11 +2690,11 @@ __decorate([
 ], User.prototype, "passwordResetToken", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", Date)
 ], User.prototype, "passwordResetExpires", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], User.prototype, "lastLogin", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -2675,7 +2724,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtStrategy = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -2703,7 +2751,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
 exports.JwtStrategy = JwtStrategy;
 exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], JwtStrategy);
 
 
@@ -2725,7 +2773,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalStrategy = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -2748,7 +2795,7 @@ let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)
 exports.LocalStrategy = LocalStrategy;
 exports.LocalStrategy = LocalStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [auth_service_1.AuthService])
 ], LocalStrategy);
 
 
@@ -2773,9 +2820,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
@@ -2834,14 +2881,54 @@ let ConsultationsController = class ConsultationsController {
 exports.ConsultationsController = ConsultationsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new consultation request' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Consultation created successfully' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create a new consultation request',
+        description: `
+      Request a virtual consultation with a veterinarian.
+      
+      **Process:**
+      1. Submit consultation request with pet details
+      2. Request enters vet queue with 'pending' status
+      3. Available vets can see and accept the request
+      4. You'll be notified when a vet accepts
+      
+      **Required Information:**
+      - Pet ID (must be your pet)
+      - Scheduled date/time
+      - Reason for consultation
+      
+      **Optional Information:**
+      - Symptoms description
+      - Consultation type (video/audio/chat)
+      - Expected duration
+    `
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Consultation created successfully',
+        schema: {
+            example: {
+                _id: '507f1f77bcf86cd799439012',
+                userId: '507f1f77bcf86cd799439010',
+                petId: '507f1f77bcf86cd799439011',
+                status: 'pending',
+                scheduledDate: '2024-12-25T10:00:00.000Z',
+                reason: 'Annual checkup',
+                symptoms: 'Coughing and sneezing',
+                consultationType: 'video',
+                duration: 30,
+                isActive: true,
+                createdAt: '2024-01-15T10:00:00.000Z'
+            }
+        }
+    }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input data' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_consultation_dto_1.CreateConsultationDto !== "undefined" && create_consultation_dto_1.CreateConsultationDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_consultation_dto_1.CreateConsultationDto]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "create", null);
 __decorate([
@@ -2850,6 +2937,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: ['pending', 'assigned', 'in-progress', 'completed', 'cancelled'], description: 'Filter by consultation status' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of consultations retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -2861,6 +2949,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get upcoming consultations for the authenticated user' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Upcoming consultations retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2874,6 +2963,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2888,11 +2978,12 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, typeof (_c = typeof update_consultation_dto_1.UpdateConsultationDto !== "undefined" && update_consultation_dto_1.UpdateConsultationDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [String, Object, update_consultation_dto_1.UpdateConsultationDto]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "update", null);
 __decorate([
@@ -2903,6 +2994,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot cancel consultation in current status' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2918,6 +3010,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot start consultation in current status' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)('meetingLink')),
@@ -2943,6 +3036,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot complete consultation in current status' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)('notes')),
@@ -2958,6 +3052,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Queue retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -2969,6 +3064,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Active consultations retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2981,6 +3077,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'History retrieved successfully' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2996,6 +3093,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 409, description: 'Consultation already assigned' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -3011,6 +3109,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Not assigned to this vet' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -3022,7 +3121,7 @@ exports.ConsultationsController = ConsultationsController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('consultations'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof consultations_service_1.ConsultationsService !== "undefined" && consultations_service_1.ConsultationsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [consultations_service_1.ConsultationsService])
 ], ConsultationsController);
 
 
@@ -3047,7 +3146,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsGateway = void 0;
 const websockets_1 = __webpack_require__(/*! @nestjs/websockets */ "@nestjs/websockets");
@@ -3135,14 +3233,14 @@ let ConsultationsGateway = class ConsultationsGateway {
 exports.ConsultationsGateway = ConsultationsGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", typeof (_c = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _c : Object)
+    __metadata("design:type", socket_io_1.Server)
 ], ConsultationsGateway.prototype, "server", void 0);
 __decorate([
     (0, websockets_1.SubscribeMessage)('consultation:register'),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object, Object]),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ConsultationsGateway.prototype, "handleRegister", null);
 __decorate([
@@ -3150,7 +3248,7 @@ __decorate([
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object, Object]),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ConsultationsGateway.prototype, "handleAccept", null);
 __decorate([
@@ -3158,12 +3256,13 @@ __decorate([
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __param(1, (0, websockets_1.MessageBody)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _f : Object, Object]),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ConsultationsGateway.prototype, "handleRelease", null);
 exports.ConsultationsGateway = ConsultationsGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: { origin: '*' }, namespace: '/consultations' }),
-    __metadata("design:paramtypes", [typeof (_a = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof consultations_service_1.ConsultationsService !== "undefined" && consultations_service_1.ConsultationsService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [jwt_1.JwtService,
+        consultations_service_1.ConsultationsService])
 ], ConsultationsGateway);
 
 
@@ -3234,7 +3333,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -3373,7 +3471,8 @@ exports.ConsultationsService = ConsultationsService;
 exports.ConsultationsService = ConsultationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(consultation_schema_1.Consultation.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        pets_service_1.PetsService])
 ], ConsultationsService);
 
 
@@ -3397,40 +3496,78 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateConsultationDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateConsultationDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, scheduledDate: { required: true, type: () => String }, duration: { required: false, type: () => Number }, reason: { required: true, type: () => String }, symptoms: { required: false, type: () => String }, consultationType: { required: false, type: () => String }, cost: { required: false, type: () => Number } };
+    }
 }
 exports.CreateConsultationDto = CreateConsultationDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Pet ID for the consultation',
+        example: '507f1f77bcf86cd799439011'
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "petId", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Scheduled date and time for the consultation',
+        example: '2024-12-25T10:00:00Z'
+    }),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "scheduledDate", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Duration of consultation in minutes',
+        example: 30,
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateConsultationDto.prototype, "duration", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reason for consultation',
+        example: 'Annual checkup'
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "reason", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Symptoms or concerns',
+        example: 'Coughing and sneezing for 2 days',
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "symptoms", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Type of consultation',
+        enum: ['video', 'audio', 'chat'],
+        example: 'video',
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(['video', 'audio', 'chat']),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "consultationType", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Consultation cost',
+        example: 50,
+        required: false
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
@@ -3457,10 +3594,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateConsultationDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const create_consultation_dto_1 = __webpack_require__(/*! ./create-consultation.dto */ "./src/modules/consultations/dto/create-consultation.dto.ts");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class UpdateConsultationDto extends (0, mapped_types_1.PartialType)(create_consultation_dto_1.CreateConsultationDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { status: { required: false, type: () => String }, notes: { required: false, type: () => String }, prescription: { required: false, type: () => String }, followUpRequired: { required: false, type: () => Boolean }, followUpDate: { required: false, type: () => String }, meetingLink: { required: false, type: () => String }, meetingId: { required: false, type: () => String }, paymentStatus: { required: false, type: () => String } };
+    }
 }
 exports.UpdateConsultationDto = UpdateConsultationDto;
 __decorate([
@@ -3523,7 +3664,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationSchema = exports.Consultation = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -3533,15 +3673,15 @@ let Consultation = class Consultation {
 exports.Consultation = Consultation;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Consultation.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Consultation.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User' }),
-    __metadata("design:type", typeof (_c = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _c : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Consultation.prototype, "assignedVet", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -3553,7 +3693,7 @@ __decorate([
 ], Consultation.prototype, "status", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+    __metadata("design:type", Date)
 ], Consultation.prototype, "scheduledDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: 30 }),
@@ -3581,7 +3721,7 @@ __decorate([
 ], Consultation.prototype, "followUpRequired", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+    __metadata("design:type", Date)
 ], Consultation.prototype, "followUpDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: 'video', enum: ['video', 'audio', 'chat'] }),
@@ -3609,7 +3749,7 @@ __decorate([
 ], Consultation.prototype, "unreadCount", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+    __metadata("design:type", Date)
 ], Consultation.prototype, "lastMessageAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -3643,9 +3783,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateEventDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateEventDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: false, type: () => String }, title: { required: true, type: () => String }, description: { required: true, type: () => String }, eventDate: { required: true, type: () => String }, eventTime: { required: false, type: () => String }, category: { required: true, type: () => String }, location: { required: false, type: () => String }, notes: { required: false, type: () => String }, isRecurring: { required: false, type: () => Boolean }, recurringType: { required: false, type: () => String } };
+    }
 }
 exports.CreateEventDto = CreateEventDto;
 __decorate([
@@ -3728,11 +3872,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateEventDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const create_event_dto_1 = __webpack_require__(/*! ./create-event.dto */ "./src/modules/events/dto/create-event.dto.ts");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class UpdateEventDto extends (0, swagger_1.PartialType)(create_event_dto_1.CreateEventDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { status: { required: false, type: () => String } };
+    }
 }
 exports.UpdateEventDto = UpdateEventDto;
 __decorate([
@@ -3764,9 +3912,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -3823,16 +3971,18 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create a new event' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Event created successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_event_dto_1.CreateEventDto !== "undefined" && create_event_dto_1.CreateEventDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_event_dto_1.CreateEventDto]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "create", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all user events' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user events' }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -3842,6 +3992,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get upcoming events' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of upcoming events' }),
     (0, common_1.Get)('upcoming'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -3852,6 +4003,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of events by category' }),
     (0, swagger_1.ApiQuery)({ name: 'category', enum: ['appointment', 'vaccination', 'medication', 'grooming', 'training', 'other'] }),
     (0, common_1.Get)('category'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('category')),
     __metadata("design:type", Function),
@@ -3863,6 +4015,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Event details' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Event not found' }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -3873,17 +4026,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update event' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Event updated successfully' }),
     (0, common_1.Put)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/events/schemas/event.schema */ "./src/modules/events/schemas/event.schema.ts").Event) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_event_dto_1.UpdateEventDto !== "undefined" && update_event_dto_1.UpdateEventDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, update_event_dto_1.UpdateEventDto, Object]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "update", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete event' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Event deleted successfully' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -3895,7 +4050,7 @@ exports.EventsController = EventsController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('events'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof events_service_1.EventsService !== "undefined" && events_service_1.EventsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [events_service_1.EventsService])
 ], EventsController);
 
 
@@ -3957,7 +4112,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -4061,7 +4215,7 @@ exports.EventsService = EventsService;
 exports.EventsService = EventsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(event_schema_1.Event.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], EventsService);
 
 
@@ -4083,7 +4237,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EventSchema = exports.Event = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -4093,11 +4246,11 @@ let Event = class Event {
 exports.Event = Event;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Event.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet' }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Event.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -4109,7 +4262,7 @@ __decorate([
 ], Event.prototype, "description", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], Event.prototype, "eventDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -4169,9 +4322,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateForumPostDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateForumPostDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { title: { required: true, type: () => String }, content: { required: true, type: () => String }, category: { required: true, type: () => String } };
+    }
 }
 exports.CreateForumPostDto = CreateForumPostDto;
 __decorate([
@@ -4216,9 +4373,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateReplyDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateReplyDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { content: { required: true, type: () => String } };
+    }
 }
 exports.CreateReplyDto = CreateReplyDto;
 __decorate([
@@ -4250,9 +4411,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForumController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -4287,10 +4448,11 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create a new forum post' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Post created successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/forum/schemas/forum-post.schema */ "./src/modules/forum/schemas/forum-post.schema.ts").ForumPost) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_forum_post_dto_1.CreateForumPostDto !== "undefined" && create_forum_post_dto_1.CreateForumPostDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_forum_post_dto_1.CreateForumPostDto]),
     __metadata("design:returntype", Promise)
 ], ForumController.prototype, "create", null);
 __decorate([
@@ -4300,6 +4462,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('category')),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
@@ -4311,6 +4474,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get forum post by ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Forum post details' }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/forum/schemas/forum-post.schema */ "./src/modules/forum/schemas/forum-post.schema.ts").ForumPost) }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -4320,6 +4484,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Toggle like on a forum post' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Like toggled successfully' }),
     (0, common_1.Post)(':id/like'),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/forum/schemas/forum-post.schema */ "./src/modules/forum/schemas/forum-post.schema.ts").ForumPost) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4330,17 +4495,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Add reply to a forum post' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Reply added successfully' }),
     (0, common_1.Post)(':id/replies'),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/forum/schemas/forum-post.schema */ "./src/modules/forum/schemas/forum-post.schema.ts").ForumPost) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof create_reply_dto_1.CreateReplyDto !== "undefined" && create_reply_dto_1.CreateReplyDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, create_reply_dto_1.CreateReplyDto, Object]),
     __metadata("design:returntype", Promise)
 ], ForumController.prototype, "addReply", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete forum post' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Post deleted successfully' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4352,7 +4519,7 @@ exports.ForumController = ForumController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('forum'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof forum_service_1.ForumService !== "undefined" && forum_service_1.ForumService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [forum_service_1.ForumService])
 ], ForumController);
 
 
@@ -4414,7 +4581,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForumService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -4562,7 +4728,7 @@ exports.ForumService = ForumService;
 exports.ForumService = ForumService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(forum_post_schema_1.ForumPost.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], ForumService);
 
 
@@ -4584,7 +4750,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForumPostSchema = exports.ForumPost = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -4606,7 +4771,7 @@ __decorate([
 ], ForumPost.prototype, "category", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], ForumPost.prototype, "authorId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'User' }], default: [] }),
@@ -4626,7 +4791,7 @@ __decorate([
             authorId: { type: mongoose_2.Types.ObjectId, ref: 'User', required: true },
             createdAt: { type: Date, default: Date.now }
         }]),
-    __metadata("design:type", typeof (_b = typeof Array !== "undefined" && Array) === "function" ? _b : Object)
+    __metadata("design:type", Array)
 ], ForumPost.prototype, "replies", void 0);
 exports.ForumPost = ForumPost = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
@@ -4656,9 +4821,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateHealthRecordDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateHealthRecordDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, type: { required: true, type: () => String }, title: { required: true, type: () => String }, description: { required: false, type: () => String }, date: { required: true, type: () => String }, veterinarian: { required: false, type: () => String }, clinic: { required: false, type: () => String }, attachments: { required: false, type: () => [String] }, nextDueDate: { required: false, type: () => String }, weight: { required: false, type: () => Number, minimum: 0 }, temperature: { required: false, type: () => Number }, heartRate: { required: false, type: () => Number, minimum: 0 }, cost: { required: false, type: () => Number, minimum: 0 }, notes: { required: false, type: () => String }, isReminder: { required: false, type: () => Boolean }, isCompleted: { required: false, type: () => Boolean } };
+    }
 }
 exports.CreateHealthRecordDto = CreateHealthRecordDto;
 __decorate([
@@ -4777,9 +4946,13 @@ __decorate([
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateHealthRecordDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const create_health_record_dto_1 = __webpack_require__(/*! ./create-health-record.dto */ "./src/modules/health-records/dto/create-health-record.dto.ts");
 class UpdateHealthRecordDto extends (0, mapped_types_1.PartialType)(create_health_record_dto_1.CreateHealthRecordDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return {};
+    }
 }
 exports.UpdateHealthRecordDto = UpdateHealthRecordDto;
 
@@ -4805,9 +4978,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mongoose_1 = __webpack_require__(/*! mongoose */ "mongoose");
@@ -4889,10 +5062,11 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create health record' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Health record created successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_health_record_dto_1.CreateHealthRecordDto !== "undefined" && create_health_record_dto_1.CreateHealthRecordDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_health_record_dto_1.CreateHealthRecordDto]),
     __metadata("design:returntype", Promise)
 ], HealthRecordsController.prototype, "create", null);
 __decorate([
@@ -4900,6 +5074,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of pet health records' }),
     (0, swagger_1.ApiQuery)({ name: 'type', required: false, description: 'Filter by record type' }),
     (0, common_1.Get)('pet/:petId'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Query)('type')),
     __param(2, (0, common_1.Request)()),
@@ -4911,6 +5086,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get upcoming reminders' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of upcoming health reminders' }),
     (0, common_1.Get)('reminders/upcoming'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -4920,6 +5096,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get vaccination history' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Vaccination records for pet' }),
     (0, common_1.Get)('pet/:petId/vaccinations'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4930,6 +5107,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get health summary for pet' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Health summary statistics' }),
     (0, common_1.Get)('pet/:petId/summary'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4940,6 +5118,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get health record by ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Health record details' }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4950,17 +5129,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update health record' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Health record updated successfully' }),
     (0, common_1.Put)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_health_record_dto_1.UpdateHealthRecordDto !== "undefined" && update_health_record_dto_1.UpdateHealthRecordDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, update_health_record_dto_1.UpdateHealthRecordDto, Object]),
     __metadata("design:returntype", Promise)
 ], HealthRecordsController.prototype, "update", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete health record' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Health record deleted successfully' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -4971,6 +5152,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get overdue reminders' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of overdue health reminders' }),
     (0, common_1.Get)('reminders/overdue'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -4980,6 +5162,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Add attachment to health record' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Attachment added successfully' }),
     (0, common_1.Post)(':id/attachments'),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('url')),
     __param(2, (0, common_1.Request)()),
@@ -4991,6 +5174,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Remove attachment from health record' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Attachment removed successfully' }),
     (0, common_1.Delete)(':id/attachments'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('url')),
     __param(2, (0, common_1.Request)()),
@@ -5004,6 +5188,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: true, description: 'Start date (YYYY-MM-DD)' }),
     (0, swagger_1.ApiQuery)({ name: 'endDate', required: true, description: 'End date (YYYY-MM-DD)' }),
     (0, common_1.Get)('pet/:petId/date-range'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/health-records/schemas/health-record.schema */ "./src/modules/health-records/schemas/health-record.schema.ts").HealthRecord)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Query)('startDate')),
     __param(2, (0, common_1.Query)('endDate')),
@@ -5016,6 +5201,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get health analytics for user' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Health analytics and statistics' }),
     (0, common_1.Get)('analytics'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -5026,7 +5212,7 @@ exports.HealthRecordsController = HealthRecordsController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('health-records'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [health_records_service_1.HealthRecordsService])
 ], HealthRecordsController);
 
 
@@ -5090,7 +5276,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -5300,7 +5485,8 @@ exports.HealthRecordsService = HealthRecordsService;
 exports.HealthRecordsService = HealthRecordsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(health_record_schema_1.HealthRecord.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        pets_service_1.PetsService])
 ], HealthRecordsService);
 
 
@@ -5322,7 +5508,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRecordSchema = exports.HealthRecord = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -5332,7 +5517,7 @@ let HealthRecord = class HealthRecord extends mongoose_2.Document {
 exports.HealthRecord = HealthRecord;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], HealthRecord.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -5348,7 +5533,7 @@ __decorate([
 ], HealthRecord.prototype, "description", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], HealthRecord.prototype, "date", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -5364,7 +5549,7 @@ __decorate([
 ], HealthRecord.prototype, "attachments", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], HealthRecord.prototype, "nextDueDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -5430,9 +5615,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRemindersController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -5453,6 +5638,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all reminders for user' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User health reminders' }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -5462,6 +5648,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create vaccination reminders for pet' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Vaccination reminders created' }),
     (0, common_1.Post)('pet/:petId/vaccinations'),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -5473,7 +5660,7 @@ exports.HealthRemindersController = HealthRemindersController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('health-reminders'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof health_reminders_service_1.HealthRemindersService !== "undefined" && health_reminders_service_1.HealthRemindersService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [health_reminders_service_1.HealthRemindersService])
 ], HealthRemindersController);
 
 
@@ -5531,7 +5718,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HealthRemindersService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -5663,7 +5849,9 @@ __decorate([
 ], HealthRemindersService.prototype, "sendDailyReminders", null);
 exports.HealthRemindersService = HealthRemindersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof health_records_service_1.HealthRecordsService !== "undefined" && health_records_service_1.HealthRecordsService) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object, typeof (_c = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [health_records_service_1.HealthRecordsService,
+        pets_service_1.PetsService,
+        notifications_service_1.NotificationsService])
 ], HealthRemindersService);
 
 
@@ -5687,9 +5875,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateInsuranceDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreateInsuranceDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, provider: { required: true, type: () => String }, policyNumber: { required: true, type: () => String }, planType: { required: true, type: () => String }, monthlyPremium: { required: true, type: () => Number, minimum: 0 }, deductible: { required: true, type: () => Number, minimum: 0 }, coverageLimit: { required: true, type: () => Number, minimum: 0 }, startDate: { required: true, type: () => String }, endDate: { required: true, type: () => String }, notes: { required: false, type: () => String } };
+    }
 }
 exports.CreateInsuranceDto = CreateInsuranceDto;
 __decorate([
@@ -5768,9 +5960,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceClaimDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class InsuranceClaimDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { insuranceId: { required: true, type: () => String }, claimAmount: { required: true, type: () => Number, minimum: 0 }, description: { required: true, type: () => String }, serviceDate: { required: true, type: () => String }, provider: { required: false, type: () => String }, treatmentType: { required: false, type: () => String } };
+    }
 }
 exports.InsuranceClaimDto = InsuranceClaimDto;
 __decorate([
@@ -5828,11 +6024,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateInsuranceDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const create_insurance_dto_1 = __webpack_require__(/*! ./create-insurance.dto */ "./src/modules/insurance/dto/create-insurance.dto.ts");
 class UpdateInsuranceDto extends (0, mapped_types_1.PartialType)(create_insurance_dto_1.CreateInsuranceDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { status: { required: false, type: () => String } };
+    }
 }
 exports.UpdateInsuranceDto = UpdateInsuranceDto;
 __decorate([
@@ -5868,9 +6068,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -5921,10 +6121,11 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create new insurance policy' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Insurance policy created successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_insurance_dto_1.CreateInsuranceDto !== "undefined" && create_insurance_dto_1.CreateInsuranceDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_insurance_dto_1.CreateInsuranceDto]),
     __metadata("design:returntype", Promise)
 ], InsuranceController.prototype, "create", null);
 __decorate([
@@ -5933,6 +6134,7 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, description: 'Filter by status' }),
     (0, swagger_1.ApiQuery)({ name: 'petId', required: false, description: 'Filter by pet ID' }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('status')),
     __param(2, (0, common_1.Query)('petId')),
@@ -5945,6 +6147,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Insurance policy details' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Insurance policy not found' }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -5955,17 +6158,19 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update insurance policy' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Insurance policy updated successfully' }),
     (0, common_1.Put)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_insurance_dto_1.UpdateInsuranceDto !== "undefined" && update_insurance_dto_1.UpdateInsuranceDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, update_insurance_dto_1.UpdateInsuranceDto, Object]),
     __metadata("design:returntype", Promise)
 ], InsuranceController.prototype, "update", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Update insurance policy status' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Insurance status updated' }),
     (0, common_1.Put)(':id/status'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('status')),
     __param(2, (0, common_1.Request)()),
@@ -5977,6 +6182,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete insurance policy' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Insurance policy deleted successfully' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -5987,6 +6193,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get active policies by pet' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Active insurance policies for pet' }),
     (0, common_1.Get)('pet/:petId/active'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/insurance/schemas/insurance.schema */ "./src/modules/insurance/schemas/insurance.schema.ts").Insurance)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -5997,6 +6204,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Check policy coverage for amount' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Coverage check result' }),
     (0, common_1.Get)(':id/coverage/:amount'),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Param)('amount')),
     __param(2, (0, common_1.Request)()),
@@ -6008,10 +6216,11 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Submit insurance claim' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Claim submitted successfully' }),
     (0, common_1.Post)('claims'),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance-claim.schema */ "./src/modules/insurance/schemas/insurance-claim.schema.ts").InsuranceClaim) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_d = typeof insurance_claim_dto_1.InsuranceClaimDto !== "undefined" && insurance_claim_dto_1.InsuranceClaimDto) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [Object, insurance_claim_dto_1.InsuranceClaimDto]),
     __metadata("design:returntype", Promise)
 ], InsuranceController.prototype, "submitClaim", null);
 __decorate([
@@ -6019,6 +6228,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'List of user claims' }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, description: 'Filter by status' }),
     (0, common_1.Get)('claims'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/insurance/schemas/insurance-claim.schema */ "./src/modules/insurance/schemas/insurance-claim.schema.ts").InsuranceClaim)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -6029,6 +6239,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get claim by ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Claim details' }),
     (0, common_1.Get)('claims/:claimId'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/insurance/schemas/insurance-claim.schema */ "./src/modules/insurance/schemas/insurance-claim.schema.ts").InsuranceClaim) }),
     __param(0, (0, common_1.Param)('claimId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -6040,7 +6251,7 @@ exports.InsuranceController = InsuranceController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('insurance'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof insurance_service_1.InsuranceService !== "undefined" && insurance_service_1.InsuranceService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [insurance_service_1.InsuranceService])
 ], InsuranceController);
 
 
@@ -6106,7 +6317,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -6283,7 +6493,8 @@ exports.InsuranceService = InsuranceService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(insurance_schema_1.Insurance.name)),
     __param(1, (0, mongoose_1.InjectModel)(insurance_claim_schema_1.InsuranceClaim.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], InsuranceService);
 
 
@@ -6305,7 +6516,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceClaimSchema = exports.InsuranceClaim = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -6315,11 +6525,11 @@ let InsuranceClaim = class InsuranceClaim {
 exports.InsuranceClaim = InsuranceClaim;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Insurance', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], InsuranceClaim.prototype, "insuranceId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], InsuranceClaim.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -6331,7 +6541,7 @@ __decorate([
 ], InsuranceClaim.prototype, "description", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], InsuranceClaim.prototype, "serviceDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -6359,7 +6569,7 @@ __decorate([
 ], InsuranceClaim.prototype, "denialReason", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+    __metadata("design:type", Date)
 ], InsuranceClaim.prototype, "processedDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -6389,7 +6599,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InsuranceSchema = exports.Insurance = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -6399,11 +6608,11 @@ let Insurance = class Insurance {
 exports.Insurance = Insurance;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Insurance.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Insurance.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -6431,11 +6640,11 @@ __decorate([
 ], Insurance.prototype, "coverageLimit", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], Insurance.prototype, "startDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+    __metadata("design:type", Date)
 ], Insurance.prototype, "endDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
@@ -6479,8 +6688,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateMedicationDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class CreateMedicationDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, name: { required: true, type: () => String }, dosage: { required: true, type: () => String }, frequency: { required: true, type: () => String }, startDate: { required: true, type: () => String }, endDate: { required: false, type: () => String }, instructions: { required: false, type: () => String }, veterinarian: { required: false, type: () => String } };
+    }
 }
 exports.CreateMedicationDto = CreateMedicationDto;
 __decorate([
@@ -6543,10 +6756,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateMedicationDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const create_medication_dto_1 = __webpack_require__(/*! ./create-medication.dto */ "./src/modules/medications/dto/create-medication.dto.ts");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class UpdateMedicationDto extends (0, mapped_types_1.PartialType)(create_medication_dto_1.CreateMedicationDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { isCompleted: { required: false, type: () => Boolean } };
+    }
 }
 exports.UpdateMedicationDto = UpdateMedicationDto;
 __decorate([
@@ -6577,10 +6794,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MedicationsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const medications_service_1 = __webpack_require__(/*! ./medications.service */ "./src/modules/medications/medications.service.ts");
 const create_medication_dto_1 = __webpack_require__(/*! ./dto/create-medication.dto */ "./src/modules/medications/dto/create-medication.dto.ts");
 const update_medication_dto_1 = __webpack_require__(/*! ./dto/update-medication.dto */ "./src/modules/medications/dto/update-medication.dto.ts");
@@ -6614,14 +6832,88 @@ let MedicationsController = class MedicationsController {
 exports.MedicationsController = MedicationsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create medication record',
+        description: `
+      Track medications for your pets including prescriptions and supplements.
+      
+      **Information to Track:**
+      - Medication name and dosage
+      - Frequency and administration instructions
+      - Start and end dates
+      - Prescribing veterinarian
+      - Special instructions
+      
+      **Use Cases:**
+      - Track prescription medications
+      - Monitor supplement schedules
+      - Set medication reminders
+      - Maintain medication history
+    `
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Medication created successfully',
+        schema: {
+            example: {
+                _id: '507f1f77bcf86cd799439014',
+                petId: '507f1f77bcf86cd799439012',
+                name: 'Amoxicillin',
+                dosage: '500mg',
+                frequency: 'twice daily',
+                startDate: '2024-01-15',
+                endDate: '2024-01-22',
+                instructions: 'Give with food',
+                status: 'active',
+                createdAt: '2024-01-15T10:00:00.000Z'
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid medication data' }),
+    (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_medication_dto_1.CreateMedicationDto !== "undefined" && create_medication_dto_1.CreateMedicationDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_medication_dto_1.CreateMedicationDto]),
     __metadata("design:returntype", void 0)
 ], MedicationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('active'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get all active medications',
+        description: `
+      Retrieve all currently active medications for all your pets.
+      
+      **Returns:**
+      - Medications with status 'active'
+      - Sorted by start date (newest first)
+      - Includes pet information
+      
+      **Useful For:**
+      - Daily medication checklist
+      - Current treatment overview
+      - Medication reminders
+    `
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Active medications retrieved',
+        schema: {
+            example: [
+                {
+                    _id: '507f1f77bcf86cd799439014',
+                    petId: { name: 'Buddy', species: 'dog' },
+                    name: 'Amoxicillin',
+                    dosage: '500mg',
+                    frequency: 'twice daily',
+                    status: 'active'
+                }
+            ]
+        }
+    }),
+    (0, common_1.Get)('active'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication)] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -6629,6 +6921,14 @@ __decorate([
 ], MedicationsController.prototype, "findActive", null);
 __decorate([
     (0, common_1.Get)('pet/:petId'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get medications for a specific pet',
+        description: 'Retrieve all medication records (active and completed) for a specific pet'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'petId', description: 'Pet ID', example: '507f1f77bcf86cd799439012' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Medications retrieved successfully' }),
+    (0, common_1.Get)('pet/:petId'),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication)] }),
     __param(0, (0, common_1.Param)('petId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -6637,6 +6937,12 @@ __decorate([
 ], MedicationsController.prototype, "findByPet", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get medication by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Medication ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Medication retrieved' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Medication not found' }),
+    (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -6645,15 +6951,38 @@ __decorate([
 ], MedicationsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update medication details',
+        description: 'Update medication information such as dosage, frequency, or instructions'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Medication ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Medication updated successfully' }),
+    (0, common_1.Patch)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, typeof (_c = typeof update_medication_dto_1.UpdateMedicationDto !== "undefined" && update_medication_dto_1.UpdateMedicationDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [String, Object, update_medication_dto_1.UpdateMedicationDto]),
     __metadata("design:returntype", void 0)
 ], MedicationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Patch)(':id/complete'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Mark medication as completed',
+        description: `
+      Mark a medication course as completed.
+      
+      **Effect:**
+      - Changes status from 'active' to 'completed'
+      - Removes from active medication list
+      - Preserves in medication history
+    `
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Medication ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Medication marked as completed' }),
+    (0, common_1.Patch)(':id/complete'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -6662,6 +6991,14 @@ __decorate([
 ], MedicationsController.prototype, "markCompleted", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete medication record',
+        description: 'Soft delete a medication record (marks as inactive)'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Medication ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Medication deleted successfully' }),
+    (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/medications/schemas/medication.schema */ "./src/modules/medications/schemas/medication.schema.ts").Medication) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -6669,9 +7006,11 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MedicationsController.prototype, "remove", null);
 exports.MedicationsController = MedicationsController = __decorate([
+    (0, swagger_1.ApiTags)('Medications'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('medications'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof medications_service_1.MedicationsService !== "undefined" && medications_service_1.MedicationsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [medications_service_1.MedicationsService])
 ], MedicationsController);
 
 
@@ -6735,7 +7074,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MedicationsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -6850,7 +7188,8 @@ exports.MedicationsService = MedicationsService;
 exports.MedicationsService = MedicationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(medication_schema_1.Medication.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        pets_service_1.PetsService])
 ], MedicationsService);
 
 
@@ -6872,7 +7211,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MedicationSchema = exports.Medication = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -6882,7 +7220,7 @@ let Medication = class Medication {
 exports.Medication = Medication;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Medication.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -6898,11 +7236,11 @@ __decorate([
 ], Medication.prototype, "frequency", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], Medication.prototype, "startDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", Date)
 ], Medication.prototype, "endDate", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -6946,8 +7284,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdatePreferenceDto = exports.PetNotificationSettingsDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class PetNotificationSettingsDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { appointments: { required: false, type: () => Boolean }, medications: { required: false, type: () => Boolean }, vaccinations: { required: false, type: () => Boolean }, checkups: { required: false, type: () => Boolean }, healthAlerts: { required: false, type: () => Boolean }, weightChanges: { required: false, type: () => Boolean } };
+    }
 }
 exports.PetNotificationSettingsDto = PetNotificationSettingsDto;
 __decorate([
@@ -6981,6 +7323,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], PetNotificationSettingsDto.prototype, "weightChanges", void 0);
 class UpdatePreferenceDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { globalEnabled: { required: false, type: () => Boolean }, petId: { required: false, type: () => String }, petSettings: { required: false, type: () => (__webpack_require__(/*! ./src/modules/notifications/dto/update-preference.dto */ "./src/modules/notifications/dto/update-preference.dto.ts").PetNotificationSettingsDto) }, emailNotifications: { required: false, type: () => Boolean }, pushNotifications: { required: false, type: () => Boolean }, reminderHoursBefore: { required: false, type: () => Number } };
+    }
 }
 exports.UpdatePreferenceDto = UpdatePreferenceDto;
 __decorate([
@@ -7036,9 +7381,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const notifications_service_1 = __webpack_require__(/*! ./notifications.service */ "./src/modules/notifications/notifications.service.ts");
 const update_preference_dto_1 = __webpack_require__(/*! ./dto/update-preference.dto */ "./src/modules/notifications/dto/update-preference.dto.ts");
@@ -7081,6 +7426,7 @@ let NotificationsController = class NotificationsController {
 exports.NotificationsController = NotificationsController;
 __decorate([
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/notifications/schemas/notification.schema */ "./src/modules/notifications/schemas/notification.schema.ts").Notification)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('petId')),
     __metadata("design:type", Function),
@@ -7089,6 +7435,7 @@ __decorate([
 ], NotificationsController.prototype, "getNotifications", null);
 __decorate([
     (0, common_1.Get)('unread-count'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -7096,6 +7443,7 @@ __decorate([
 ], NotificationsController.prototype, "getUnreadCount", null);
 __decorate([
     (0, common_1.Patch)(':id/read'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/notifications/schemas/notification.schema */ "./src/modules/notifications/schemas/notification.schema.ts").Notification) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -7104,6 +7452,7 @@ __decorate([
 ], NotificationsController.prototype, "markAsRead", null);
 __decorate([
     (0, common_1.Patch)('read-all'),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -7111,6 +7460,7 @@ __decorate([
 ], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
     (0, common_1.Get)('preferences'),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -7118,14 +7468,16 @@ __decorate([
 ], NotificationsController.prototype, "getPreferences", null);
 __decorate([
     (0, common_1.Patch)('preferences'),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof update_preference_dto_1.UpdatePreferenceDto !== "undefined" && update_preference_dto_1.UpdatePreferenceDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, update_preference_dto_1.UpdatePreferenceDto]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "updatePreferences", null);
 __decorate([
     (0, common_1.Post)('remove-duplicates'),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -7134,7 +7486,7 @@ __decorate([
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
 ], NotificationsController);
 
 
@@ -7200,7 +7552,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -7361,7 +7712,8 @@ exports.NotificationsService = NotificationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
     __param(1, (0, mongoose_1.InjectModel)(notification_preference_schema_1.NotificationPreference.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], NotificationsService);
 
 
@@ -7383,7 +7735,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationPreferenceSchema = exports.NotificationPreference = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -7393,7 +7744,7 @@ let NotificationPreference = class NotificationPreference {
 exports.NotificationPreference = NotificationPreference;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true, unique: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], NotificationPreference.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -7401,7 +7752,7 @@ __decorate([
 ], NotificationPreference.prototype, "globalEnabled", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Schema.Types.Mixed, default: {} }),
-    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+    __metadata("design:type", Object)
 ], NotificationPreference.prototype, "petSettings", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -7439,7 +7790,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationSchema = exports.Notification = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -7449,11 +7799,11 @@ let Notification = class Notification {
 exports.Notification = Notification;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Notification.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet' }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Notification.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -7477,7 +7827,7 @@ __decorate([
 ], Notification.prototype, "actionUrl", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: Object }),
-    __metadata("design:type", typeof (_c = typeof Record !== "undefined" && Record) === "function" ? _c : Object)
+    __metadata("design:type", Object)
 ], Notification.prototype, "metadata", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
@@ -7511,9 +7861,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreatePetDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 class CreatePetDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { name: { required: true, type: () => String }, species: { required: true, type: () => String }, breed: { required: true, type: () => String }, age: { required: true, type: () => Number, minimum: 0, maximum: 30 }, gender: { required: true, type: () => String }, weight: { required: false, type: () => Number, minimum: 0 }, color: { required: false, type: () => String }, profileImage: { required: false, type: () => String }, dateOfBirth: { required: false, type: () => String }, medicalNotes: { required: false, type: () => String }, allergies: { required: false, type: () => [String] }, pastIllnesses: { required: false, type: () => [String] }, surgeries: { required: false, type: () => [String] }, dietaryPreferences: { required: false, type: () => String }, dietaryRestrictions: { required: false, type: () => [String] }, behavioralNotes: { required: false, type: () => String }, emergencyContactName: { required: false, type: () => String }, emergencyContactPhone: { required: false, type: () => String } };
+    }
 }
 exports.CreatePetDto = CreatePetDto;
 __decorate([
@@ -7653,11 +8007,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdatePetDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const mapped_types_1 = __webpack_require__(/*! @nestjs/mapped-types */ "@nestjs/mapped-types");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const create_pet_dto_1 = __webpack_require__(/*! ./create-pet.dto */ "./src/modules/pets/dto/create-pet.dto.ts");
 class UpdatePetDto extends (0, mapped_types_1.PartialType)(create_pet_dto_1.CreatePetDto) {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { healthStatus: { required: false, type: () => String } };
+    }
 }
 exports.UpdatePetDto = UpdatePetDto;
 __decorate([
@@ -7692,9 +8050,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PetsController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -7819,10 +8177,11 @@ __decorate([
         }
     }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof create_pet_dto_1.CreatePetDto !== "undefined" && create_pet_dto_1.CreatePetDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, create_pet_dto_1.CreatePetDto]),
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "create", null);
 __decorate([
@@ -7873,6 +8232,7 @@ __decorate([
         }
     }),
     (0, common_1.Get)(),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet)] }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('species')),
     __metadata("design:type", Function),
@@ -7962,6 +8322,7 @@ __decorate([
         }
     }),
     (0, common_1.Get)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -7969,20 +8330,79 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "findOne", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Update pet information' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet updated successfully' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update pet information',
+        description: `
+      Update any field of a pet's profile. Only provided fields will be updated.
+      
+      **Updatable Fields:**
+      - Basic info (name, breed, age, weight, color)
+      - Medical info (allergies, past illnesses, surgeries)
+      - Dietary info (preferences, restrictions)
+      - Behavioral notes
+      - Emergency contacts
+      
+      **Note:** You can only update your own pets
+    `
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Pet updated successfully',
+        schema: {
+            example: {
+                _id: '507f1f77bcf86cd799439012',
+                name: 'Buddy Updated',
+                weight: 32,
+                updatedAt: '2024-01-16T10:00:00.000Z'
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Pet not found' }),
     (0, common_1.Put)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_c = typeof update_pet_dto_1.UpdatePetDto !== "undefined" && update_pet_dto_1.UpdatePetDto) === "function" ? _c : Object, Object]),
+    __metadata("design:paramtypes", [String, update_pet_dto_1.UpdatePetDto, Object]),
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "update", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Update pet health status' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Health status updated' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update pet health status',
+        description: `
+      Update the current health status of a pet.
+      
+      **Valid Status Values:**
+      - healthy - Pet is in good health
+      - sick - Pet is currently ill
+      - recovering - Pet is recovering from illness
+      - chronic - Pet has chronic condition
+      
+      **Use Cases:**
+      - Track pet's health changes over time
+      - Alert for sick pets needing attention
+      - Monitor recovery progress
+    `
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Health status updated',
+        schema: {
+            example: {
+                _id: '507f1f77bcf86cd799439012',
+                name: 'Buddy',
+                healthStatus: 'sick',
+                updatedAt: '2024-01-16T10:00:00.000Z'
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid health status' }),
     (0, common_1.Put)(':id/health-status'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)('status')),
     __param(2, (0, common_1.Request)()),
@@ -7991,9 +8411,37 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "updateHealthStatus", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Delete pet' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Pet deleted successfully' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete pet (soft delete)',
+        description: `
+      Soft delete a pet profile. The pet is marked as inactive but not permanently removed.
+      
+      **Important:**
+      - Pet data is preserved for historical records
+      - Associated health records, appointments remain accessible
+      - Pet will not appear in active pet lists
+      - Can be restored by admin if needed
+      
+      **Security:** Only pet owner can delete their pets
+    `
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Pet ID to delete', example: '507f1f77bcf86cd799439012' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Pet deleted successfully',
+        schema: {
+            example: {
+                _id: '507f1f77bcf86cd799439012',
+                name: 'Buddy',
+                isActive: false,
+                updatedAt: '2024-01-16T10:00:00.000Z'
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Pet not found' }),
     (0, common_1.Delete)(':id'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/pets/schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts").Pet) }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -8005,7 +8453,7 @@ exports.PetsController = PetsController = __decorate([
     (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, common_1.Controller)('pets'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof pets_service_1.PetsService !== "undefined" && pets_service_1.PetsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [pets_service_1.PetsService])
 ], PetsController);
 
 
@@ -8067,7 +8515,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PetsService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -8129,7 +8576,7 @@ exports.PetsService = PetsService;
 exports.PetsService = PetsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(pet_schema_1.Pet.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], PetsService);
 
 
@@ -8151,7 +8598,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PetSchema = exports.Pet = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -8193,11 +8639,11 @@ __decorate([
 ], Pet.prototype, "profileImage", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Pet.prototype, "ownerId", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", Date)
 ], Pet.prototype, "dateOfBirth", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
@@ -8904,9 +9350,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SeedController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const seed_service_1 = __webpack_require__(/*! ./seed.service */ "./src/modules/seed/seed.service.ts");
@@ -8923,6 +9369,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Seed database with sample data' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Database seeded successfully' }),
     (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -8930,7 +9377,7 @@ __decorate([
 exports.SeedController = SeedController = __decorate([
     (0, swagger_1.ApiTags)('seed'),
     (0, common_1.Controller)('seed'),
-    __metadata("design:paramtypes", [typeof (_a = typeof seed_service_1.SeedService !== "undefined" && seed_service_1.SeedService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [seed_service_1.SeedService])
 ], SeedController);
 
 
@@ -8989,7 +9436,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SeedService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -9078,7 +9524,8 @@ exports.SeedService = SeedService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __param(1, (0, mongoose_3.InjectConnection)()),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_4.Connection !== "undefined" && mongoose_4.Connection) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_4.Connection])
 ], SeedService);
 
 
@@ -9192,6 +9639,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckDto = exports.SeverityLevel = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 var SeverityLevel;
@@ -9202,6 +9650,9 @@ var SeverityLevel;
     SeverityLevel[SeverityLevel["CRITICAL"] = 4] = "CRITICAL";
 })(SeverityLevel || (exports.SeverityLevel = SeverityLevel = {}));
 class SymptomCheckDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { petId: { required: true, type: () => String }, symptoms: { required: true, type: () => [String] }, duration: { required: true, type: () => String }, severity: { required: true, enum: (__webpack_require__(/*! ./src/modules/symptom-checker/dto/symptom-check.dto */ "./src/modules/symptom-checker/dto/symptom-check.dto.ts").SeverityLevel) }, additionalInfo: { required: false, type: () => String } };
+    }
 }
 exports.SymptomCheckDto = SymptomCheckDto;
 __decorate([
@@ -9251,7 +9702,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckSchema = exports.SymptomCheck = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -9261,11 +9711,11 @@ let SymptomCheck = class SymptomCheck extends mongoose_2.Document {
 exports.SymptomCheck = SymptomCheck;
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
-    __metadata("design:type", typeof (_a = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _a : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], SymptomCheck.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Pet', required: true }),
-    __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
+    __metadata("design:type", mongoose_2.Types.ObjectId)
 ], SymptomCheck.prototype, "petId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -9338,9 +9788,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckerController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
@@ -9372,15 +9822,17 @@ exports.SymptomCheckerController = SymptomCheckerController;
 __decorate([
     (0, common_1.Post)('check'),
     (0, swagger_1.ApiOperation)({ summary: 'AI-powered symptom analysis for pets' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof symptom_check_dto_1.SymptomCheckDto !== "undefined" && symptom_check_dto_1.SymptomCheckDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, symptom_check_dto_1.SymptomCheckDto]),
     __metadata("design:returntype", Promise)
 ], SymptomCheckerController.prototype, "checkSymptoms", null);
 __decorate([
     (0, common_1.Post)('chat'),
     (0, swagger_1.ApiOperation)({ summary: 'Chat with Dr. Woofson AI veterinarian' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -9390,6 +9842,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('history'),
     (0, swagger_1.ApiOperation)({ summary: 'Get symptom check history' }),
+    openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -9400,7 +9853,7 @@ exports.SymptomCheckerController = SymptomCheckerController = __decorate([
     (0, common_1.Controller)('symptom-checker'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof symptom_checker_service_1.SymptomCheckerService !== "undefined" && symptom_checker_service_1.SymptomCheckerService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [symptom_checker_service_1.SymptomCheckerService])
 ], SymptomCheckerController);
 
 
@@ -9472,7 +9925,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SymptomCheckerService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -9787,7 +10239,11 @@ exports.SymptomCheckerService = SymptomCheckerService = __decorate([
     __param(2, (0, mongoose_1.InjectModel)(medication_schema_1.Medication.name)),
     __param(3, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __param(4, (0, mongoose_1.InjectModel)(symptom_check_schema_1.SymptomCheck.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object, typeof (_b = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _b : Object, typeof (_c = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _c : Object, typeof (_d = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _d : Object, typeof (_e = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _e : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model])
 ], SymptomCheckerService);
 
 
@@ -9811,8 +10267,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateUserDto = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class UpdateUserDto {
+    static _OPENAPI_METADATA_FACTORY() {
+        return { firstName: { required: false, type: () => String }, lastName: { required: false, type: () => String } };
+    }
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
@@ -9848,9 +10308,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UserController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
 const user_service_1 = __webpack_require__(/*! ./user.service */ "./src/modules/user/user.service.ts");
@@ -9871,6 +10331,7 @@ let UserController = class UserController {
 exports.UserController = UserController;
 __decorate([
     (0, common_1.Get)('profile'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts").User) }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -9878,16 +10339,17 @@ __decorate([
 ], UserController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Put)('profile'),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts").User) }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof update_user_dto_1.UpdateUserDto !== "undefined" && update_user_dto_1.UpdateUserDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [Object, update_user_dto_1.UpdateUserDto]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "updateProfile", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Controller)('users'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [typeof (_a = typeof user_service_1.UserService !== "undefined" && user_service_1.UserService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [user_service_1.UserService])
 ], UserController);
 
 
@@ -9949,7 +10411,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UserService = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -9971,7 +10432,7 @@ exports.UserService = UserService;
 exports.UserService = UserService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __metadata("design:paramtypes", [typeof (_a = typeof mongoose_2.Model !== "undefined" && mongoose_2.Model) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], UserService);
 
 

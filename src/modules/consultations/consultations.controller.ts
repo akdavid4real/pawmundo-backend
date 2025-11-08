@@ -15,8 +15,47 @@ export class ConsultationsController {
   constructor(private readonly consultationsService: ConsultationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new consultation request' })
-  @ApiResponse({ status: 201, description: 'Consultation created successfully' })
+  @ApiOperation({ 
+    summary: 'Create a new consultation request',
+    description: `
+      Request a virtual consultation with a veterinarian.
+      
+      **Process:**
+      1. Submit consultation request with pet details
+      2. Request enters vet queue with 'pending' status
+      3. Available vets can see and accept the request
+      4. You'll be notified when a vet accepts
+      
+      **Required Information:**
+      - Pet ID (must be your pet)
+      - Scheduled date/time
+      - Reason for consultation
+      
+      **Optional Information:**
+      - Symptoms description
+      - Consultation type (video/audio/chat)
+      - Expected duration
+    `
+  })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Consultation created successfully',
+    schema: {
+      example: {
+        _id: '507f1f77bcf86cd799439012',
+        userId: '507f1f77bcf86cd799439010',
+        petId: '507f1f77bcf86cd799439011',
+        status: 'pending',
+        scheduledDate: '2024-12-25T10:00:00.000Z',
+        reason: 'Annual checkup',
+        symptoms: 'Coughing and sneezing',
+        consultationType: 'video',
+        duration: 30,
+        isActive: true,
+        createdAt: '2024-01-15T10:00:00.000Z'
+      }
+    }
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Request() req, @Body() createConsultationDto: CreateConsultationDto) {
