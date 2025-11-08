@@ -2777,6 +2777,7 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsController = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
 const create_consultation_dto_1 = __webpack_require__(/*! ./dto/create-consultation.dto */ "./src/modules/consultations/dto/create-consultation.dto.ts");
 const update_consultation_dto_1 = __webpack_require__(/*! ./dto/update-consultation.dto */ "./src/modules/consultations/dto/update-consultation.dto.ts");
@@ -2833,6 +2834,10 @@ let ConsultationsController = class ConsultationsController {
 exports.ConsultationsController = ConsultationsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new consultation request' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Consultation created successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input data' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -2841,6 +2846,10 @@ __decorate([
 ], ConsultationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all consultations for the authenticated user' }),
+    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: ['pending', 'assigned', 'in-progress', 'completed', 'cancelled'], description: 'Filter by consultation status' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'List of consultations retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -2849,6 +2858,9 @@ __decorate([
 ], ConsultationsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('upcoming'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get upcoming consultations for the authenticated user' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Upcoming consultations retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2856,6 +2868,12 @@ __decorate([
 ], ConsultationsController.prototype, "getUpcoming", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a single consultation by ID' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2864,6 +2882,12 @@ __decorate([
 ], ConsultationsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update consultation details' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation updated successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),
@@ -2873,6 +2897,12 @@ __decorate([
 ], ConsultationsController.prototype, "update", null);
 __decorate([
     (0, common_1.Patch)(':id/cancel'),
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel a consultation' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation cancelled successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot cancel consultation in current status' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2881,6 +2911,13 @@ __decorate([
 ], ConsultationsController.prototype, "cancel", null);
 __decorate([
     (0, common_1.Patch)(':id/start'),
+    (0, swagger_1.ApiOperation)({ summary: 'Start a consultation session with meeting link' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiBody)({ schema: { properties: { meetingLink: { type: 'string', example: 'https://meet.example.com/abc123' } } } }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation started successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot start consultation in current status' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)('meetingLink')),
@@ -2890,6 +2927,22 @@ __decorate([
 ], ConsultationsController.prototype, "startConsultation", null);
 __decorate([
     (0, common_1.Patch)(':id/complete'),
+    (0, swagger_1.ApiOperation)({ summary: 'Complete a consultation with notes and optional prescription' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                notes: { type: 'string', example: 'Patient responded well to treatment' },
+                prescription: { type: 'string', example: 'Amoxicillin 500mg twice daily for 7 days' }
+            },
+            required: ['notes']
+        }
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation completed successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot complete consultation in current status' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)('notes')),
@@ -2901,6 +2954,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('vet/queue'),
     (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get pending consultations in the vet queue (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Queue retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -2908,6 +2965,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('vet/active'),
     (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get active consultations assigned to the vet (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Active consultations retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2916,6 +2977,10 @@ __decorate([
 __decorate([
     (0, common_1.Get)('vet/history'),
     (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get completed consultation history for the vet (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'History retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -2924,6 +2989,13 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/accept'),
     (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Accept a consultation from the queue (Vet only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation accepted successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Consultation already assigned' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2933,6 +3005,12 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/release'),
     (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Release a consultation back to the queue (Vet only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation released successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Not assigned to this vet' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -2940,6 +3018,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "releaseConsultation", null);
 exports.ConsultationsController = ConsultationsController = __decorate([
+    (0, swagger_1.ApiTags)('Consultations'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('consultations'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [typeof (_a = typeof consultations_service_1.ConsultationsService !== "undefined" && consultations_service_1.ConsultationsService) === "function" ? _a : Object])
@@ -10212,24 +10292,19 @@ async function bootstrap() {
         - HTTP status codes
       `)
             .setVersion('2.0.0')
-            .addBearerAuth({
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-            name: 'JWT',
-            description: 'Enter JWT token',
-            in: 'header',
-        }, 'JWT-auth')
+            .addBearerAuth()
             .addServer(process.env.BASE_URL || 'http://localhost:3000', 'Development Server')
             .addServer('https://pawpromise-backend.onrender.com', 'Production Server')
             .addTag('Authentication', 'User registration, login, and account management')
             .addTag('Pets', 'Pet profile management and detailed information')
+            .addTag('Consultations', 'Virtual veterinary consultations with real-time updates')
             .addTag('Activity Tracking', 'Daily activity and diet logging')
             .addTag('Health Records', 'Medical history and health tracking')
             .addTag('Medications', 'Medication management and reminders')
             .addTag('Appointments', 'Veterinary appointment scheduling')
             .addTag('Insurance', 'Pet insurance policies and claims')
             .addTag('Health Reminders', 'Automated health notifications')
+            .addTag('Seed', 'Database seeding for development')
             .build();
         const document = swagger_1.SwaggerModule.createDocument(app, config);
         swagger_1.SwaggerModule.setup('api', app, document, {

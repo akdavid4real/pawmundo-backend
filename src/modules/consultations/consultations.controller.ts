@@ -93,10 +93,12 @@ export class ConsultationsController {
   @ApiParam({ name: 'id', description: 'Consultation ID' })
   @ApiBody({ 
     schema: { 
+      type: 'object',
       properties: { 
         notes: { type: 'string', example: 'Patient responded well to treatment' },
-        prescription: { type: 'string', example: 'Amoxicillin 500mg twice daily for 7 days', required: false }
-      } 
+        prescription: { type: 'string', example: 'Amoxicillin 500mg twice daily for 7 days' }
+      },
+      required: ['notes']
     } 
   })
   @ApiResponse({ status: 200, description: 'Consultation completed successfully' })
