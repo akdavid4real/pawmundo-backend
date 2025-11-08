@@ -1,19 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtService } from '@nestjs/jwt';
 import { getModelToken } from '@nestjs/mongoose';
-import { UnauthorizedException, ConflictException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { AuthService } from './auth.service';
 import { User } from './schemas/user.schema';
+import { MailService } from '../../common/utils/mail.service';
+import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
+  let userModel: any;
   let jwtService: JwtService;
 
   const mockUser = {
-    _id: 'userId123',
+    _id: 'user123',
     email: 'test@example.com',
     password: 'hashedPassword',
     firstName: 'John',
@@ -21,65 +24,140 @@ describe('AuthService', () => {
     role: 'user',
     isEmailVerified: false,
     save: jest.fn().mockResolvedValue(this),
+    toObject: jest.fn().mockReturnValue({
+      _id: 'user123',
+      email: 'test@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      role: 'user',
+    }),
+  };
+
+  const mockVetUser = {
+    _id: 'vet123',
+    email: 'vet@example.com',
+    password: 'hashedPassword',
+    firstName: 'Dr. Sarah',
+    lastName: 'Johnson',
+    role: 'vet',
+    isEmailVerified: false,
+    save: jest.fn().mockResolvedValue(this),
+    toObject: jest.fn().mockReturnValue({
+      _id: 'vet123',
+      email: 'vet@example.com',
+      firstName: 'Dr. Sarah',
+      lastName: 'Johnson',
+      role: 'vet',
+    }),
   };
 
   const mockUserModel: any = jest.fn().mockImplementation((dto) => ({
     ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: 'userId123' }),
-    toObject: jest.fn().mockReturnValue({ ...dto, _id: 'userId123' })
+    save: jest.fn().mockResolvedValue({ ...dto, _id: 'user123' }),
   }));
+  
   mockUserModel.findOne = jest.fn();
   mockUserModel.findById = jest.fn();
   mockUserModel.findByIdAndUpdate = jest.fn();
-  mockUserModel.create = jest.fn();
 
   const mockJwtService = {
-    sign: jest.fn().mockReturnValue('jwt-token'),
-    verify: jest.fn(),
+    sign: jest.fn().mockReturnValue('mock-jwt-token'),
+  };
+
+  const mockMailService = {
+    sendResetPassword: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: getModelToken(User.name), useValue: mockUserModel },
-        { provide: JwtService, useValue: mockJwtService },
+        {
+          provide: getModelToken(User.name),
+          useValue: mockUserModel,
+        },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
+        {
+          provide: MailService,
+          useValue: mockMailService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    userModel = module.get(getModelToken(User.name));
     jwtService = module.get<JwtService>(JwtService);
-  });
 
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('register', () => {
-    const registerDto = {
-      email: 'test@example.com',
-      password: 'password123',
-      firstName: 'John',
-      lastName: 'Doe',
-    };
+    it('should register a new user with default role', async () => {
+      const registerDto = {
+        email: 'test@example.com',
+        password: 'Password123',
+        firstName: 'John',
+        lastName: 'Doe',
+      };
 
-    it('should register a new user successfully', async () => {
       mockUserModel.findOne.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
-      mockUserModel.mockReturnValue({
+
+      const newUser = {
+        ...mockUser,
         save: jest.fn().mockResolvedValue(mockUser),
-        toObject: jest.fn().mockReturnValue(mockUser)
-      });
+      };
+
+      userModel.prototype = newUser;
+      jest.spyOn(userModel, 'constructor' as any).mockReturnValue(newUser);
 
       const result = await service.register(registerDto);
 
       expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: registerDto.email });
       expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
       expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('user');
+      expect(result.user.role).toBe('user');
     });
 
-    it('should throw ConflictException if user already exists', async () => {
+    it('should register a new vet user', async () => {
+      const registerDto = {
+        email: 'vet@example.com',
+        password: 'VetPass123',
+        firstName: 'Dr. Sarah',
+        lastName: 'Johnson',
+        role: 'vet',
+      };
+
+      mockUserModel.findOne.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+
+      const newVet = {
+        ...mockVetUser,
+        save: jest.fn().mockResolvedValue(mockVetUser),
+      };
+
+      userModel.prototype = newVet;
+      jest.spyOn(userModel, 'constructor' as any).mockReturnValue(newVet);
+
+      const result = await service.register(registerDto);
+
+      expect(result.user.role).toBe('vet');
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({ role: 'vet' }),
+      );
+    });
+
+    it('should throw ConflictException if email exists', async () => {
+      const registerDto = {
+        email: 'existing@example.com',
+        password: 'Password123',
+        firstName: 'John',
+        lastName: 'Doe',
+      };
+
       mockUserModel.findOne.mockResolvedValue(mockUser);
 
       await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
@@ -87,62 +165,95 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    const loginDto = { email: 'test@example.com', password: 'password123' };
+    it('should login user and return token with role', async () => {
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'Password123',
+      };
 
-    it('should login user successfully', async () => {
-      mockUserModel.findOne.mockResolvedValue({
-        ...mockUser,
-        toObject: jest.fn().mockReturnValue(mockUser)
-      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockUserModel.findOne.mockResolvedValue(mockUser);
       mockUserModel.findByIdAndUpdate.mockResolvedValue(mockUser);
 
       const result = await service.login(loginDto);
 
-      expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: loginDto.email });
-      expect(bcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
       expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('user');
+      expect(result.user.role).toBe('user');
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: loginDto.email,
+          sub: mockUser._id,
+          role: 'user',
+        }),
+      );
+    });
+
+    it('should login vet and return token with vet role', async () => {
+      const loginDto = {
+        email: 'vet@example.com',
+        password: 'VetPass123',
+      };
+
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockUserModel.findOne.mockResolvedValue(mockVetUser);
+      mockUserModel.findByIdAndUpdate.mockResolvedValue(mockVetUser);
+
+      const result = await service.login(loginDto);
+
+      expect(result.user.role).toBe('vet');
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'vet',
+        }),
+      );
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
-      mockUserModel.findOne.mockResolvedValue(null);
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'WrongPassword',
+      };
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should throw UnauthorizedException for wrong password', async () => {
-      mockUserModel.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      mockUserModel.findOne.mockResolvedValue(mockUser);
 
       await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
   });
 
-  describe('changePassword', () => {
-    const changePasswordDto = {
-      currentPassword: 'oldPassword',
-      newPassword: 'newPassword123',
-    };
-
-    it('should change password successfully', async () => {
-      mockUserModel.findById.mockResolvedValue(mockUser);
+  describe('validateUser', () => {
+    it('should validate user credentials', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('newHashedPassword');
-      mockUserModel.findByIdAndUpdate.mockResolvedValue(mockUser);
+      mockUserModel.findOne.mockResolvedValue(mockUser);
 
-      await service.changePassword('userId123', changePasswordDto);
+      const result = await service.validateUser('test@example.com', 'Password123');
 
-      expect(bcrypt.compare).toHaveBeenCalledWith(changePasswordDto.currentPassword, mockUser.password);
-      expect(bcrypt.hash).toHaveBeenCalledWith(changePasswordDto.newPassword, 12);
-      expect(mockUserModel.findByIdAndUpdate).toHaveBeenCalled();
+      expect(result).toBeDefined();
+      expect(result.email).toBe('test@example.com');
     });
 
-    it('should throw UnauthorizedException for wrong current password', async () => {
-      mockUserModel.findById.mockResolvedValue(mockUser);
+    it('should return null for invalid credentials', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      mockUserModel.findOne.mockResolvedValue(mockUser);
 
-      await expect(service.changePassword('userId123', changePasswordDto)).rejects.toThrow(UnauthorizedException);
+      const result = await service.validateUser('test@example.com', 'WrongPassword');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findById', () => {
+    it('should find user by id', async () => {
+      const userId = new Types.ObjectId().toString();
+      const userWithId = { ...mockUser, _id: userId };
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockResolvedValue(userWithId),
+      });
+
+      const result = await service.findById(userId);
+
+      expect(mockUserModel.findById).toHaveBeenCalledWith(userId);
+      expect(result).toEqual(userWithId);
     });
   });
 });

@@ -8,14 +8,17 @@ describe('ActivityTrackingService', () => {
   let mockActivityModel: any;
 
   beforeEach(async () => {
-    mockActivityModel = {
-      find: jest.fn(),
-      findById: jest.fn(),
-      findByIdAndUpdate: jest.fn(),
-      save: jest.fn(),
-      sort: jest.fn(),
-      exec: jest.fn(),
-    };
+    mockActivityModel = jest.fn().mockImplementation((dto) => ({
+      ...dto,
+      save: jest.fn().mockResolvedValue({ ...dto, _id: 'activity123' }),
+    }));
+    
+    mockActivityModel.find = jest.fn();
+    mockActivityModel.findById = jest.fn();
+    mockActivityModel.findByIdAndUpdate = jest.fn();
+    mockActivityModel.save = jest.fn();
+    mockActivityModel.sort = jest.fn();
+    mockActivityModel.exec = jest.fn();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -43,11 +46,8 @@ describe('ActivityTrackingService', () => {
       distance: 2.5,
     };
 
-    const mockActivity = { ...createActivityDto, save: jest.fn().mockResolvedValue(createActivityDto) };
-    jest.spyOn(service['activityModel'], 'constructor' as any).mockReturnValue(mockActivity);
-
     const result = await service.create(createActivityDto, 'user123');
-    expect(mockActivity.save).toHaveBeenCalled();
+    expect(mockActivityModel).toHaveBeenCalled();
   });
 
   it('should find activities by pet', async () => {

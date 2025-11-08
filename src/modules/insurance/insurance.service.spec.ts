@@ -26,17 +26,26 @@ describe('InsuranceService', () => {
     save: jest.fn().mockResolvedValue(this),
   };
 
-  const mockModel = {
-    new: jest.fn().mockResolvedValue(mockInsurance),
-    constructor: jest.fn().mockResolvedValue(mockInsurance),
-    find: jest.fn(),
-    findById: jest.fn(),
-    findByIdAndUpdate: jest.fn(),
-    create: jest.fn(),
-    exec: jest.fn(),
-    populate: jest.fn(),
-    sort: jest.fn(),
-  };
+  const mockModel: any = jest.fn().mockImplementation((dto) => ({
+    ...dto,
+    save: jest.fn().mockResolvedValue({ ...dto, _id: '507f1f77bcf86cd799439011' }),
+  }));
+  
+  mockModel.find = jest.fn();
+  mockModel.findById = jest.fn();
+  mockModel.findByIdAndUpdate = jest.fn();
+  mockModel.create = jest.fn();
+  mockModel.exec = jest.fn();
+  mockModel.populate = jest.fn();
+  mockModel.sort = jest.fn();
+  
+  const mockClaimModel: any = jest.fn().mockImplementation((dto) => ({
+    ...dto,
+    save: jest.fn().mockResolvedValue({ ...dto, _id: 'claim123' }),
+  }));
+  
+  mockClaimModel.find = jest.fn();
+  mockClaimModel.findById = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,6 +54,10 @@ describe('InsuranceService', () => {
         {
           provide: getModelToken(Insurance.name),
           useValue: mockModel,
+        },
+        {
+          provide: getModelToken('InsuranceClaim'),
+          useValue: mockClaimModel,
         },
       ],
     }).compile();
@@ -134,9 +147,23 @@ describe('InsuranceService', () => {
 
   describe('checkCoverage', () => {
     it('should calculate coverage correctly', async () => {
+      const today = new Date();
+      const pastDate = new Date(today);
+      pastDate.setMonth(pastDate.getMonth() - 1);
+      const futureDate = new Date(today);
+      futureDate.setMonth(futureDate.getMonth() + 1);
+      
+      const activeInsurance = {
+        ...mockInsurance,
+        status: 'active',
+        startDate: pastDate,
+        endDate: futureDate,
+        userId: { toString: () => '507f1f77bcf86cd799439012' }
+      };
+      
       mockModel.findById.mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(mockInsurance),
+          exec: jest.fn().mockResolvedValue(activeInsurance),
         }),
       });
 

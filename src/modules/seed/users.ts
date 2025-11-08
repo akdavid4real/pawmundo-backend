@@ -45,6 +45,34 @@ const sampleUsers = [
     role: 'user',
     createdAt: new Date(),
     updatedAt: new Date()
+  },
+  {
+    _id: new Types.ObjectId(),
+    email: 'dr.sarah@vetclinic.com',
+    password: bcrypt.hashSync('VetPass123', 12),
+    firstName: 'Dr. Sarah',
+    lastName: 'Johnson',
+    phone: '+1555123456',
+    address: '789 Vet Clinic Rd, City, State 11111',
+    isActive: true,
+    isEmailVerified: true,
+    role: 'vet',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    _id: new Types.ObjectId(),
+    email: 'dr.mike@petcare.com',
+    password: bcrypt.hashSync('VetPass123', 12),
+    firstName: 'Dr. Michael',
+    lastName: 'Chen',
+    phone: '+1555789012',
+    address: '321 Pet Care Blvd, City, State 22222',
+    isActive: true,
+    isEmailVerified: true,
+    role: 'vet',
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
 ];
 

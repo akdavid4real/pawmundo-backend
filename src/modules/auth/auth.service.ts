@@ -41,6 +41,7 @@ export class AuthService {
         password: hashedPassword,
         firstName,
         lastName,
+        role: registerDto.role || 'user',
         phone,
         address,
         emailVerificationToken,
@@ -52,7 +53,7 @@ export class AuthService {
       DatabaseErrorHandler.handle(error, 'User registration');
     }
 
-    const payload = { email: user.email, sub: user._id };
+    const payload = { email: user.email, sub: user._id, role: user.role };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -80,7 +81,7 @@ export class AuthService {
       const lastLogin = new Date();
       await this.userModel.findByIdAndUpdate(user._id, { lastLogin });
 
-      const payload = { email: user.email, sub: user._id };
+      const payload = { email: user.email, sub: user._id, role: user.role };
       const token = this.jwtService.sign(payload);
 
       return {

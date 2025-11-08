@@ -91,6 +91,22 @@ exports.AppModule = AppModule = __decorate([
 
 /***/ }),
 
+/***/ "./src/common/decorators/roles.decorator.ts":
+/*!**************************************************!*\
+  !*** ./src/common/decorators/roles.decorator.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Roles = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const Roles = (...roles) => (0, common_1.SetMetadata)('roles', roles);
+exports.Roles = Roles;
+
+
+/***/ }),
+
 /***/ "./src/common/filters/global-exception.filter.ts":
 /*!*******************************************************!*\
   !*** ./src/common/filters/global-exception.filter.ts ***!
@@ -281,6 +297,53 @@ exports.JwtAuthGuard = JwtAuthGuard;
 exports.JwtAuthGuard = JwtAuthGuard = __decorate([
     (0, common_1.Injectable)()
 ], JwtAuthGuard);
+
+
+/***/ }),
+
+/***/ "./src/common/guards/roles.guard.ts":
+/*!******************************************!*\
+  !*** ./src/common/guards/roles.guard.ts ***!
+  \******************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RolesGuard = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
+let RolesGuard = class RolesGuard {
+    constructor(reflector) {
+        this.reflector = reflector;
+    }
+    canActivate(context) {
+        const requiredRoles = this.reflector.get('roles', context.getHandler());
+        if (!requiredRoles) {
+            return true;
+        }
+        const request = context.switchToHttp().getRequest();
+        const user = request.user;
+        if (!user || !requiredRoles.includes(user.role)) {
+            throw new common_1.ForbiddenException('You do not have permission to access this resource');
+        }
+        return true;
+    }
+};
+exports.RolesGuard = RolesGuard;
+exports.RolesGuard = RolesGuard = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
+], RolesGuard);
 
 
 /***/ }),
@@ -2109,6 +2172,7 @@ let AuthService = class AuthService {
                 password: hashedPassword,
                 firstName,
                 lastName,
+                role: registerDto.role || 'user',
                 phone,
                 address,
                 emailVerificationToken,
@@ -2120,7 +2184,7 @@ let AuthService = class AuthService {
                 throw error;
             database_error_handler_1.DatabaseErrorHandler.handle(error, 'User registration');
         }
-        const payload = { email: user.email, sub: user._id };
+        const payload = { email: user.email, sub: user._id, role: user.role };
         const token = this.jwtService.sign(payload);
         return {
             access_token: token,
@@ -2143,7 +2207,7 @@ let AuthService = class AuthService {
             }
             const lastLogin = new Date();
             await this.userModel.findByIdAndUpdate(user._id, { lastLogin });
-            const payload = { email: user.email, sub: user._id };
+            const payload = { email: user.email, sub: user._id, role: user.role };
             const token = this.jwtService.sign(payload);
             return {
                 access_token: token,
@@ -2416,6 +2480,12 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "lastName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User role', enum: ['user', 'vet'], default: 'user' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['user', 'vet']),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "role", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Phone number' }),
     (0, class_validator_1.IsOptional)(),
@@ -2711,6 +2781,8 @@ const consultations_service_1 = __webpack_require__(/*! ./consultations.service 
 const create_consultation_dto_1 = __webpack_require__(/*! ./dto/create-consultation.dto */ "./src/modules/consultations/dto/create-consultation.dto.ts");
 const update_consultation_dto_1 = __webpack_require__(/*! ./dto/update-consultation.dto */ "./src/modules/consultations/dto/update-consultation.dto.ts");
 const jwt_auth_guard_1 = __webpack_require__(/*! ../auth/guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
+const roles_guard_1 = __webpack_require__(/*! ../../common/guards/roles.guard */ "./src/common/guards/roles.guard.ts");
+const roles_decorator_1 = __webpack_require__(/*! ../../common/decorators/roles.decorator */ "./src/common/decorators/roles.decorator.ts");
 let ConsultationsController = class ConsultationsController {
     constructor(consultationsService) {
         this.consultationsService = consultationsService;
@@ -2741,6 +2813,21 @@ let ConsultationsController = class ConsultationsController {
     }
     completeConsultation(id, req, notes, prescription) {
         return this.consultationsService.completeConsultation(id, req.user.userId, notes, prescription);
+    }
+    getVetQueue() {
+        return this.consultationsService.getVetQueue();
+    }
+    getVetActive(req) {
+        return this.consultationsService.getVetActive(req.user.userId);
+    }
+    getVetHistory(req) {
+        return this.consultationsService.getVetHistory(req.user.userId);
+    }
+    acceptConsultation(id, req) {
+        return this.consultationsService.acceptConsultation(id, req.user.userId);
+    }
+    releaseConsultation(id, req) {
+        return this.consultationsService.releaseConsultation(id, req.user.userId);
     }
 };
 exports.ConsultationsController = ConsultationsController;
@@ -2811,11 +2898,193 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "completeConsultation", null);
+__decorate([
+    (0, common_1.Get)('vet/queue'),
+    (0, roles_decorator_1.Roles)('vet'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetQueue", null);
+__decorate([
+    (0, common_1.Get)('vet/active'),
+    (0, roles_decorator_1.Roles)('vet'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetActive", null);
+__decorate([
+    (0, common_1.Get)('vet/history'),
+    (0, roles_decorator_1.Roles)('vet'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetHistory", null);
+__decorate([
+    (0, common_1.Post)(':id/accept'),
+    (0, roles_decorator_1.Roles)('vet'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "acceptConsultation", null);
+__decorate([
+    (0, common_1.Post)(':id/release'),
+    (0, roles_decorator_1.Roles)('vet'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "releaseConsultation", null);
 exports.ConsultationsController = ConsultationsController = __decorate([
     (0, common_1.Controller)('consultations'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [typeof (_a = typeof consultations_service_1.ConsultationsService !== "undefined" && consultations_service_1.ConsultationsService) === "function" ? _a : Object])
 ], ConsultationsController);
+
+
+/***/ }),
+
+/***/ "./src/modules/consultations/consultations.gateway.ts":
+/*!************************************************************!*\
+  !*** ./src/modules/consultations/consultations.gateway.ts ***!
+  \************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConsultationsGateway = void 0;
+const websockets_1 = __webpack_require__(/*! @nestjs/websockets */ "@nestjs/websockets");
+const socket_io_1 = __webpack_require__(/*! socket.io */ "socket.io");
+const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
+let ConsultationsGateway = class ConsultationsGateway {
+    constructor(jwtService, consultationsService) {
+        this.jwtService = jwtService;
+        this.consultationsService = consultationsService;
+        this.vetConnections = new Map();
+    }
+    async handleConnection(client) {
+        try {
+            const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+            if (!token) {
+                client.disconnect();
+                return;
+            }
+            const payload = this.jwtService.verify(token);
+            client.data.userId = payload.sub;
+            client.data.role = payload.role;
+            console.log(`Client connected: ${client.id}, userId: ${payload.sub}, role: ${payload.role}`);
+        }
+        catch (error) {
+            console.error('Connection auth error:', error.message);
+            client.disconnect();
+        }
+    }
+    handleDisconnect(client) {
+        if (client.data.role === 'vet') {
+            this.vetConnections.delete(client.data.userId);
+        }
+        console.log(`Client disconnected: ${client.id}`);
+    }
+    async handleRegister(client, data) {
+        if (data.role === 'veterinarian' && client.data.role === 'vet') {
+            this.vetConnections.set(client.data.userId, client.id);
+            return { success: true, message: 'Registered as available vet' };
+        }
+        return { success: false, error: 'Invalid role' };
+    }
+    async handleAccept(client, data) {
+        try {
+            if (client.data.role !== 'vet') {
+                return { success: false, error: 'Only vets can accept consultations' };
+            }
+            const consultation = await this.consultationsService.acceptConsultation(data.consultationId, client.data.userId);
+            this.server.emit('consultation:claimed', {
+                consultationId: data.consultationId,
+                vetId: client.data.userId,
+                vetName: consultation.veterinarianName,
+            });
+            return { success: true, consultation };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+    async handleRelease(client, data) {
+        try {
+            if (client.data.role !== 'vet') {
+                return { success: false, error: 'Only vets can release consultations' };
+            }
+            await this.consultationsService.releaseConsultation(data.consultationId, client.data.userId);
+            this.server.emit('consultation:released', {
+                consultationId: data.consultationId,
+            });
+            return { success: true };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+    notifyNewConsultation(consultation) {
+        this.server.emit('consultation:incoming', consultation);
+    }
+    notifyConsultationCompleted(consultationId) {
+        this.server.emit('consultation:completed', { consultationId });
+    }
+    notifyConsultationUpdated(consultationId, updates) {
+        this.server.emit('consultation:updated', { consultationId, ...updates });
+    }
+};
+exports.ConsultationsGateway = ConsultationsGateway;
+__decorate([
+    (0, websockets_1.WebSocketServer)(),
+    __metadata("design:type", typeof (_c = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _c : Object)
+], ConsultationsGateway.prototype, "server", void 0);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:register'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleRegister", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:accept'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleAccept", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:release'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleRelease", null);
+exports.ConsultationsGateway = ConsultationsGateway = __decorate([
+    (0, websockets_1.WebSocketGateway)({ cors: { origin: '*' }, namespace: '/consultations' }),
+    __metadata("design:paramtypes", [typeof (_a = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof consultations_service_1.ConsultationsService !== "undefined" && consultations_service_1.ConsultationsService) === "function" ? _b : Object])
+], ConsultationsGateway);
 
 
 /***/ }),
@@ -2837,8 +3106,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
+const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
 const consultations_controller_1 = __webpack_require__(/*! ./consultations.controller */ "./src/modules/consultations/consultations.controller.ts");
+const consultations_gateway_1 = __webpack_require__(/*! ./consultations.gateway */ "./src/modules/consultations/consultations.gateway.ts");
 const consultation_schema_1 = __webpack_require__(/*! ./schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts");
 const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
 let ConsultationsModule = class ConsultationsModule {
@@ -2848,11 +3120,15 @@ exports.ConsultationsModule = ConsultationsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: consultation_schema_1.Consultation.name, schema: consultation_schema_1.ConsultationSchema }]),
+            jwt_1.JwtModule.register({
+                secret: process.env.JWT_SECRET || 'your-secret-key',
+                signOptions: { expiresIn: '7d' },
+            }),
             pets_module_1.PetsModule,
         ],
         controllers: [consultations_controller_1.ConsultationsController],
-        providers: [consultations_service_1.ConsultationsService],
-        exports: [consultations_service_1.ConsultationsService],
+        providers: [consultations_service_1.ConsultationsService, consultations_gateway_1.ConsultationsGateway, core_1.Reflector],
+        exports: [consultations_service_1.ConsultationsService, consultations_gateway_1.ConsultationsGateway],
     })
 ], ConsultationsModule);
 
@@ -2897,7 +3173,7 @@ let ConsultationsService = class ConsultationsService {
             ...createConsultationDto,
             userId: new mongoose_2.Types.ObjectId(userId),
             petId: new mongoose_2.Types.ObjectId(createConsultationDto.petId),
-            status: 'scheduled',
+            status: 'pending',
             scheduledDate: new Date(createConsultationDto.scheduledDate),
         });
         return consultation.save();
@@ -2961,6 +3237,57 @@ let ConsultationsService = class ConsultationsService {
             .sort({ scheduledDate: 1 })
             .limit(5);
     }
+    async getVetQueue() {
+        return this.consultationModel
+            .find({ status: 'pending', isActive: true })
+            .populate('userId', 'firstName lastName email')
+            .populate('petId', 'name species breed age')
+            .sort({ scheduledDate: 1 });
+    }
+    async getVetActive(vetId) {
+        return this.consultationModel
+            .find({ assignedVet: new mongoose_2.Types.ObjectId(vetId), status: { $in: ['assigned', 'in-progress'] }, isActive: true })
+            .populate('userId', 'firstName lastName email phone')
+            .populate('petId', 'name species breed age weight')
+            .sort({ scheduledDate: 1 });
+    }
+    async getVetHistory(vetId) {
+        return this.consultationModel
+            .find({ assignedVet: new mongoose_2.Types.ObjectId(vetId), status: 'completed', isActive: true })
+            .populate('userId', 'firstName lastName')
+            .populate('petId', 'name species')
+            .sort({ updatedAt: -1 })
+            .limit(50);
+    }
+    async acceptConsultation(consultationId, vetId) {
+        const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+        if (!consultation) {
+            throw new common_1.NotFoundException('Consultation not found');
+        }
+        if (consultation.status !== 'pending') {
+            throw new common_1.ConflictException('Consultation already assigned or completed');
+        }
+        consultation.assignedVet = new mongoose_2.Types.ObjectId(vetId);
+        consultation.status = 'assigned';
+        await consultation.save();
+        return this.consultationModel
+            .findById(consultationId)
+            .populate('userId', 'firstName lastName email phone')
+            .populate('petId', 'name species breed age weight');
+    }
+    async releaseConsultation(consultationId, vetId) {
+        const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+        if (!consultation) {
+            throw new common_1.NotFoundException('Consultation not found');
+        }
+        if (consultation.assignedVet?.toString() !== vetId) {
+            throw new common_1.ForbiddenException('You are not assigned to this consultation');
+        }
+        consultation.assignedVet = undefined;
+        consultation.status = 'pending';
+        await consultation.save();
+        return consultation;
+    }
 };
 exports.ConsultationsService = ConsultationsService;
 exports.ConsultationsService = ConsultationsService = __decorate([
@@ -3000,20 +3327,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "petId", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateConsultationDto.prototype, "veterinarianId", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateConsultationDto.prototype, "veterinarianName", void 0);
-__decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "scheduledDate", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateConsultationDto.prototype, "duration", void 0);
@@ -3028,6 +3346,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "symptoms", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(['video', 'audio', 'chat']),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "consultationType", void 0);
@@ -3124,7 +3443,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationSchema = exports.Consultation = void 0;
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
@@ -3141,23 +3460,23 @@ __decorate([
     __metadata("design:type", typeof (_b = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _b : Object)
 ], Consultation.prototype, "petId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Consultation.prototype, "veterinarianId", void 0);
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User' }),
+    __metadata("design:type", typeof (_c = typeof mongoose_2.Types !== "undefined" && mongoose_2.Types.ObjectId) === "function" ? _c : Object)
+], Consultation.prototype, "assignedVet", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Consultation.prototype, "veterinarianName", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, enum: ['scheduled', 'in-progress', 'completed', 'cancelled'] }),
+    (0, mongoose_1.Prop)({ required: true, enum: ['pending', 'assigned', 'in-progress', 'completed', 'cancelled'], default: 'pending' }),
     __metadata("design:type", String)
 ], Consultation.prototype, "status", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
 ], Consultation.prototype, "scheduledDate", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ default: 30 }),
     __metadata("design:type", Number)
 ], Consultation.prototype, "duration", void 0);
 __decorate([
@@ -3182,10 +3501,10 @@ __decorate([
 ], Consultation.prototype, "followUpRequired", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
-    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
 ], Consultation.prototype, "followUpDate", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, enum: ['video', 'audio', 'chat'] }),
+    (0, mongoose_1.Prop)({ default: 'video', enum: ['video', 'audio', 'chat'] }),
     __metadata("design:type", String)
 ], Consultation.prototype, "consultationType", void 0);
 __decorate([
@@ -3205,6 +3524,14 @@ __decorate([
     __metadata("design:type", String)
 ], Consultation.prototype, "paymentStatus", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Consultation.prototype, "unreadCount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+], Consultation.prototype, "lastMessageAt", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)
 ], Consultation.prototype, "isActive", void 0);
@@ -3212,6 +3539,8 @@ exports.Consultation = Consultation = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Consultation);
 exports.ConsultationSchema = mongoose_1.SchemaFactory.createForClass(Consultation);
+exports.ConsultationSchema.index({ assignedVet: 1, status: 1 });
+exports.ConsultationSchema.index({ status: 1, scheduledDate: 1 });
 
 
 /***/ }),
@@ -8730,6 +9059,34 @@ const sampleUsers = [
         role: 'user',
         createdAt: new Date(),
         updatedAt: new Date()
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        email: 'dr.sarah@vetclinic.com',
+        password: bcrypt.hashSync('VetPass123', 12),
+        firstName: 'Dr. Sarah',
+        lastName: 'Johnson',
+        phone: '+1555123456',
+        address: '789 Vet Clinic Rd, City, State 11111',
+        isActive: true,
+        isEmailVerified: true,
+        role: 'vet',
+        createdAt: new Date(),
+        updatedAt: new Date()
+    },
+    {
+        _id: new mongoose_1.Types.ObjectId(),
+        email: 'dr.mike@petcare.com',
+        password: bcrypt.hashSync('VetPass123', 12),
+        firstName: 'Dr. Michael',
+        lastName: 'Chen',
+        phone: '+1555789012',
+        address: '321 Pet Care Blvd, City, State 22222',
+        isActive: true,
+        isEmailVerified: true,
+        role: 'vet',
+        createdAt: new Date(),
+        updatedAt: new Date()
     }
 ];
 exports.sampleUsers = sampleUsers;
@@ -9640,6 +9997,16 @@ module.exports = require("@nestjs/swagger");
 
 /***/ }),
 
+/***/ "@nestjs/websockets":
+/*!*************************************!*\
+  !*** external "@nestjs/websockets" ***!
+  \*************************************/
+/***/ ((module) => {
+
+module.exports = require("@nestjs/websockets");
+
+/***/ }),
+
 /***/ "bcrypt":
 /*!*************************!*\
   !*** external "bcrypt" ***!
@@ -9697,6 +10064,16 @@ module.exports = require("passport-jwt");
 /***/ ((module) => {
 
 module.exports = require("passport-local");
+
+/***/ }),
+
+/***/ "socket.io":
+/*!****************************!*\
+  !*** external "socket.io" ***!
+  \****************************/
+/***/ ((module) => {
+
+module.exports = require("socket.io");
 
 /***/ }),
 
@@ -9799,6 +10176,7 @@ async function bootstrap() {
     app.enableCors({
         origin: process.env.CORS_ORIGIN || '*',
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     });
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'public'));
     const shouldEnableSwagger = process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true';

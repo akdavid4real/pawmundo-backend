@@ -11,20 +11,20 @@ export class Consultation {
   @Prop({ type: Types.ObjectId, ref: 'Pet', required: true })
   petId: Types.ObjectId;
 
-  @Prop({ required: true })
-  veterinarianId: string;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  assignedVet?: Types.ObjectId;
 
-  @Prop({ required: true })
-  veterinarianName: string;
+  @Prop()
+  veterinarianName?: string;
 
-  @Prop({ required: true, enum: ['scheduled', 'in-progress', 'completed', 'cancelled'] })
+  @Prop({ required: true, enum: ['pending', 'assigned', 'in-progress', 'completed', 'cancelled'], default: 'pending' })
   status: string;
 
   @Prop({ required: true })
   scheduledDate: Date;
 
-  @Prop({ required: true })
-  duration: number; // in minutes
+  @Prop({ default: 30 })
+  duration: number;
 
   @Prop({ required: true })
   reason: string;
@@ -44,7 +44,7 @@ export class Consultation {
   @Prop()
   followUpDate?: Date;
 
-  @Prop({ required: true, enum: ['video', 'audio', 'chat'] })
+  @Prop({ default: 'video', enum: ['video', 'audio', 'chat'] })
   consultationType: string;
 
   @Prop()
@@ -59,8 +59,16 @@ export class Consultation {
   @Prop({ default: 'pending', enum: ['pending', 'paid', 'refunded'] })
   paymentStatus: string;
 
+  @Prop({ default: 0 })
+  unreadCount: number;
+
+  @Prop()
+  lastMessageAt?: Date;
+
   @Prop({ default: true })
   isActive: boolean;
 }
 
 export const ConsultationSchema = SchemaFactory.createForClass(Consultation);
+ConsultationSchema.index({ assignedVet: 1, status: 1 });
+ConsultationSchema.index({ status: 1, scheduledDate: 1 });

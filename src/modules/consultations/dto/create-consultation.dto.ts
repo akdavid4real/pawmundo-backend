@@ -1,23 +1,16 @@
-import { IsString, IsNotEmpty, IsDateString, IsNumber, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsNumber, IsEnum, IsOptional } from 'class-validator';
 
 export class CreateConsultationDto {
   @IsString()
   @IsNotEmpty()
   petId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  veterinarianId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  veterinarianName: string;
-
   @IsDateString()
   scheduledDate: string;
 
+  @IsOptional()
   @IsNumber()
-  duration: number;
+  duration?: number;
 
   @IsString()
   @IsNotEmpty()
@@ -27,8 +20,9 @@ export class CreateConsultationDto {
   @IsString()
   symptoms?: string;
 
+  @IsOptional()
   @IsEnum(['video', 'audio', 'chat'])
-  consultationType: string;
+  consultationType?: string;
 
   @IsOptional()
   @IsNumber()

@@ -30,8 +30,10 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^11.1.8",
     "@nestjs/schedule": "^4.0.0",
     "@nestjs/swagger": "^7.4.0",
+    "@nestjs/websockets": "^11.1.8",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "bull": "^4.11.0",
@@ -47,6 +49,7 @@
     "redis": "^4.6.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
@@ -93,6 +96,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["<rootDir>/../test/setup.ts"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/../test/setup.ts"
+    ]
   }
 }

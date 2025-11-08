@@ -73,13 +73,31 @@ PawMundo is a modern pet management platform that helps pet owners track their p
 - Veterinarian notes
 - File attachments support
 
+### 🩺 Virtual Consultations (NEW!)
+- Real-time consultation requests
+- Vet queue management
+- WebSocket-based notifications
+- Video consultation support
+- Consultation notes and prescriptions
+- Complete consultation lifecycle
+
+### 🛡️ Insurance Management (NEW!)
+- Policy management
+- Coverage calculation
+- Claims submission
+- Expiring policy alerts
+
+### 🏃 Activity Tracking (NEW!)
+- Daily activity logging
+- Multiple activity types
+- Duration and distance tracking
+
 ### 🔮 Planned Features
-- Virtual consultations
 - AI-powered symptom checker
 - Community forum
-- Insurance management
 - Push notifications
-- Mobile app support
+- Email notifications
+- Payment processing
 
 ## 🛠️ Tech Stack
 
@@ -269,7 +287,13 @@ curl http://localhost:3000/health
 
 ## 📚 API Documentation
 
-Detailed API documentation is available in the [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) file.
+### Interactive Swagger UI
+Access the interactive API documentation at: **`http://localhost:3000/api`**
+
+### Documentation Files
+- **[API_ENDPOINTS.md](./API_ENDPOINTS.md)** - Complete endpoint reference with examples
+- **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** - Feature implementation status
+- **[VET_MOBILE_INTEGRATION.md](../pawmundo-mobile/VET_MOBILE_INTEGRATION.md)** - Mobile app integration guide
 
 ### Quick Start API Testing
 

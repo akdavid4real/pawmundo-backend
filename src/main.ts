@@ -50,6 +50,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
   
   app.useStaticAssets(join(__dirname, '..', 'public'));
@@ -89,27 +90,19 @@ async function bootstrap() {
         - HTTP status codes
       `)
       .setVersion('2.0.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          name: 'JWT',
-          description: 'Enter JWT token',
-          in: 'header',
-        },
-        'JWT-auth'
-      )
+      .addBearerAuth()
       .addServer(process.env.BASE_URL || 'http://localhost:3000', 'Development Server')
       .addServer('https://pawpromise-backend.onrender.com', 'Production Server')
       .addTag('Authentication', 'User registration, login, and account management')
       .addTag('Pets', 'Pet profile management and detailed information')
+      .addTag('Consultations', 'Virtual veterinary consultations with real-time updates')
       .addTag('Activity Tracking', 'Daily activity and diet logging')
       .addTag('Health Records', 'Medical history and health tracking')
       .addTag('Medications', 'Medication management and reminders')
       .addTag('Appointments', 'Veterinary appointment scheduling')
       .addTag('Insurance', 'Pet insurance policies and claims')
       .addTag('Health Reminders', 'Automated health notifications')
+      .addTag('Seed', 'Database seeding for development')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document, {
