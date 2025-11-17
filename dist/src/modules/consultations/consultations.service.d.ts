@@ -21,4 +21,6 @@ export declare class ConsultationsService {
     getVetHistory(vetId: string): Promise<Consultation[]>;
     acceptConsultation(consultationId: string, vetId: string): Promise<Consultation>;
     releaseConsultation(consultationId: string, vetId: string): Promise<Consultation>;
+    findByIdForVet(id: string): Promise<Consultation>;
+    getConsultationDebugInfo(id: string): Promise<any>;
 }

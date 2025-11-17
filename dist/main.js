@@ -91,6 +91,23 @@ exports.AppModule = AppModule = __decorate([
 
 /***/ }),
 
+/***/ "./src/common/decorators/public.decorator.ts":
+/*!***************************************************!*\
+  !*** ./src/common/decorators/public.decorator.ts ***!
+  \***************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Public = exports.IS_PUBLIC_KEY = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+exports.IS_PUBLIC_KEY = 'isPublic';
+const Public = () => (0, common_1.SetMetadata)(exports.IS_PUBLIC_KEY, true);
+exports.Public = Public;
+
+
+/***/ }),
+
 /***/ "./src/common/decorators/roles.decorator.ts":
 /*!**************************************************!*\
   !*** ./src/common/decorators/roles.decorator.ts ***!
@@ -2608,15 +2625,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtAuthGuard = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const public_decorator_1 = __webpack_require__(/*! ../../../common/decorators/public.decorator */ "./src/common/decorators/public.decorator.ts");
 let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
+    constructor(reflector) {
+        super();
+        this.reflector = reflector;
+    }
+    canActivate(context) {
+        const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (isPublic) {
+            return true;
+        }
+        return super.canActivate(context);
+    }
 };
 exports.JwtAuthGuard = JwtAuthGuard;
 exports.JwtAuthGuard = JwtAuthGuard = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [core_1.Reflector])
 ], JwtAuthGuard);
 
 
@@ -2847,6 +2884,18 @@ let ConsultationsController = class ConsultationsController {
     getUpcoming(req) {
         return this.consultationsService.getUpcoming(req.user.userId);
     }
+    getVetQueue() {
+        return this.consultationsService.getVetQueue();
+    }
+    getVetActive(req) {
+        return this.consultationsService.getVetActive(req.user.userId);
+    }
+    getVetHistory(req) {
+        return this.consultationsService.getVetHistory(req.user.userId);
+    }
+    findOneForVet(id) {
+        return this.consultationsService.findByIdForVet(id);
+    }
     findOne(id, req) {
         return this.consultationsService.findById(id, req.user.userId);
     }
@@ -2861,15 +2910,6 @@ let ConsultationsController = class ConsultationsController {
     }
     completeConsultation(id, req, notes, prescription) {
         return this.consultationsService.completeConsultation(id, req.user.userId, notes, prescription);
-    }
-    getVetQueue() {
-        return this.consultationsService.getVetQueue();
-    }
-    getVetActive(req) {
-        return this.consultationsService.getVetActive(req.user.userId);
-    }
-    getVetHistory(req) {
-        return this.consultationsService.getVetHistory(req.user.userId);
     }
     acceptConsultation(id, req) {
         return this.consultationsService.acceptConsultation(id, req.user.userId);
@@ -2955,6 +2995,59 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "getUpcoming", null);
+__decorate([
+    (0, common_1.Get)('vet/queue'),
+    (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get pending consultations in the vet queue (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Queue retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetQueue", null);
+__decorate([
+    (0, common_1.Get)('vet/active'),
+    (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get active consultations assigned to the vet (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Active consultations retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetActive", null);
+__decorate([
+    (0, common_1.Get)('vet/history'),
+    (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get completed consultation history for the vet (Vet only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'History retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "getVetHistory", null);
+__decorate([
+    (0, common_1.Get)('vet/:id'),
+    (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get any consultation by ID (Vet only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "findOneForVet", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get a single consultation by ID' }),
@@ -3045,44 +3138,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "completeConsultation", null);
-__decorate([
-    (0, common_1.Get)('vet/queue'),
-    (0, roles_decorator_1.Roles)('vet'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get pending consultations in the vet queue (Vet only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Queue retrieved successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
-    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], ConsultationsController.prototype, "getVetQueue", null);
-__decorate([
-    (0, common_1.Get)('vet/active'),
-    (0, roles_decorator_1.Roles)('vet'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get active consultations assigned to the vet (Vet only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Active consultations retrieved successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
-    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], ConsultationsController.prototype, "getVetActive", null);
-__decorate([
-    (0, common_1.Get)('vet/history'),
-    (0, roles_decorator_1.Roles)('vet'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get completed consultation history for the vet (Vet only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'History retrieved successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
-    openapi.ApiResponse({ status: 200, type: [(__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation)] }),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], ConsultationsController.prototype, "getVetHistory", null);
 __decorate([
     (0, common_1.Post)(':id/accept'),
     (0, roles_decorator_1.Roles)('vet'),
@@ -3289,6 +3344,8 @@ const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
 const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
 const consultations_controller_1 = __webpack_require__(/*! ./consultations.controller */ "./src/modules/consultations/consultations.controller.ts");
+const debug_controller_1 = __webpack_require__(/*! ./debug.controller */ "./src/modules/consultations/debug.controller.ts");
+const test_controller_1 = __webpack_require__(/*! ./test.controller */ "./src/modules/consultations/test.controller.ts");
 const consultations_gateway_1 = __webpack_require__(/*! ./consultations.gateway */ "./src/modules/consultations/consultations.gateway.ts");
 const consultation_schema_1 = __webpack_require__(/*! ./schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts");
 const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
@@ -3305,7 +3362,7 @@ exports.ConsultationsModule = ConsultationsModule = __decorate([
             }),
             pets_module_1.PetsModule,
         ],
-        controllers: [consultations_controller_1.ConsultationsController],
+        controllers: [consultations_controller_1.ConsultationsController, debug_controller_1.DebugController, test_controller_1.TestController],
         providers: [consultations_service_1.ConsultationsService, consultations_gateway_1.ConsultationsGateway, core_1.Reflector],
         exports: [consultations_service_1.ConsultationsService, consultations_gateway_1.ConsultationsGateway],
     })
@@ -3369,12 +3426,19 @@ let ConsultationsService = class ConsultationsService {
             .sort({ scheduledDate: -1 });
     }
     async findById(id, userId) {
-        const consultation = await this.consultationModel
-            .findOne({ _id: id, userId: new mongoose_2.Types.ObjectId(userId), isActive: true })
-            .populate('petId');
-        if (!consultation) {
-            throw new common_1.NotFoundException(`Consultation with ID '${id}' does not exist or you don't have permission to access it`);
+        const consultationExists = await this.consultationModel.findById(id);
+        if (!consultationExists) {
+            throw new common_1.NotFoundException(`Consultation with ID '${id}' does not exist`);
         }
+        if (!consultationExists.isActive) {
+            throw new common_1.NotFoundException(`Consultation with ID '${id}' has been deleted`);
+        }
+        if (consultationExists.userId.toString() !== userId) {
+            throw new common_1.ForbiddenException(`You don't have permission to access consultation '${id}'`);
+        }
+        const consultation = await this.consultationModel
+            .findById(id)
+            .populate('petId');
         return consultation;
     }
     async update(id, userId, updateConsultationDto) {
@@ -3466,6 +3530,30 @@ let ConsultationsService = class ConsultationsService {
         await consultation.save();
         return consultation;
     }
+    async findByIdForVet(id) {
+        const consultation = await this.consultationModel
+            .findOne({ _id: id, isActive: true })
+            .populate('userId', 'firstName lastName email phone')
+            .populate('petId', 'name species breed age weight');
+        if (!consultation) {
+            throw new common_1.NotFoundException(`Consultation with ID '${id}' does not exist`);
+        }
+        return consultation;
+    }
+    async getConsultationDebugInfo(id) {
+        const consultation = await this.consultationModel.findById(id);
+        if (!consultation) {
+            return { exists: false, message: 'Consultation not found' };
+        }
+        return {
+            exists: true,
+            id: consultation._id,
+            userId: consultation.userId,
+            isActive: consultation.isActive,
+            status: consultation.status,
+            createdAt: consultation.createdAt
+        };
+    }
 };
 exports.ConsultationsService = ConsultationsService;
 exports.ConsultationsService = ConsultationsService = __decorate([
@@ -3474,6 +3562,60 @@ exports.ConsultationsService = ConsultationsService = __decorate([
     __metadata("design:paramtypes", [mongoose_2.Model,
         pets_service_1.PetsService])
 ], ConsultationsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/consultations/debug.controller.ts":
+/*!*******************************************************!*\
+  !*** ./src/modules/consultations/debug.controller.ts ***!
+  \*******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DebugController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
+let DebugController = class DebugController {
+    constructor(consultationsService) {
+        this.consultationsService = consultationsService;
+    }
+    getDebugInfo(id) {
+        return this.consultationsService.getConsultationDebugInfo(id);
+    }
+};
+exports.DebugController = DebugController;
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get consultation debug information (No auth required)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Debug info retrieved successfully' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DebugController.prototype, "getDebugInfo", null);
+exports.DebugController = DebugController = __decorate([
+    (0, swagger_1.ApiTags)('Debug'),
+    (0, common_1.Controller)('consultations/debug'),
+    __metadata("design:paramtypes", [consultations_service_1.ConsultationsService])
+], DebugController);
 
 
 /***/ }),
@@ -3761,6 +3903,74 @@ exports.Consultation = Consultation = __decorate([
 exports.ConsultationSchema = mongoose_1.SchemaFactory.createForClass(Consultation);
 exports.ConsultationSchema.index({ assignedVet: 1, status: 1 });
 exports.ConsultationSchema.index({ status: 1, scheduledDate: 1 });
+
+
+/***/ }),
+
+/***/ "./src/modules/consultations/test.controller.ts":
+/*!******************************************************!*\
+  !*** ./src/modules/consultations/test.controller.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TestController = void 0;
+const openapi = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
+let TestController = class TestController {
+    constructor(consultationsService) {
+        this.consultationsService = consultationsService;
+    }
+    async testConsultation(id) {
+        try {
+            const result = await this.consultationsService.getConsultationDebugInfo(id);
+            return {
+                success: true,
+                consultationId: id,
+                ...result
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                consultationId: id,
+                error: error.message
+            };
+        }
+    }
+};
+exports.TestController = TestController;
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Test consultation existence (No auth)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Test result' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TestController.prototype, "testConsultation", null);
+exports.TestController = TestController = __decorate([
+    (0, swagger_1.ApiTags)('Test'),
+    (0, common_1.Controller)('test/consultations'),
+    __metadata("design:paramtypes", [consultations_service_1.ConsultationsService])
+], TestController);
 
 
 /***/ }),

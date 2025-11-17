@@ -42,13 +42,26 @@ export class ConsultationsService {
   }
 
   async findById(id: string, userId: string): Promise<Consultation> {
-    const consultation = await this.consultationModel
-      .findOne({ _id: id, userId: new Types.ObjectId(userId), isActive: true })
-      .populate('petId');
-
-    if (!consultation) {
-      throw new NotFoundException(`Consultation with ID '${id}' does not exist or you don't have permission to access it`);
+    // First check if consultation exists at all
+    const consultationExists = await this.consultationModel.findById(id);
+    
+    if (!consultationExists) {
+      throw new NotFoundException(`Consultation with ID '${id}' does not exist`);
     }
+
+    // Check if it's inactive
+    if (!consultationExists.isActive) {
+      throw new NotFoundException(`Consultation with ID '${id}' has been deleted`);
+    }
+
+    // Check if user has permission
+    if (consultationExists.userId.toString() !== userId) {
+      throw new ForbiddenException(`You don't have permission to access consultation '${id}'`);
+    }
+
+    const consultation = await this.consultationModel
+      .findById(id)
+      .populate('petId');
 
     return consultation;
   }
@@ -160,5 +173,37 @@ export class ConsultationsService {
     await consultation.save();
 
     return consultation;
+  }
+
+  // Method for vets to access any consultation
+  async findByIdForVet(id: string): Promise<Consultation> {
+    const consultation = await this.consultationModel
+      .findOne({ _id: id, isActive: true })
+      .populate('userId', 'firstName lastName email phone')
+      .populate('petId', 'name species breed age weight');
+
+    if (!consultation) {
+      throw new NotFoundException(`Consultation with ID '${id}' does not exist`);
+    }
+
+    return consultation;
+  }
+
+  // Debug method to check consultation details
+  async getConsultationDebugInfo(id: string): Promise<any> {
+    const consultation = await this.consultationModel.findById(id);
+    
+    if (!consultation) {
+      return { exists: false, message: 'Consultation not found' };
+    }
+
+    return {
+      exists: true,
+      id: consultation._id,
+      userId: consultation.userId,
+      isActive: consultation.isActive,
+      status: consultation.status,
+      createdAt: (consultation as any).createdAt
+    };
   }
 }

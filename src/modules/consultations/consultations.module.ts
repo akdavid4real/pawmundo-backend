@@ -4,6 +4,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { ConsultationsService } from './consultations.service';
 import { ConsultationsController } from './consultations.controller';
+import { DebugController } from './debug.controller';
+import { TestController } from './test.controller';
 import { ConsultationsGateway } from './consultations.gateway';
 import { Consultation, ConsultationSchema } from './schemas/consultation.schema';
 import { PetsModule } from '../pets/pets.module';
@@ -17,7 +19,7 @@ import { PetsModule } from '../pets/pets.module';
     }),
     PetsModule,
   ],
-  controllers: [ConsultationsController],
+  controllers: [ConsultationsController, DebugController, TestController],
   providers: [ConsultationsService, ConsultationsGateway, Reflector],
   exports: [ConsultationsService, ConsultationsGateway],
 })

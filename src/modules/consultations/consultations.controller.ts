@@ -7,10 +7,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
+
 @ApiTags('Consultations')
 @ApiBearerAuth()
 @Controller('consultations')
 @UseGuards(JwtAuthGuard, RolesGuard)
+
 export class ConsultationsController {
   constructor(private readonly consultationsService: ConsultationsService) {}
 
@@ -82,6 +84,50 @@ export class ConsultationsController {
     return this.consultationsService.getUpcoming(req.user.userId);
   }
 
+
+
+  @Get('vet/queue')
+  @Roles('vet')
+  @ApiOperation({ summary: 'Get pending consultations in the vet queue (Vet only)' })
+  @ApiResponse({ status: 200, description: 'Queue retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
+  getVetQueue() {
+    return this.consultationsService.getVetQueue();
+  }
+
+  @Get('vet/active')
+  @Roles('vet')
+  @ApiOperation({ summary: 'Get active consultations assigned to the vet (Vet only)' })
+  @ApiResponse({ status: 200, description: 'Active consultations retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
+  getVetActive(@Request() req) {
+    return this.consultationsService.getVetActive(req.user.userId);
+  }
+
+  @Get('vet/history')
+  @Roles('vet')
+  @ApiOperation({ summary: 'Get completed consultation history for the vet (Vet only)' })
+  @ApiResponse({ status: 200, description: 'History retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
+  getVetHistory(@Request() req) {
+    return this.consultationsService.getVetHistory(req.user.userId);
+  }
+
+  @Get('vet/:id')
+  @Roles('vet')
+  @ApiOperation({ summary: 'Get any consultation by ID (Vet only)' })
+  @ApiParam({ name: 'id', description: 'Consultation ID' })
+  @ApiResponse({ status: 200, description: 'Consultation retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Consultation not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
+  findOneForVet(@Param('id') id: string) {
+    return this.consultationsService.findByIdForVet(id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a single consultation by ID' })
   @ApiParam({ name: 'id', description: 'Consultation ID' })
@@ -151,36 +197,6 @@ export class ConsultationsController {
     @Body('prescription') prescription?: string
   ) {
     return this.consultationsService.completeConsultation(id, req.user.userId, notes, prescription);
-  }
-
-  @Get('vet/queue')
-  @Roles('vet')
-  @ApiOperation({ summary: 'Get pending consultations in the vet queue (Vet only)' })
-  @ApiResponse({ status: 200, description: 'Queue retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  getVetQueue() {
-    return this.consultationsService.getVetQueue();
-  }
-
-  @Get('vet/active')
-  @Roles('vet')
-  @ApiOperation({ summary: 'Get active consultations assigned to the vet (Vet only)' })
-  @ApiResponse({ status: 200, description: 'Active consultations retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  getVetActive(@Request() req) {
-    return this.consultationsService.getVetActive(req.user.userId);
-  }
-
-  @Get('vet/history')
-  @Roles('vet')
-  @ApiOperation({ summary: 'Get completed consultation history for the vet (Vet only)' })
-  @ApiResponse({ status: 200, description: 'History retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  getVetHistory(@Request() req) {
-    return this.consultationsService.getVetHistory(req.user.userId);
   }
 
   @Post(':id/accept')
