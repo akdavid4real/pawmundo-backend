@@ -3,10 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 import { Pet, PetSchema } from './schemas/pet.schema';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Pet.name, schema: PetSchema }]),
+    AuthModule,
   ],
   controllers: [PetsController],
   providers: [PetsService],

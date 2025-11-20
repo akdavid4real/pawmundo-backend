@@ -1695,13 +1695,15 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const appointments_controller_1 = __webpack_require__(/*! ./appointments.controller */ "./src/modules/appointments/appointments.controller.ts");
 const appointments_service_1 = __webpack_require__(/*! ./appointments.service */ "./src/modules/appointments/appointments.service.ts");
 const appointment_schema_1 = __webpack_require__(/*! ./schemas/appointment.schema */ "./src/modules/appointments/schemas/appointment.schema.ts");
+const auth_module_1 = __webpack_require__(/*! ../auth/auth.module */ "./src/modules/auth/auth.module.ts");
 let AppointmentsModule = class AppointmentsModule {
 };
 exports.AppointmentsModule = AppointmentsModule;
 exports.AppointmentsModule = AppointmentsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema }])
+            mongoose_1.MongooseModule.forFeature([{ name: appointment_schema_1.Appointment.name, schema: appointment_schema_1.AppointmentSchema }]),
+            auth_module_1.AuthModule,
         ],
         controllers: [appointments_controller_1.AppointmentsController],
         providers: [appointments_service_1.AppointmentsService],
@@ -2146,6 +2148,7 @@ const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/mo
 const user_schema_1 = __webpack_require__(/*! ./schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
 const jwt_strategy_1 = __webpack_require__(/*! ./strategies/jwt.strategy */ "./src/modules/auth/strategies/jwt.strategy.ts");
 const local_strategy_1 = __webpack_require__(/*! ./strategies/local.strategy */ "./src/modules/auth/strategies/local.strategy.ts");
+const jwt_auth_guard_1 = __webpack_require__(/*! ./guards/jwt-auth.guard */ "./src/modules/auth/guards/jwt-auth.guard.ts");
 const mail_service_1 = __webpack_require__(/*! ../../common/utils/mail.service */ "./src/common/utils/mail.service.ts");
 let AuthModule = class AuthModule {
 };
@@ -2161,8 +2164,8 @@ exports.AuthModule = AuthModule = __decorate([
             mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, local_strategy_1.LocalStrategy, mail_service_1.MailService],
-        exports: [auth_service_1.AuthService],
+        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, local_strategy_1.LocalStrategy, jwt_auth_guard_1.JwtAuthGuard, mail_service_1.MailService],
+        exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard],
     })
 ], AuthModule);
 
@@ -2640,7 +2643,7 @@ let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
+        const isPublic = this.reflector?.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
             context.getHandler(),
             context.getClass(),
         ]);
@@ -8689,6 +8692,7 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const pets_controller_1 = __webpack_require__(/*! ./pets.controller */ "./src/modules/pets/pets.controller.ts");
 const pets_service_1 = __webpack_require__(/*! ./pets.service */ "./src/modules/pets/pets.service.ts");
 const pet_schema_1 = __webpack_require__(/*! ./schemas/pet.schema */ "./src/modules/pets/schemas/pet.schema.ts");
+const auth_module_1 = __webpack_require__(/*! ../auth/auth.module */ "./src/modules/auth/auth.module.ts");
 let PetsModule = class PetsModule {
 };
 exports.PetsModule = PetsModule;
@@ -8696,6 +8700,7 @@ exports.PetsModule = PetsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: pet_schema_1.Pet.name, schema: pet_schema_1.PetSchema }]),
+            auth_module_1.AuthModule,
         ],
         controllers: [pets_controller_1.PetsController],
         providers: [pets_service_1.PetsService],
@@ -10585,6 +10590,7 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const user_controller_1 = __webpack_require__(/*! ./user.controller */ "./src/modules/user/user.controller.ts");
 const user_service_1 = __webpack_require__(/*! ./user.service */ "./src/modules/user/user.service.ts");
 const user_schema_1 = __webpack_require__(/*! ../auth/schemas/user.schema */ "./src/modules/auth/schemas/user.schema.ts");
+const auth_module_1 = __webpack_require__(/*! ../auth/auth.module */ "./src/modules/auth/auth.module.ts");
 let UserModule = class UserModule {
 };
 exports.UserModule = UserModule;
@@ -10592,6 +10598,7 @@ exports.UserModule = UserModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
+            auth_module_1.AuthModule,
         ],
         controllers: [user_controller_1.UserController],
         providers: [user_service_1.UserService],

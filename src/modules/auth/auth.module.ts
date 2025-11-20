@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { User, UserSchema } from './schemas/user.schema';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MailService } from '../../common/utils/mail.service';
 
 @Module({
@@ -19,7 +20,7 @@ import { MailService } from '../../common/utils/mail.service';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy, MailService],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, LocalStrategy, JwtAuthGuard, MailService],
+  exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}
