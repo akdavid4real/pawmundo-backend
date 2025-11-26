@@ -2920,6 +2920,13 @@ let ConsultationsController = class ConsultationsController {
     releaseConsultation(id, req) {
         return this.consultationsService.releaseConsultation(id, req.user.userId);
     }
+    sendMessage(id, req, message) {
+        const isVet = req.user.role === 'vet';
+        return this.consultationsService.sendMessage(id, req.user.userId, message, isVet);
+    }
+    checkAssignmentStatus(id, req) {
+        return this.consultationsService.isConsultationAssignedToVet(id, req.user.userId);
+    }
 };
 exports.ConsultationsController = ConsultationsController;
 __decorate([
@@ -3174,6 +3181,39 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ConsultationsController.prototype, "releaseConsultation", null);
+__decorate([
+    (0, common_1.Post)(':id/messages'),
+    (0, swagger_1.ApiOperation)({ summary: 'Send a message in a consultation' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiBody)({ schema: { properties: { message: { type: 'string', example: 'Hello, how can I help you?' } } } }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Message sent successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    openapi.ApiResponse({ status: 201, type: (__webpack_require__(/*! ./src/modules/consultations/schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts").Consultation) }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Body)('message')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "sendMessage", null);
+__decorate([
+    (0, common_1.Get)(':id/assignment-status'),
+    (0, roles_decorator_1.Roles)('vet'),
+    (0, swagger_1.ApiOperation)({ summary: 'Check if consultation is assigned to the current vet (Vet only)' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Assignment status retrieved successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - Vet role required' }),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ConsultationsController.prototype, "checkAssignmentStatus", null);
 exports.ConsultationsController = ConsultationsController = __decorate([
     (0, swagger_1.ApiTags)('Consultations'),
     (0, swagger_1.ApiBearerAuth)(),
@@ -3209,6 +3249,7 @@ exports.ConsultationsGateway = void 0;
 const websockets_1 = __webpack_require__(/*! @nestjs/websockets */ "@nestjs/websockets");
 const socket_io_1 = __webpack_require__(/*! socket.io */ "socket.io");
 const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
 let ConsultationsGateway = class ConsultationsGateway {
     constructor(jwtService, consultationsService) {
@@ -3246,16 +3287,25 @@ let ConsultationsGateway = class ConsultationsGateway {
         }
         return { success: false, error: 'Invalid role' };
     }
+    async handleJoinRoom(client, data) {
+        try {
+            const roomName = `consultation:${data.consultationId}`;
+            await client.join(roomName);
+            console.log(`Client ${client.id} joined room ${roomName}`);
+            return { success: true, message: `Joined consultation ${data.consultationId}` };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
     async handleAccept(client, data) {
         try {
-            if (client.data.role !== 'vet') {
-                return { success: false, error: 'Only vets can accept consultations' };
-            }
             const consultation = await this.consultationsService.acceptConsultation(data.consultationId, client.data.userId);
-            this.server.emit('consultation:claimed', {
+            const roomName = `consultation:${data.consultationId}`;
+            this.server.to(roomName).emit('consultation:claimed', {
                 consultationId: data.consultationId,
                 vetId: client.data.userId,
-                vetName: consultation.veterinarianName,
+                vetName: `${consultation.assignedVet['firstName']} ${consultation.assignedVet['lastName']}`
             });
             return { success: true, consultation };
         }
@@ -3265,11 +3315,9 @@ let ConsultationsGateway = class ConsultationsGateway {
     }
     async handleRelease(client, data) {
         try {
-            if (client.data.role !== 'vet') {
-                return { success: false, error: 'Only vets can release consultations' };
-            }
             await this.consultationsService.releaseConsultation(data.consultationId, client.data.userId);
-            this.server.emit('consultation:released', {
+            const roomName = `consultation:${data.consultationId}`;
+            this.server.to(roomName).emit('consultation:released', {
                 consultationId: data.consultationId,
             });
             return { success: true };
@@ -3285,7 +3333,9 @@ let ConsultationsGateway = class ConsultationsGateway {
         this.server.emit('consultation:completed', { consultationId });
     }
     notifyConsultationUpdated(consultationId, updates) {
-        this.server.emit('consultation:updated', { consultationId, ...updates });
+        const roomName = `consultation:${consultationId}`;
+        console.log(`Emitting consultation:updated to room ${roomName}:`, updates);
+        this.server.to(roomName).emit('consultation:updated', { consultationId, ...updates });
     }
 };
 exports.ConsultationsGateway = ConsultationsGateway;
@@ -3301,6 +3351,14 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ConsultationsGateway.prototype, "handleRegister", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:joinRoom'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleJoinRoom", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)('consultation:accept'),
     __param(0, (0, websockets_1.ConnectedSocket)()),
@@ -3319,6 +3377,7 @@ __decorate([
 ], ConsultationsGateway.prototype, "handleRelease", null);
 exports.ConsultationsGateway = ConsultationsGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: { origin: '*' }, namespace: '/consultations' }),
+    __param(1, (0, common_1.Inject)((0, common_1.forwardRef)(() => consultations_service_1.ConsultationsService))),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         consultations_service_1.ConsultationsService])
 ], ConsultationsGateway);
@@ -3400,10 +3459,12 @@ const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose
 const mongoose_2 = __webpack_require__(/*! mongoose */ "mongoose");
 const consultation_schema_1 = __webpack_require__(/*! ./schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts");
 const pets_service_1 = __webpack_require__(/*! ../pets/pets.service */ "./src/modules/pets/pets.service.ts");
+const consultations_gateway_1 = __webpack_require__(/*! ./consultations.gateway */ "./src/modules/consultations/consultations.gateway.ts");
 let ConsultationsService = class ConsultationsService {
-    constructor(consultationModel, petsService) {
+    constructor(consultationModel, petsService, consultationsGateway) {
         this.consultationModel = consultationModel;
         this.petsService = petsService;
+        this.consultationsGateway = consultationsGateway;
     }
     async create(userId, createConsultationDto) {
         await this.petsService.findById(createConsultationDto.petId, userId);
@@ -3509,12 +3570,22 @@ let ConsultationsService = class ConsultationsService {
         if (!consultation) {
             throw new common_1.NotFoundException('Consultation not found');
         }
+        if (consultation.assignedVet?.toString() === vetId && consultation.status === 'assigned') {
+            return this.consultationModel
+                .findById(consultationId)
+                .populate('userId', 'firstName lastName email phone')
+                .populate('petId', 'name species breed age weight');
+        }
         if (consultation.status !== 'pending') {
             throw new common_1.ConflictException('Consultation already assigned or completed');
         }
-        consultation.assignedVet = new mongoose_2.Types.ObjectId(vetId);
-        consultation.status = 'assigned';
-        await consultation.save();
+        const updatedConsultation = await this.consultationModel.findOneAndUpdate({ _id: consultationId, status: 'pending', isActive: true }, {
+            assignedVet: new mongoose_2.Types.ObjectId(vetId),
+            status: 'assigned'
+        }, { new: true });
+        if (!updatedConsultation) {
+            throw new common_1.ConflictException('Consultation already assigned or completed');
+        }
         return this.consultationModel
             .findById(consultationId)
             .populate('userId', 'firstName lastName email phone')
@@ -3543,6 +3614,51 @@ let ConsultationsService = class ConsultationsService {
         }
         return consultation;
     }
+    async isConsultationAssignedToVet(consultationId, vetId) {
+        const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+        if (!consultation) {
+            throw new common_1.NotFoundException('Consultation not found');
+        }
+        return {
+            isAssigned: consultation.assignedVet?.toString() === vetId,
+            status: consultation.status,
+            assignedVet: consultation.assignedVet?.toString()
+        };
+    }
+    async sendMessage(consultationId, userId, message, isVet = false) {
+        const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+        if (!consultation) {
+            throw new common_1.NotFoundException('Consultation not found');
+        }
+        if (!isVet && consultation.userId.toString() !== userId) {
+            throw new common_1.ForbiddenException('You don\'t have permission to send messages in this consultation');
+        }
+        if (isVet && consultation.assignedVet?.toString() !== userId) {
+            throw new common_1.ForbiddenException('You are not assigned to this consultation');
+        }
+        const newMessage = {
+            id: new mongoose_2.Types.ObjectId().toString(),
+            text: message,
+            sender: isVet ? 'doctor' : 'user',
+            timestamp: new Date(),
+            isRead: false
+        };
+        consultation.messages.push(newMessage);
+        consultation.lastMessageAt = new Date();
+        if (!isVet) {
+            consultation.unreadCount = (consultation.unreadCount || 0) + 1;
+        }
+        await consultation.save();
+        this.consultationsGateway.notifyConsultationUpdated(consultationId, {
+            newMessage: newMessage,
+            unreadCount: consultation.unreadCount,
+            lastMessageAt: consultation.lastMessageAt,
+        });
+        return this.consultationModel
+            .findById(consultationId)
+            .populate('userId', 'firstName lastName email phone')
+            .populate('petId', 'name species breed age weight');
+    }
     async getConsultationDebugInfo(id) {
         const consultation = await this.consultationModel.findById(id);
         if (!consultation) {
@@ -3554,6 +3670,7 @@ let ConsultationsService = class ConsultationsService {
             userId: consultation.userId,
             isActive: consultation.isActive,
             status: consultation.status,
+            assignedVet: consultation.assignedVet,
             createdAt: consultation.createdAt
         };
     }
@@ -3562,8 +3679,10 @@ exports.ConsultationsService = ConsultationsService;
 exports.ConsultationsService = ConsultationsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(consultation_schema_1.Consultation.name)),
+    __param(2, (0, common_1.Inject)((0, common_1.forwardRef)(() => consultations_gateway_1.ConsultationsGateway))),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        pets_service_1.PetsService])
+        pets_service_1.PetsService,
+        consultations_gateway_1.ConsultationsGateway])
 ], ConsultationsService);
 
 
@@ -3896,6 +4015,19 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Date)
 ], Consultation.prototype, "lastMessageAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [{
+                id: { type: String, required: true },
+                text: { type: String, required: true },
+                sender: { type: String, enum: ['user', 'doctor'], required: true },
+                timestamp: { type: Date, default: Date.now },
+                isRead: { type: Boolean, default: false }
+            }],
+        default: []
+    }),
+    __metadata("design:type", Array)
+], Consultation.prototype, "messages", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)

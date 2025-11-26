@@ -18,4 +18,10 @@ export declare class ConsultationsController {
     completeConsultation(id: string, req: any, notes: string, prescription?: string): Promise<import("./schemas/consultation.schema").Consultation>;
     acceptConsultation(id: string, req: any): Promise<import("./schemas/consultation.schema").Consultation>;
     releaseConsultation(id: string, req: any): Promise<import("./schemas/consultation.schema").Consultation>;
+    sendMessage(id: string, req: any, message: string): Promise<import("./schemas/consultation.schema").Consultation>;
+    checkAssignmentStatus(id: string, req: any): Promise<{
+        isAssigned: boolean;
+        status: string;
+        assignedVet?: string;
+    }>;
 }

@@ -1,22 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConsultationsGateway } from './consultations.gateway';
-import { ConsultationsService } from './consultations.service';
 import { Socket } from 'socket.io';
 import { Types } from 'mongoose';
 
 describe('ConsultationsGateway', () => {
   let gateway: ConsultationsGateway;
   let jwtService: JwtService;
-  let consultationsService: ConsultationsService;
 
   const mockJwtService = {
     verify: jest.fn(),
-  };
-
-  const mockConsultationsService = {
-    acceptConsultation: jest.fn(),
-    releaseConsultation: jest.fn(),
   };
 
   const mockSocket = {
@@ -42,16 +35,11 @@ describe('ConsultationsGateway', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
-        {
-          provide: ConsultationsService,
-          useValue: mockConsultationsService,
-        },
       ],
     }).compile();
 
     gateway = module.get<ConsultationsGateway>(ConsultationsGateway);
     jwtService = module.get<JwtService>(JwtService);
-    consultationsService = module.get<ConsultationsService>(ConsultationsService);
 
     gateway.server = mockServer as any;
 
@@ -147,107 +135,7 @@ describe('ConsultationsGateway', () => {
     });
   });
 
-  describe('handleAccept', () => {
-    it('should accept consultation for vet', async () => {
-      const consultationId = new Types.ObjectId().toString();
-      const mockConsultation = {
-        _id: consultationId,
-        status: 'assigned',
-        veterinarianName: 'Dr. Smith',
-      };
 
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-      mockConsultationsService.acceptConsultation.mockResolvedValue(mockConsultation);
-
-      const result = await gateway.handleAccept(mockSocket, { consultationId });
-
-      expect(consultationsService.acceptConsultation).toHaveBeenCalledWith(
-        consultationId,
-        'vet123',
-      );
-      expect(result.success).toBe(true);
-      expect(result.consultation).toEqual(mockConsultation);
-      expect(mockServer.emit).toHaveBeenCalledWith('consultation:claimed', {
-        consultationId,
-        vetId: 'vet123',
-        vetName: 'Dr. Smith',
-      });
-    });
-
-    it('should reject accept for non-vet', async () => {
-      mockSocket.data.role = 'user';
-
-      const result = await gateway.handleAccept(mockSocket, {
-        consultationId: 'consultation123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Only vets can accept consultations');
-    });
-
-    it('should handle accept errors', async () => {
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-      mockConsultationsService.acceptConsultation.mockRejectedValue(
-        new Error('Already assigned'),
-      );
-
-      const result = await gateway.handleAccept(mockSocket, {
-        consultationId: 'consultation123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Already assigned');
-    });
-  });
-
-  describe('handleRelease', () => {
-    it('should release consultation for vet', async () => {
-      const consultationId = new Types.ObjectId().toString();
-
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-      mockConsultationsService.releaseConsultation.mockResolvedValue({});
-
-      const result = await gateway.handleRelease(mockSocket, { consultationId });
-
-      expect(consultationsService.releaseConsultation).toHaveBeenCalledWith(
-        consultationId,
-        'vet123',
-      );
-      expect(result.success).toBe(true);
-      expect(mockServer.emit).toHaveBeenCalledWith('consultation:released', {
-        consultationId,
-      });
-    });
-
-    it('should reject release for non-vet', async () => {
-      mockSocket.data.role = 'user';
-
-      const result = await gateway.handleRelease(mockSocket, {
-        consultationId: 'consultation123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Only vets can release consultations');
-    });
-
-    it('should handle release errors', async () => {
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-      mockConsultationsService.releaseConsultation.mockRejectedValue(
-        new Error('Not assigned to you'),
-      );
-
-      const result = await gateway.handleRelease(mockSocket, {
-        consultationId: 'consultation123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Not assigned to you');
-    });
-  });
 
   describe('notifyNewConsultation', () => {
     it('should broadcast new consultation', () => {

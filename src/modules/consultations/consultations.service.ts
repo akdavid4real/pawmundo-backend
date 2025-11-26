@@ -1,16 +1,19 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, forwardRef, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Consultation, ConsultationDocument } from './schemas/consultation.schema';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { PetsService } from '../pets/pets.service';
+import { ConsultationsGateway } from './consultations.gateway';
 
 @Injectable()
 export class ConsultationsService {
   constructor(
     @InjectModel(Consultation.name) private consultationModel: Model<ConsultationDocument>,
     private petsService: PetsService,
+    @Inject(forwardRef(() => ConsultationsGateway))
+    private consultationsGateway: ConsultationsGateway,
   ) {}
 
   async create(userId: string, createConsultationDto: CreateConsultationDto): Promise<Consultation> {
@@ -143,13 +146,31 @@ export class ConsultationsService {
       throw new NotFoundException('Consultation not found');
     }
 
+    // If already assigned to this vet, return the consultation (idempotent)
+    if (consultation.assignedVet?.toString() === vetId && consultation.status === 'assigned') {
+      return this.consultationModel
+        .findById(consultationId)
+        .populate('userId', 'firstName lastName email phone')
+        .populate('petId', 'name species breed age weight');
+    }
+
     if (consultation.status !== 'pending') {
       throw new ConflictException('Consultation already assigned or completed');
     }
 
-    consultation.assignedVet = new Types.ObjectId(vetId);
-    consultation.status = 'assigned';
-    await consultation.save();
+    // Use findOneAndUpdate for atomic operation to prevent race conditions
+    const updatedConsultation = await this.consultationModel.findOneAndUpdate(
+      { _id: consultationId, status: 'pending', isActive: true },
+      { 
+        assignedVet: new Types.ObjectId(vetId),
+        status: 'assigned'
+      },
+      { new: true }
+    );
+
+    if (!updatedConsultation) {
+      throw new ConflictException('Consultation already assigned or completed');
+    }
 
     return this.consultationModel
       .findById(consultationId)
@@ -189,6 +210,68 @@ export class ConsultationsService {
     return consultation;
   }
 
+  // Check if consultation is assigned to a specific vet
+  async isConsultationAssignedToVet(consultationId: string, vetId: string): Promise<{ isAssigned: boolean; status: string; assignedVet?: string }> {
+    const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+    
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found');
+    }
+
+    return {
+      isAssigned: consultation.assignedVet?.toString() === vetId,
+      status: consultation.status,
+      assignedVet: consultation.assignedVet?.toString()
+    };
+  }
+
+  // Send message in consultation
+  async sendMessage(consultationId: string, userId: string, message: string, isVet: boolean = false): Promise<Consultation> {
+    const consultation = await this.consultationModel.findOne({ _id: consultationId, isActive: true });
+    
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found');
+    }
+
+    // Check permissions
+    if (!isVet && consultation.userId.toString() !== userId) {
+      throw new ForbiddenException('You don\'t have permission to send messages in this consultation');
+    }
+
+    if (isVet && consultation.assignedVet?.toString() !== userId) {
+      throw new ForbiddenException('You are not assigned to this consultation');
+    }
+
+    const newMessage = {
+      id: new Types.ObjectId().toString(),
+      text: message,
+      sender: isVet ? 'doctor' as const : 'user' as const,
+      timestamp: new Date(),
+      isRead: false
+    };
+
+    consultation.messages.push(newMessage);
+    consultation.lastMessageAt = new Date();
+    
+    if (!isVet) {
+      consultation.unreadCount = (consultation.unreadCount || 0) + 1;
+    }
+
+    await consultation.save();
+
+    // Emit WebSocket event for real-time updates
+    this.consultationsGateway.notifyConsultationUpdated(consultationId, {
+      newMessage: newMessage,
+      unreadCount: consultation.unreadCount,
+      lastMessageAt: consultation.lastMessageAt,
+    });
+
+    return this.consultationModel
+      .findById(consultationId)
+      .populate('userId', 'firstName lastName email phone')
+      .populate('petId', 'name species breed age weight');
+  }
+
   // Debug method to check consultation details
   async getConsultationDebugInfo(id: string): Promise<any> {
     const consultation = await this.consultationModel.findById(id);
@@ -203,6 +286,7 @@ export class ConsultationsService {
       userId: consultation.userId,
       isActive: consultation.isActive,
       status: consultation.status,
+      assignedVet: consultation.assignedVet,
       createdAt: (consultation as any).createdAt
     };
   }

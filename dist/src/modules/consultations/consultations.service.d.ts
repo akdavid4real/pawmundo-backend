@@ -3,10 +3,12 @@ import { Consultation, ConsultationDocument } from './schemas/consultation.schem
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { PetsService } from '../pets/pets.service';
+import { ConsultationsGateway } from './consultations.gateway';
 export declare class ConsultationsService {
     private consultationModel;
     private petsService;
-    constructor(consultationModel: Model<ConsultationDocument>, petsService: PetsService);
+    private consultationsGateway;
+    constructor(consultationModel: Model<ConsultationDocument>, petsService: PetsService, consultationsGateway: ConsultationsGateway);
     create(userId: string, createConsultationDto: CreateConsultationDto): Promise<Consultation>;
     findAll(userId: string): Promise<Consultation[]>;
     findByStatus(userId: string, status: string): Promise<Consultation[]>;
@@ -22,5 +24,11 @@ export declare class ConsultationsService {
     acceptConsultation(consultationId: string, vetId: string): Promise<Consultation>;
     releaseConsultation(consultationId: string, vetId: string): Promise<Consultation>;
     findByIdForVet(id: string): Promise<Consultation>;
+    isConsultationAssignedToVet(consultationId: string, vetId: string): Promise<{
+        isAssigned: boolean;
+        status: string;
+        assignedVet?: string;
+    }>;
+    sendMessage(consultationId: string, userId: string, message: string, isVet?: boolean): Promise<Consultation>;
     getConsultationDebugInfo(id: string): Promise<any>;
 }

@@ -223,4 +223,29 @@ export class ConsultationsController {
   releaseConsultation(@Param('id') id: string, @Request() req) {
     return this.consultationsService.releaseConsultation(id, req.user.userId);
   }
+
+  @Post(':id/messages')
+  @ApiOperation({ summary: 'Send a message in a consultation' })
+  @ApiParam({ name: 'id', description: 'Consultation ID' })
+  @ApiBody({ schema: { properties: { message: { type: 'string', example: 'Hello, how can I help you?' } } } })
+  @ApiResponse({ status: 200, description: 'Message sent successfully' })
+  @ApiResponse({ status: 404, description: 'Consultation not found' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  sendMessage(@Param('id') id: string, @Request() req, @Body('message') message: string) {
+    const isVet = req.user.role === 'vet';
+    return this.consultationsService.sendMessage(id, req.user.userId, message, isVet);
+  }
+
+  @Get(':id/assignment-status')
+  @Roles('vet')
+  @ApiOperation({ summary: 'Check if consultation is assigned to the current vet (Vet only)' })
+  @ApiParam({ name: 'id', description: 'Consultation ID' })
+  @ApiResponse({ status: 200, description: 'Assignment status retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Consultation not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
+  checkAssignmentStatus(@Param('id') id: string, @Request() req) {
+    return this.consultationsService.isConsultationAssignedToVet(id, req.user.userId);
+  }
 }

@@ -65,6 +65,24 @@ export class Consultation {
   @Prop()
   lastMessageAt?: Date;
 
+  @Prop({ 
+    type: [{
+      id: { type: String, required: true },
+      text: { type: String, required: true },
+      sender: { type: String, enum: ['user', 'doctor'], required: true },
+      timestamp: { type: Date, default: Date.now },
+      isRead: { type: Boolean, default: false }
+    }],
+    default: []
+  })
+  messages: Array<{
+    id: string;
+    text: string;
+    sender: 'user' | 'doctor';
+    timestamp: Date;
+    isRead: boolean;
+  }>;
+
   @Prop({ default: true })
   isActive: boolean;
 }

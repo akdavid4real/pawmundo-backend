@@ -22,6 +22,17 @@ export declare class ConsultationsGateway implements OnGatewayConnection, OnGate
         error: string;
         message?: undefined;
     }>;
+    handleJoinRoom(client: Socket, data: {
+        consultationId: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        message?: undefined;
+    }>;
     handleAccept(client: Socket, data: {
         consultationId: string;
     }): Promise<{

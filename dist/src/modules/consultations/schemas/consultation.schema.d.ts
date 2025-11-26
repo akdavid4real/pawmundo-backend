@@ -21,6 +21,13 @@ export declare class Consultation {
     paymentStatus: string;
     unreadCount: number;
     lastMessageAt?: Date;
+    messages: Array<{
+        id: string;
+        text: string;
+        sender: 'user' | 'doctor';
+        timestamp: Date;
+        isRead: boolean;
+    }>;
     isActive: boolean;
 }
 export declare const ConsultationSchema: import("mongoose").Schema<Consultation, import("mongoose").Model<Consultation, any, any, any, Document<unknown, any, Consultation, any, {}> & Consultation & {

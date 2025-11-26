@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { Inject, forwardRef } from '@nestjs/common';
 import { ConsultationsService } from './consultations.service';
 
 @WebSocketGateway({ cors: { origin: '*' }, namespace: '/consultations' })
@@ -20,6 +21,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   constructor(
     private jwtService: JwtService,
+    @Inject(forwardRef(() => ConsultationsService))
     private consultationsService: ConsultationsService,
   ) {}
 
@@ -62,25 +64,37 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     return { success: false, error: 'Invalid role' };
   }
 
+  @SubscribeMessage('consultation:joinRoom')
+  async handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { consultationId: string },
+  ) {
+    try {
+      const roomName = `consultation:${data.consultationId}`;
+      await client.join(roomName);
+      console.log(`Client ${client.id} joined room ${roomName}`);
+      return { success: true, message: `Joined consultation ${data.consultationId}` };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
   @SubscribeMessage('consultation:accept')
   async handleAccept(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { consultationId: string },
   ) {
     try {
-      if (client.data.role !== 'vet') {
-        return { success: false, error: 'Only vets can accept consultations' };
-      }
-
       const consultation = await this.consultationsService.acceptConsultation(
         data.consultationId,
         client.data.userId,
       );
-
-      this.server.emit('consultation:claimed', {
+      
+      const roomName = `consultation:${data.consultationId}`;
+      this.server.to(roomName).emit('consultation:claimed', {
         consultationId: data.consultationId,
         vetId: client.data.userId,
-        vetName: consultation.veterinarianName,
+        vetName: `${consultation.assignedVet['firstName']} ${consultation.assignedVet['lastName']}`
       });
 
       return { success: true, consultation };
@@ -95,13 +109,13 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     @MessageBody() data: { consultationId: string },
   ) {
     try {
-      if (client.data.role !== 'vet') {
-        return { success: false, error: 'Only vets can release consultations' };
-      }
-
-      await this.consultationsService.releaseConsultation(data.consultationId, client.data.userId);
-
-      this.server.emit('consultation:released', {
+      await this.consultationsService.releaseConsultation(
+        data.consultationId,
+        client.data.userId,
+      );
+      
+      const roomName = `consultation:${data.consultationId}`;
+      this.server.to(roomName).emit('consultation:released', {
         consultationId: data.consultationId,
       });
 
@@ -110,6 +124,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
       return { success: false, error: error.message };
     }
   }
+
 
   notifyNewConsultation(consultation: any) {
     this.server.emit('consultation:incoming', consultation);
@@ -120,6 +135,8 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
   }
 
   notifyConsultationUpdated(consultationId: string, updates: any) {
-    this.server.emit('consultation:updated', { consultationId, ...updates });
+    const roomName = `consultation:${consultationId}`;
+    console.log(`Emitting consultation:updated to room ${roomName}:`, updates);
+    this.server.to(roomName).emit('consultation:updated', { consultationId, ...updates });
   }
 }
