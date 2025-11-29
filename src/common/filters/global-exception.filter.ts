@@ -37,6 +37,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Add specific suggestions based on status code
       suggestions = this.getStatusSuggestions(status, message);
+    } else if ((exception as any)?.status) {
+      // Handle exceptions that have a status property but aren't HttpException instances
+      // This happens with @nestjs/passport's UnauthorizedException
+      status = (exception as any).status;
+      const response = (exception as any).response;
+      if (response && typeof response === 'object') {
+        message = response.message || (exception as Error).message || 'Unauthorized';
+      } else {
+        message = (exception as Error).message || 'An error occurred';
+      }
+      suggestions = this.getStatusSuggestions(status, message);
     } else if (this.isMongoError(exception)) {
       status = HttpStatus.BAD_REQUEST;
       message = this.getMongoErrorMessage(exception);
@@ -51,8 +62,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // Log the error for debugging
     console.log('🔥 Full exception:', exception);
+    console.log('🔥 Exception type check:', {
+      isHttpException: exception instanceof HttpException,
+      constructor: exception?.constructor?.name,
+      finalStatus: status,
+      message: message
+    });
+    
     this.logger.error(
-      `${request.method} ${request.url} - ${status} - ${message}`,
+      `${request.method} ${request.url} - STATUS:${status} - ${message}`,
       exception instanceof Error ? exception.stack : 'Unknown error'
     );
 
@@ -71,6 +89,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }),
     };
 
+    console.log('🔥 Sending response with status:', status);
     response.status(status).json(errorResponse);
   }
 

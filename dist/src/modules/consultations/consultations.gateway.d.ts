@@ -53,6 +53,26 @@ export declare class ConsultationsGateway implements OnGatewayConnection, OnGate
         success: boolean;
         error: any;
     }>;
+    handleTyping(client: Socket, data: {
+        consultationId: string;
+        isTyping: boolean;
+    }): Promise<{
+        success: boolean;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+    }>;
+    handleMarkRead(client: Socket, data: {
+        consultationId: string;
+        messageIds?: string[];
+    }): Promise<{
+        success: boolean;
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+    }>;
     notifyNewConsultation(consultation: any): void;
     notifyConsultationCompleted(consultationId: string): void;
     notifyConsultationUpdated(consultationId: string, updates: any): void;

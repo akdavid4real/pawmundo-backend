@@ -31,4 +31,5 @@ export declare class ConsultationsService {
     }>;
     sendMessage(consultationId: string, userId: string, message: string, isVet?: boolean): Promise<Consultation>;
     getConsultationDebugInfo(id: string): Promise<any>;
+    markMessagesAsRead(consultationId: string, userId: string, messageIds?: string[]): Promise<Consultation>;
 }

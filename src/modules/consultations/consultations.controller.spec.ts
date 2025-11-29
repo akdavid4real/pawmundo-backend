@@ -13,6 +13,7 @@ describe('ConsultationsController', () => {
     findAll: jest.fn(),
     findByStatus: jest.fn(),
     findById: jest.fn(),
+    findByIdForVet: jest.fn(),
     update: jest.fn(),
     cancel: jest.fn(),
     startConsultation: jest.fn(),
@@ -23,6 +24,8 @@ describe('ConsultationsController', () => {
     getVetHistory: jest.fn(),
     acceptConsultation: jest.fn(),
     releaseConsultation: jest.fn(),
+    sendMessage: jest.fn(),
+    isConsultationAssignedToVet: jest.fn(),
   };
 
   const mockRequest = {

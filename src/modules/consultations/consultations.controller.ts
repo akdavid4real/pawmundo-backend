@@ -164,7 +164,15 @@ export class ConsultationsController {
   @Patch(':id/start')
   @ApiOperation({ summary: 'Start a consultation session with meeting link' })
   @ApiParam({ name: 'id', description: 'Consultation ID' })
-  @ApiBody({ schema: { properties: { meetingLink: { type: 'string', example: 'https://meet.example.com/abc123' } } } })
+  @ApiBody({ 
+    schema: { 
+      type: 'object',
+      properties: { 
+        meetingLink: { type: 'string', example: 'https://meet.example.com/room/123' }
+      },
+      required: ['meetingLink']
+    } 
+  })
   @ApiResponse({ status: 200, description: 'Consultation started successfully' })
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 400, description: 'Cannot start consultation in current status' })
@@ -174,7 +182,7 @@ export class ConsultationsController {
   }
 
   @Patch(':id/complete')
-  @ApiOperation({ summary: 'Complete a consultation with notes and optional prescription' })
+  @ApiOperation({ summary: 'Complete a consultation with notes and prescription' })
   @ApiParam({ name: 'id', description: 'Consultation ID' })
   @ApiBody({ 
     schema: { 

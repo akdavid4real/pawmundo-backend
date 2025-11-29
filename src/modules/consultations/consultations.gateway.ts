@@ -125,6 +125,52 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     }
   }
 
+  @SubscribeMessage('consultation:typing')
+  async handleTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { consultationId: string; isTyping: boolean },
+  ) {
+    try {
+      const roomName = `consultation:${data.consultationId}`;
+      // Broadcast to everyone in the room except the sender
+      client.to(roomName).emit('consultation:typing', {
+        consultationId: data.consultationId,
+        userId: client.data.userId,
+        role: client.data.role,
+        isTyping: data.isTyping,
+      });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  @SubscribeMessage('consultation:markRead')
+  async handleMarkRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { consultationId: string; messageIds?: string[] },
+  ) {
+    try {
+      const updatedConsultation = await this.consultationsService.markMessagesAsRead(
+        data.consultationId,
+        client.data.userId,
+        data.messageIds,
+      );
+      
+      // Broadcast the updated consultation to all clients in the room
+      const roomName = `consultation:${data.consultationId}`;
+      this.server.to(roomName).emit('consultation:updated', {
+        consultationId: data.consultationId,
+        consultation: updatedConsultation,
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error in handleMarkRead:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
 
   notifyNewConsultation(consultation: any) {
     this.server.emit('consultation:incoming', consultation);

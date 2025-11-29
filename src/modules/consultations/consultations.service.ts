@@ -189,8 +189,8 @@ export class ConsultationsService {
       throw new ForbiddenException('You are not assigned to this consultation');
     }
 
-    consultation.assignedVet = undefined;
-    consultation.status = 'pending';
+    // Keep the assignedVet for history tracking, but mark as completed
+    consultation.status = 'completed';
     await consultation.save();
 
     return consultation;
@@ -289,5 +289,62 @@ export class ConsultationsService {
       assignedVet: consultation.assignedVet,
       createdAt: (consultation as any).createdAt
     };
+  }
+
+  async markMessagesAsRead(
+    consultationId: string,
+    userId: string,
+    messageIds?: string[],
+  ): Promise<Consultation> {
+    const consultation = await this.consultationModel.findById(consultationId);
+    
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found');
+    }
+
+    // Verify user has access to this consultation
+    if (consultation.userId.toString() !== userId && consultation.assignedVet?.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    let updated = false;
+
+    // Mark messages as read
+    consultation.messages.forEach((msg) => {
+      // Only mark messages from the OTHER party as read
+      const isUserMessage = msg.sender === 'user';
+      const isVetReading = consultation.assignedVet?.toString() === userId;
+      const shouldMarkAsRead = (isUserMessage && isVetReading) || (!isUserMessage && !isVetReading);
+
+      if (shouldMarkAsRead && !msg.isRead) {
+        // Check both 'id' (string field) and '_id' (Mongoose ObjectId)
+        // This handles the case where they might differ slightly due to generation timing
+        const msgIdString = msg.id;
+        const msgObjectIdString = (msg as any)._id?.toString();
+        
+        const isIncluded = !messageIds || 
+                          (msgIdString && messageIds.includes(msgIdString)) || 
+                          (msgObjectIdString && messageIds.includes(msgObjectIdString));
+
+        if (isIncluded) {
+          msg.isRead = true;
+          updated = true;
+        }
+      }
+    });
+
+    if (updated) {
+      // CRITICAL: Tell Mongoose the array was modified (nested changes aren't auto-detected)
+      consultation.markModified('messages');
+      await consultation.save();
+
+      // Notify other party via WebSocket
+      this.consultationsGateway.notifyConsultationUpdated(consultationId, {
+        messagesRead: true,
+        messageIds: messageIds || consultation.messages.map(m => m.id),
+      });
+    }
+
+    return consultation;
   }
 }

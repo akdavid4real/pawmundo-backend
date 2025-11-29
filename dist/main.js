@@ -166,6 +166,17 @@ let GlobalExceptionFilter = GlobalExceptionFilter_1 = class GlobalExceptionFilte
             }
             suggestions = this.getStatusSuggestions(status, message);
         }
+        else if (exception?.status) {
+            status = exception.status;
+            const response = exception.response;
+            if (response && typeof response === 'object') {
+                message = response.message || exception.message || 'Unauthorized';
+            }
+            else {
+                message = exception.message || 'An error occurred';
+            }
+            suggestions = this.getStatusSuggestions(status, message);
+        }
         else if (this.isMongoError(exception)) {
             status = common_1.HttpStatus.BAD_REQUEST;
             message = this.getMongoErrorMessage(exception);
@@ -180,7 +191,13 @@ let GlobalExceptionFilter = GlobalExceptionFilter_1 = class GlobalExceptionFilte
             console.log('🔥 Unknown exception type:', typeof exception, exception);
         }
         console.log('🔥 Full exception:', exception);
-        this.logger.error(`${request.method} ${request.url} - ${status} - ${message}`, exception instanceof Error ? exception.stack : 'Unknown error');
+        console.log('🔥 Exception type check:', {
+            isHttpException: exception instanceof common_1.HttpException,
+            constructor: exception?.constructor?.name,
+            finalStatus: status,
+            message: message
+        });
+        this.logger.error(`${request.method} ${request.url} - STATUS:${status} - ${message}`, exception instanceof Error ? exception.stack : 'Unknown error');
         const errorResponse = {
             success: false,
             statusCode: status,
@@ -194,6 +211,7 @@ let GlobalExceptionFilter = GlobalExceptionFilter_1 = class GlobalExceptionFilte
                 stack: exception instanceof Error ? exception.stack : undefined,
             }),
         };
+        console.log('🔥 Sending response with status:', status);
         response.status(status).json(errorResponse);
     }
     getStatusSuggestions(status, message) {
@@ -2165,7 +2183,7 @@ exports.AuthModule = AuthModule = __decorate([
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, local_strategy_1.LocalStrategy, jwt_auth_guard_1.JwtAuthGuard, mail_service_1.MailService],
-        exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard],
+        exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard, jwt_1.JwtModule],
     })
 ], AuthModule);
 
@@ -3108,7 +3126,15 @@ __decorate([
     (0, common_1.Patch)(':id/start'),
     (0, swagger_1.ApiOperation)({ summary: 'Start a consultation session with meeting link' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
-    (0, swagger_1.ApiBody)({ schema: { properties: { meetingLink: { type: 'string', example: 'https://meet.example.com/abc123' } } } }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                meetingLink: { type: 'string', example: 'https://meet.example.com/room/123' }
+            },
+            required: ['meetingLink']
+        }
+    }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Consultation started successfully' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Consultation not found' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Cannot start consultation in current status' }),
@@ -3123,7 +3149,7 @@ __decorate([
 ], ConsultationsController.prototype, "startConsultation", null);
 __decorate([
     (0, common_1.Patch)(':id/complete'),
-    (0, swagger_1.ApiOperation)({ summary: 'Complete a consultation with notes and optional prescription' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Complete a consultation with notes and prescription' }),
     (0, swagger_1.ApiParam)({ name: 'id', description: 'Consultation ID' }),
     (0, swagger_1.ApiBody)({
         schema: {
@@ -3326,6 +3352,36 @@ let ConsultationsGateway = class ConsultationsGateway {
             return { success: false, error: error.message };
         }
     }
+    async handleTyping(client, data) {
+        try {
+            const roomName = `consultation:${data.consultationId}`;
+            client.to(roomName).emit('consultation:typing', {
+                consultationId: data.consultationId,
+                userId: client.data.userId,
+                role: client.data.role,
+                isTyping: data.isTyping,
+            });
+            return { success: true };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+    async handleMarkRead(client, data) {
+        try {
+            const updatedConsultation = await this.consultationsService.markMessagesAsRead(data.consultationId, client.data.userId, data.messageIds);
+            const roomName = `consultation:${data.consultationId}`;
+            this.server.to(roomName).emit('consultation:updated', {
+                consultationId: data.consultationId,
+                consultation: updatedConsultation,
+            });
+            return { success: true };
+        }
+        catch (error) {
+            console.error('❌ Error in handleMarkRead:', error);
+            return { success: false, error: error.message };
+        }
+    }
     notifyNewConsultation(consultation) {
         this.server.emit('consultation:incoming', consultation);
     }
@@ -3375,6 +3431,22 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", Promise)
 ], ConsultationsGateway.prototype, "handleRelease", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:typing'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleTyping", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('consultation:markRead'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsGateway.prototype, "handleMarkRead", null);
 exports.ConsultationsGateway = ConsultationsGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: { origin: '*' }, namespace: '/consultations' }),
     __param(1, (0, common_1.Inject)((0, common_1.forwardRef)(() => consultations_service_1.ConsultationsService))),
@@ -3402,7 +3474,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConsultationsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const mongoose_1 = __webpack_require__(/*! @nestjs/mongoose */ "@nestjs/mongoose");
-const jwt_1 = __webpack_require__(/*! @nestjs/jwt */ "@nestjs/jwt");
 const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const consultations_service_1 = __webpack_require__(/*! ./consultations.service */ "./src/modules/consultations/consultations.service.ts");
 const consultations_controller_1 = __webpack_require__(/*! ./consultations.controller */ "./src/modules/consultations/consultations.controller.ts");
@@ -3411,6 +3482,7 @@ const test_controller_1 = __webpack_require__(/*! ./test.controller */ "./src/mo
 const consultations_gateway_1 = __webpack_require__(/*! ./consultations.gateway */ "./src/modules/consultations/consultations.gateway.ts");
 const consultation_schema_1 = __webpack_require__(/*! ./schemas/consultation.schema */ "./src/modules/consultations/schemas/consultation.schema.ts");
 const pets_module_1 = __webpack_require__(/*! ../pets/pets.module */ "./src/modules/pets/pets.module.ts");
+const auth_module_1 = __webpack_require__(/*! ../auth/auth.module */ "./src/modules/auth/auth.module.ts");
 let ConsultationsModule = class ConsultationsModule {
 };
 exports.ConsultationsModule = ConsultationsModule;
@@ -3418,11 +3490,8 @@ exports.ConsultationsModule = ConsultationsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: consultation_schema_1.Consultation.name, schema: consultation_schema_1.ConsultationSchema }]),
-            jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET || 'your-secret-key',
-                signOptions: { expiresIn: '7d' },
-            }),
             pets_module_1.PetsModule,
+            auth_module_1.AuthModule,
         ],
         controllers: [consultations_controller_1.ConsultationsController, debug_controller_1.DebugController, test_controller_1.TestController],
         providers: [consultations_service_1.ConsultationsService, consultations_gateway_1.ConsultationsGateway, core_1.Reflector],
@@ -3599,8 +3668,7 @@ let ConsultationsService = class ConsultationsService {
         if (consultation.assignedVet?.toString() !== vetId) {
             throw new common_1.ForbiddenException('You are not assigned to this consultation');
         }
-        consultation.assignedVet = undefined;
-        consultation.status = 'pending';
+        consultation.status = 'completed';
         await consultation.save();
         return consultation;
     }
@@ -3673,6 +3741,41 @@ let ConsultationsService = class ConsultationsService {
             assignedVet: consultation.assignedVet,
             createdAt: consultation.createdAt
         };
+    }
+    async markMessagesAsRead(consultationId, userId, messageIds) {
+        const consultation = await this.consultationModel.findById(consultationId);
+        if (!consultation) {
+            throw new common_1.NotFoundException('Consultation not found');
+        }
+        if (consultation.userId.toString() !== userId && consultation.assignedVet?.toString() !== userId) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        let updated = false;
+        consultation.messages.forEach((msg) => {
+            const isUserMessage = msg.sender === 'user';
+            const isVetReading = consultation.assignedVet?.toString() === userId;
+            const shouldMarkAsRead = (isUserMessage && isVetReading) || (!isUserMessage && !isVetReading);
+            if (shouldMarkAsRead && !msg.isRead) {
+                const msgIdString = msg.id;
+                const msgObjectIdString = msg._id?.toString();
+                const isIncluded = !messageIds ||
+                    (msgIdString && messageIds.includes(msgIdString)) ||
+                    (msgObjectIdString && messageIds.includes(msgObjectIdString));
+                if (isIncluded) {
+                    msg.isRead = true;
+                    updated = true;
+                }
+            }
+        });
+        if (updated) {
+            consultation.markModified('messages');
+            await consultation.save();
+            this.consultationsGateway.notifyConsultationUpdated(consultationId, {
+                messagesRead: true,
+                messageIds: messageIds || consultation.messages.map(m => m.id),
+            });
+        }
+        return consultation;
     }
 };
 exports.ConsultationsService = ConsultationsService;
