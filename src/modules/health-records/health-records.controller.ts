@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HealthRecordsService } from './health-records.service';
 import { CreateHealthRecordDto } from './dto/create-health-record.dto';
@@ -11,27 +10,19 @@ import { UpdateHealthRecordDto } from './dto/update-health-record.dto';
 @Controller('health-records')
 @UseGuards(JwtAuthGuard)
 export class HealthRecordsController {
-  constructor(private readonly healthRecordsService: HealthRecordsService) {}
+  constructor(private readonly healthRecordsService: HealthRecordsService) { }
 
   @ApiOperation({ summary: 'Create health record' })
   @ApiResponse({ status: 201, description: 'Health record created successfully' })
   @Post()
   async create(@Request() req, @Body() createDto: CreateHealthRecordDto) {
-    console.log('📝 Create health record DTO:', createDto);
-    console.log('👤 User ID:', req.user.userId);
-    try {
-      const healthRecordData = {
-        ...createDto,
-        petId: new Types.ObjectId(createDto.petId),
-        date: new Date(createDto.date),
-        nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : undefined
-      };
-      console.log('✅ Processed data:', healthRecordData);
-      return await this.healthRecordsService.create(req.user.userId, healthRecordData);
-    } catch (error) {
-      console.error('❌ Controller error:', error);
-      throw error;
-    }
+    const healthRecordData = {
+      ...createDto,
+      petId: createDto.petId,
+      date: new Date(createDto.date),
+      nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : undefined,
+    };
+    return this.healthRecordsService.create(req.user.userId, healthRecordData);
   }
 
   @ApiOperation({ summary: 'Get health records by pet' })
@@ -75,9 +66,6 @@ export class HealthRecordsController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateDto: UpdateHealthRecordDto, @Request() req) {
     const healthRecordData: any = { ...updateDto };
-    if (updateDto.petId) {
-      healthRecordData.petId = new Types.ObjectId(updateDto.petId);
-    }
     if (updateDto.date) {
       healthRecordData.date = new Date(updateDto.date);
     }
@@ -124,13 +112,13 @@ export class HealthRecordsController {
     @Param('petId') petId: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.healthRecordsService.getRecordsByDateRange(
       petId,
       req.user.userId,
       new Date(startDate),
-      new Date(endDate)
+      new Date(endDate),
     );
   }
 

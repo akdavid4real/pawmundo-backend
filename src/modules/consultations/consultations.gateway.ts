@@ -23,12 +23,12 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     private jwtService: JwtService,
     @Inject(forwardRef(() => ConsultationsService))
     private consultationsService: ConsultationsService,
-  ) {}
+  ) { }
 
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
-      
+
       if (!token) {
         client.disconnect();
         return;
@@ -37,7 +37,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
       const payload = this.jwtService.verify(token);
       client.data.userId = payload.sub;
       client.data.role = payload.role;
-      
+
       console.log(`Client connected: ${client.id}, userId: ${payload.sub}, role: ${payload.role}`);
     } catch (error) {
       console.error('Connection auth error:', error.message);
@@ -89,12 +89,12 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
         data.consultationId,
         client.data.userId,
       );
-      
+
       const roomName = `consultation:${data.consultationId}`;
       this.server.to(roomName).emit('consultation:claimed', {
         consultationId: data.consultationId,
         vetId: client.data.userId,
-        vetName: `${consultation.assignedVet['firstName']} ${consultation.assignedVet['lastName']}`
+        vetName: (consultation as any).assignedVet ? `${(consultation as any).assignedVet['firstName']} ${(consultation as any).assignedVet['lastName']}` : 'Veterinarian'
       });
 
       return { success: true, consultation };
@@ -113,7 +113,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
         data.consultationId,
         client.data.userId,
       );
-      
+
       const roomName = `consultation:${data.consultationId}`;
       this.server.to(roomName).emit('consultation:released', {
         consultationId: data.consultationId,
@@ -156,14 +156,14 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
         client.data.userId,
         data.messageIds,
       );
-      
+
       // Broadcast the updated consultation to all clients in the room
       const roomName = `consultation:${data.consultationId}`;
       this.server.to(roomName).emit('consultation:updated', {
         consultationId: data.consultationId,
         consultation: updatedConsultation,
       });
-      
+
       return { success: true };
     } catch (error) {
       console.error('❌ Error in handleMarkRead:', error);

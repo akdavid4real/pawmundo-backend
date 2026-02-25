@@ -1,34 +1,32 @@
 import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { User, UserDocument } from './schemas/user.schema';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MailService } from '../../common/utils/mail.service';
-import { ValidationUtil } from '../../common/utils/validation.util';
 import { DatabaseErrorHandler } from '../../common/utils/database-error.handler';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto) {
-    let user: UserDocument;
-    
+    let user: any;
+
     try {
       const { email, password, firstName, lastName, phone, address } = registerDto;
 
-      const existingUser = await this.userModel.findOne({ email });
+      const existingUser = await this.prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         throw new ConflictException(`An account with email '${email}' already exists. Please use a different email or try logging in.`);
       }
@@ -36,30 +34,30 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(password, 12);
       const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
-      user = new this.userModel({
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: registerDto.role || 'user',
-        phone,
-        address,
-        emailVerificationToken,
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: (registerDto.role as UserRole) || 'user',
+          phone,
+          address,
+          emailVerificationToken,
+        },
       });
-
-      await user.save();
     } catch (error) {
       if (error instanceof ConflictException) throw error;
       DatabaseErrorHandler.handle(error, 'User registration');
     }
 
-    const payload = { email: user.email, sub: user._id, role: user.role };
+    const payload = { email: user.email, sub: user.id, role: user.role };
     const token = this.jwtService.sign(payload);
 
     return {
       access_token: token,
       user: {
-        id: user._id,
+        id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -72,22 +70,25 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     try {
       const { email, password } = loginDto;
-      
+
       const user = await this.validateUser(email, password);
       if (!user) {
         throw new UnauthorizedException(`Login failed: Invalid email or password. Please check your credentials and try again.`);
       }
 
       const lastLogin = new Date();
-      await this.userModel.findByIdAndUpdate(user._id, { lastLogin });
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin },
+      });
 
-      const payload = { email: user.email, sub: user._id, role: user.role };
+      const payload = { email: user.email, sub: user.id, role: user.role };
       const token = this.jwtService.sign(payload);
 
       return {
         access_token: token,
         user: {
-          id: user._id,
+          id: user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
@@ -103,34 +104,30 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.userModel.findOne({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user.toObject();
+      const { password: _, ...result } = user;
       return result;
     }
     return null;
   }
 
-  async findById(id: string): Promise<User> {
+  async findById(id: string) {
     try {
-      console.log('🔍 AuthService findById called with:', id, 'type:', typeof id);
-      ValidationUtil.validateObjectId(id, 'User ID');
-      const user = await this.userModel.findById(id).select('-password -emailVerificationToken -passwordResetToken');
-      console.log('🔍 AuthService findById result:', user ? 'User found' : 'User not found');
-      if (user) {
-        console.log('🔍 User _id:', user._id, 'type:', typeof user._id);
-      }
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        omit: { password: true, emailVerificationToken: true, passwordResetToken: true },
+      });
       return user;
     } catch (error) {
-      console.log('🔍 AuthService findById error:', error.message);
       DatabaseErrorHandler.handle(error, 'Find user by ID');
     }
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
     const { email } = forgotPasswordDto;
-    const user = await this.userModel.findOne({ email });
-    
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
     if (!user) {
       // Don't reveal if email exists
       return { message: 'If email exists, password reset link has been sent' };
@@ -140,9 +137,12 @@ export class AuthService {
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    await this.userModel.findByIdAndUpdate(user._id, {
-      passwordResetToken: hashedToken,
-      passwordResetExpires: resetExpires,
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: resetExpires,
+      },
     });
 
     // send email with the raw token
@@ -158,11 +158,13 @@ export class AuthService {
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     try {
       const { token, newPassword } = resetPasswordDto;
-      
+
       const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-      const user = await this.userModel.findOne({
-        passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: new Date() },
+      const user = await this.prisma.user.findFirst({
+        where: {
+          passwordResetToken: hashedToken,
+          passwordResetExpires: { gt: new Date() },
+        },
       });
 
       if (!user) {
@@ -170,11 +172,14 @@ export class AuthService {
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
-      
-      await this.userModel.findByIdAndUpdate(user._id, {
-        password: hashedPassword,
-        passwordResetToken: undefined,
-        passwordResetExpires: undefined,
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        },
       });
 
       return { message: 'Password reset successfully' };
@@ -186,20 +191,22 @@ export class AuthService {
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
     try {
-      ValidationUtil.validateObjectId(userId, 'User ID');
       const { currentPassword, newPassword } = changePasswordDto;
-      
-      const user = await this.userModel.findById(userId);
+
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
         throw new UnauthorizedException(`User account not found. Please check if you're logged in correctly.`);
       }
-      
+
       if (!(await bcrypt.compare(currentPassword, user.password))) {
         throw new UnauthorizedException(`Current password is incorrect. Please enter your current password correctly.`);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
-      await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword });
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      });
 
       return { message: 'Password changed successfully' };
     } catch (error) {
@@ -209,30 +216,37 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
-    const user = await this.userModel.findOne({ emailVerificationToken: token });
-    
+    const user = await this.prisma.user.findFirst({
+      where: { emailVerificationToken: token },
+    });
+
     if (!user) {
       throw new BadRequestException(`Email verification token is invalid or has already been used. Please request a new verification email.`);
     }
 
-    await this.userModel.findByIdAndUpdate(user._id, {
-      isEmailVerified: true,
-      emailVerificationToken: undefined,
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isEmailVerified: true,
+        emailVerificationToken: null,
+      },
     });
 
     return { message: 'Email verified successfully' };
   }
 
-  async updateProfile(userId: string, updateData: Partial<User>) {
+  async updateProfile(userId: string, updateData: any) {
     try {
-      ValidationUtil.validateObjectId(userId, 'User ID');
       const allowedFields = ['firstName', 'lastName', 'phone', 'address', 'profileImage'];
       const filteredData = Object.keys(updateData)
         .filter(key => allowedFields.includes(key))
         .reduce((obj, key) => ({ ...obj, [key]: updateData[key] }), {});
 
-      return this.userModel.findByIdAndUpdate(userId, filteredData, { new: true })
-        .select('-password -emailVerificationToken -passwordResetToken');
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: filteredData,
+        omit: { password: true, emailVerificationToken: true, passwordResetToken: true },
+      });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Profile update');
     }

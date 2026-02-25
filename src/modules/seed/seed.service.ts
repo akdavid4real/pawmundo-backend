@@ -1,90 +1,217 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument } from '../auth/schemas/user.schema';
-import { sampleUsers, samplePets, sampleHealthRecords, sampleMedications, sampleNotifications, sampleEvents, sampleReminders } from './index';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { PrismaService } from '@modules/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { NotificationType, EventCategory, EventStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class SeedService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectConnection() private connection: Connection
-  ) {}
+  constructor(private prisma: PrismaService) { }
 
   async seedDatabase() {
     try {
-      const db = this.connection.db;
-
-      // Clear existing data
+      // Clear existing data in proper order (respecting foreign keys)
       console.log('🗑️ Clearing existing data...');
-      await this.userModel.deleteMany({});
-      await db.collection('pets').deleteMany({});
-      await db.collection('healthrecords').deleteMany({});
-      await db.collection('medications').deleteMany({});
-      await db.collection('notifications').deleteMany({});
-      await db.collection('notificationpreferences').deleteMany({});
-      await db.collection('events').deleteMany({});
+      await this.prisma.consultationMessage.deleteMany({});
+      await this.prisma.forumLike.deleteMany({});
+      await this.prisma.forumReply.deleteMany({});
+      await this.prisma.insuranceClaim.deleteMany({});
+      await this.prisma.symptomCheck.deleteMany({});
+      await this.prisma.activity.deleteMany({});
+      await this.prisma.notification.deleteMany({});
+      await this.prisma.notificationPreference.deleteMany({});
+      await this.prisma.event.deleteMany({});
+      await this.prisma.medication.deleteMany({});
+      await this.prisma.healthRecord.deleteMany({});
+      await this.prisma.appointment.deleteMany({});
+      await this.prisma.consultation.deleteMany({});
+      await this.prisma.forumPost.deleteMany({});
+      await this.prisma.insurance.deleteMany({});
+      await this.prisma.pet.deleteMany({});
+      await this.prisma.user.deleteMany({});
       console.log('✅ Existing data cleared');
 
-      // Create users
+      // Create sample users
       console.log('👥 Creating users...');
-      await this.userModel.insertMany(sampleUsers);
-
-      console.log('🐾 Creating pets...');
-      await db.collection('pets').insertMany(samplePets);
-      
-      console.log('🏥 Creating health records...');
-      const luna = await db.collection('pets').findOne({ name: 'Luna' });
-      const shadow = await db.collection('pets').findOne({ name: 'Shadow' });
-      const buddy = await db.collection('pets').findOne({ name: 'Buddy' });
-      
-      console.log('Luna ID from DB:', luna?._id.toString());
-      console.log('Shadow ID from DB:', shadow?._id.toString());
-      console.log('Sample record petId:', sampleHealthRecords[0]?.petId.toString());
-      
-      const healthRecordsWithCorrectPets = sampleHealthRecords.map(record => {
-        const recordPetIdStr = record.petId.toString();
-        if (luna && recordPetIdStr === luna._id.toString()) return { ...record, petId: luna._id };
-        if (shadow && recordPetIdStr === shadow._id.toString()) return { ...record, petId: shadow._id };
-        if (buddy && recordPetIdStr === buddy._id.toString()) return { ...record, petId: buddy._id };
-        return record;
+      const hashedPassword = await bcrypt.hash('password123', 10);
+      const user1 = await this.prisma.user.create({
+        data: {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          password: hashedPassword,
+          role: 'user',
+          isEmailVerified: true,
+        },
       });
-      
-      await db.collection('healthrecords').insertMany(healthRecordsWithCorrectPets);
-      console.log(`✅ Inserted ${healthRecordsWithCorrectPets.length} health records`);
-      
+
+      const user2 = await this.prisma.user.create({
+        data: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+          password: hashedPassword,
+          role: 'vet',
+          isEmailVerified: true,
+        },
+      });
+
+      // Create sample pets
+      console.log('🐾 Creating pets...');
+      const luna = await this.prisma.pet.create({
+        data: {
+          name: 'Luna',
+          species: 'dog',
+          breed: 'Golden Retriever',
+          age: 3,
+          gender: 'female',
+          weight: 28,
+          color: 'Golden',
+          dateOfBirth: new Date('2023-01-15'),
+          ownerId: user1.id,
+          healthStatus: 'healthy',
+        },
+      });
+
+      const shadow = await this.prisma.pet.create({
+        data: {
+          name: 'Shadow',
+          species: 'cat',
+          breed: 'Persian',
+          age: 5,
+          gender: 'male',
+          weight: 4.5,
+          color: 'Gray',
+          dateOfBirth: new Date('2021-06-20'),
+          ownerId: user1.id,
+          healthStatus: 'healthy',
+        },
+      });
+
+      const buddy = await this.prisma.pet.create({
+        data: {
+          name: 'Buddy',
+          species: 'dog',
+          breed: 'Labrador',
+          age: 2,
+          gender: 'male',
+          weight: 30,
+          color: 'Black',
+          dateOfBirth: new Date('2024-03-10'),
+          ownerId: user1.id,
+          healthStatus: 'healthy',
+        },
+      });
+
+      // Create sample health records
+      console.log('🏥 Creating health records...');
+      await this.prisma.healthRecord.createMany({
+        data: [
+          {
+            petId: luna.id,
+            type: 'vaccination',
+            title: 'Rabies Vaccination',
+            description: 'Annual rabies vaccination',
+            date: new Date('2025-01-15'),
+            nextDueDate: new Date('2026-01-15'),
+            isReminder: true,
+          },
+          {
+            petId: luna.id,
+            type: 'checkup',
+            title: 'Annual Checkup',
+            description: 'Routine annual checkup',
+            date: new Date('2025-02-01'),
+          },
+          {
+            petId: shadow.id,
+            type: 'vaccination',
+            title: 'FVRCP Vaccination',
+            description: 'Feline core vaccination',
+            date: new Date('2025-01-20'),
+            nextDueDate: new Date('2026-01-20'),
+            isReminder: true,
+          },
+        ],
+      });
+
+      // Create sample medications
       console.log('💊 Creating medications...');
-      await db.collection('medications').insertMany(sampleMedications);
-      
+      await this.prisma.medication.createMany({
+        data: [
+          {
+            petId: luna.id,
+            name: 'Heartgard Plus',
+            dosage: '1 tablet',
+            frequency: 'monthly',
+            startDate: new Date('2025-01-01'),
+            instructions: 'Give with food on the 1st of each month',
+          },
+          {
+            petId: shadow.id,
+            name: 'Frontline Plus',
+            dosage: '1 pipette',
+            frequency: 'monthly',
+            startDate: new Date('2025-01-15'),
+            instructions: 'Apply to back of neck',
+          },
+        ],
+      });
+
+      // Create sample notifications
       console.log('🔔 Creating notifications...');
-      await db.collection('notifications').insertMany(sampleNotifications);
-      
+      const notifications: Prisma.NotificationUncheckedCreateInput[] = [
+        {
+          userId: user1.id,
+          petId: luna.id,
+          title: 'Vaccination Due',
+          message: "Luna's rabies vaccination is due soon",
+          type: NotificationType.vaccination,
+          actionUrl: `/pets/${luna.id}/health-records`,
+        },
+        {
+          userId: user1.id,
+          petId: shadow.id,
+          title: 'Medication Reminder',
+          message: "Time to give Shadow's Frontline Plus",
+          type: NotificationType.medication_notification,
+          actionUrl: `/pets/${shadow.id}/medications`,
+        },
+      ];
+      await this.prisma.notification.createMany({ data: notifications });
+
+      // Create sample events
       console.log('📅 Creating events...');
-      await db.collection('events').insertMany(sampleEvents);
-      
-      console.log('⏰ Creating additional reminders...');
-      if (luna && shadow) {
-        const remindersWithActualPets = sampleReminders.map((reminder, index) => ({
-          ...reminder,
-          petId: index % 2 === 0 ? luna._id : shadow._id,
-        }));
-        await db.collection('healthrecords').insertMany(remindersWithActualPets);
-        console.log(`✅ Assigned ${remindersWithActualPets.filter(r => r.petId.equals(luna._id)).length} reminders to Luna`);
-        console.log(`✅ Assigned ${remindersWithActualPets.filter(r => r.petId.equals(shadow._id)).length} reminders to Shadow`);
-      }
+      const events: Prisma.EventUncheckedCreateInput[] = [
+        {
+          userId: user1.id,
+          petId: luna.id,
+          title: 'Vet Visit',
+          description: 'Annual checkup at City Vet Clinic',
+          eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          category: EventCategory.event_appointment,
+          status: EventStatus.event_scheduled,
+        },
+        {
+          userId: user1.id,
+          petId: luna.id,
+          title: 'Dog Park Meetup',
+          description: 'Weekly dog park meetup',
+          eventDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          category: EventCategory.training,
+          status: EventStatus.event_scheduled,
+        },
+      ];
+      await this.prisma.event.createMany({ data: events });
 
       return {
         message: 'Database seeded successfully!',
         summary: {
-          users: sampleUsers.length,
-          pets: samplePets.length,
-          healthRecords: sampleHealthRecords.length + sampleReminders.length,
-          medications: sampleMedications.length,
-          notifications: sampleNotifications.length,
-          events: sampleEvents.length,
-          reminders: sampleReminders.length,
+          users: 2,
+          pets: 3,
+          healthRecords: 3,
+          medications: 2,
+          notifications: 2,
+          events: 2,
         },
       };
     } catch (error) {

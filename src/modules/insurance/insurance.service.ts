@@ -1,209 +1,200 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Insurance } from './schemas/insurance.schema';
-import { InsuranceClaim } from './schemas/insurance-claim.schema';
+import { InsuranceStatus, ClaimStatus } from '@prisma/client';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateInsuranceDto } from './dto/create-insurance.dto';
 import { UpdateInsuranceDto } from './dto/update-insurance.dto';
 import { InsuranceClaimDto } from './dto/insurance-claim.dto';
 
 @Injectable()
 export class InsuranceService {
-  constructor(
-    @InjectModel(Insurance.name) private insuranceModel: Model<Insurance>,
-    @InjectModel(InsuranceClaim.name) private claimModel: Model<InsuranceClaim>
-  ) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(userId: string, createInsuranceDto: CreateInsuranceDto): Promise<Insurance> {
-    const insuranceData = {
-      ...createInsuranceDto,
-      userId,
-      startDate: new Date(createInsuranceDto.startDate),
-      endDate: new Date(createInsuranceDto.endDate),
-    };
+  async create(userId: string, createInsuranceDto: CreateInsuranceDto) {
+    const startDate = new Date(createInsuranceDto.startDate);
+    const endDate = new Date(createInsuranceDto.endDate);
 
-    // Validate dates
-    if (insuranceData.startDate >= insuranceData.endDate) {
+    if (startDate >= endDate) {
       throw new BadRequestException(`Invalid date range: Start date (${createInsuranceDto.startDate}) must be before end date (${createInsuranceDto.endDate})`);
     }
 
-    const insurance = new this.insuranceModel(insuranceData);
-    return insurance.save();
+    return this.prisma.insurance.create({
+      data: {
+        ...createInsuranceDto,
+        userId,
+        startDate,
+        endDate,
+      },
+    });
   }
 
-  async findByUser(userId: string, status?: string, petId?: string): Promise<Insurance[]> {
-    const filter: any = { userId, isActive: true };
-    if (status) filter.status = status;
-    if (petId) filter.petId = petId;
-    
-    return this.insuranceModel
-      .find(filter)
-      .populate('petId', 'name species breed')
-      .sort({ createdAt: -1 })
-      .exec();
+  async findByUser(userId: string, status?: string, petId?: string) {
+    const where: any = { userId, isActive: true };
+    if (status) where.status = status as InsuranceStatus;
+    if (petId) where.petId = petId;
+
+    return this.prisma.insurance.findMany({
+      where,
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  async findById(id: string, userId?: string): Promise<Insurance> {
-    const insurance = await this.insuranceModel
-      .findById(id)
-      .populate('petId', 'name species breed')
-      .exec();
-    
+  async findById(id: string, userId?: string) {
+    const insurance = await this.prisma.insurance.findUnique({
+      where: { id },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
+
     if (!insurance) {
       throw new NotFoundException(`Insurance policy with ID '${id}' does not exist`);
     }
-    
-    if (userId && insurance.userId.toString() !== userId) {
+    if (userId && insurance.userId !== userId) {
       throw new ForbiddenException(`You don't have permission to access insurance policy '${id}'. This policy belongs to another user.`);
     }
-    
+
     return insurance;
   }
 
-  async update(id: string, userId: string, updateInsuranceDto: UpdateInsuranceDto): Promise<Insurance> {
+  async update(id: string, userId: string, updateInsuranceDto: UpdateInsuranceDto) {
     await this.findById(id, userId);
-    
-    const updateData: any = { ...updateInsuranceDto };
-    
-    // Handle date updates
-    if (updateInsuranceDto.startDate) {
-      updateData.startDate = new Date(updateInsuranceDto.startDate);
-    }
-    if (updateInsuranceDto.endDate) {
-      updateData.endDate = new Date(updateInsuranceDto.endDate);
-    }
 
-    return this.insuranceModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('petId', 'name species breed')
-      .exec();
+    const updateData: any = { ...updateInsuranceDto };
+    if (updateInsuranceDto.startDate) updateData.startDate = new Date(updateInsuranceDto.startDate);
+    if (updateInsuranceDto.endDate) updateData.endDate = new Date(updateInsuranceDto.endDate);
+
+    return this.prisma.insurance.update({
+      where: { id },
+      data: updateData,
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async updateStatus(id: string, userId: string, status: string): Promise<Insurance> {
+  async updateStatus(id: string, userId: string, status: string) {
     await this.findById(id, userId);
-    
-    const validStatuses = ['active', 'expired', 'cancelled', 'pending'];
-    if (!validStatuses.includes(status)) {
+
+    const validStatuses: InsuranceStatus[] = [
+      InsuranceStatus.insurance_active,
+      InsuranceStatus.expired,
+      InsuranceStatus.insurance_cancelled,
+      InsuranceStatus.insurance_pending,
+    ];
+    if (!validStatuses.includes(status as InsuranceStatus)) {
       throw new BadRequestException(`Invalid insurance status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
     }
 
-    return this.insuranceModel
-      .findByIdAndUpdate(id, { status }, { new: true })
-      .populate('petId', 'name species breed')
-      .exec();
+    return this.prisma.insurance.update({
+      where: { id },
+      data: { status: status as InsuranceStatus },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async delete(id: string, userId: string): Promise<Insurance> {
+  async delete(id: string, userId: string) {
     await this.findById(id, userId);
-    
-    return this.insuranceModel
-      .findByIdAndUpdate(id, { isActive: false }, { new: true })
-      .exec();
+    return this.prisma.insurance.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 
-  async findActivePoliciesByPet(petId: string, userId: string): Promise<Insurance[]> {
-    return this.insuranceModel
-      .find({
-        petId,
-        userId,
-        status: 'active',
+  async findActivePoliciesByPet(petId: string, userId: string) {
+    const now = new Date();
+    return this.prisma.insurance.findMany({
+      where: {
+        petId, userId,
+        status: InsuranceStatus.insurance_active,
         isActive: true,
-        startDate: { $lte: new Date() },
-        endDate: { $gte: new Date() }
-      })
-      .populate('petId', 'name species breed')
-      .exec();
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async checkCoverage(id: string, userId: string, amount: number): Promise<any> {
+  async checkCoverage(id: string, userId: string, amount: number) {
     const insurance = await this.findById(id, userId);
-    
-    if (insurance.status !== 'active') {
-      return {
-        covered: false,
-        reason: 'Policy is not active',
-        coverageAmount: 0
-      };
+
+    if (insurance.status !== InsuranceStatus.insurance_active) {
+      return { covered: false, reason: 'Policy is not active', coverageAmount: 0 };
     }
 
     const currentDate = new Date();
     if (currentDate < insurance.startDate || currentDate > insurance.endDate) {
-      return {
-        covered: false,
-        reason: 'Policy is not in effect',
-        coverageAmount: 0
-      };
+      return { covered: false, reason: 'Policy is not in effect', coverageAmount: 0 };
     }
 
     const maxCoverage = Math.max(0, insurance.coverageLimit - insurance.deductible);
     const coverageAmount = Math.min(amount - insurance.deductible, maxCoverage);
-    
+
     return {
       covered: coverageAmount > 0,
       coverageAmount: Math.max(0, coverageAmount),
       deductible: insurance.deductible,
       remainingLimit: insurance.coverageLimit,
-      outOfPocket: Math.max(0, amount - coverageAmount)
+      outOfPocket: Math.max(0, amount - coverageAmount),
     };
   }
 
-  async findExpiringPolicies(userId: string, days: number = 30): Promise<Insurance[]> {
+  async findExpiringPolicies(userId: string, days: number = 30) {
+    const now = new Date();
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
 
-    return this.insuranceModel
-      .find({
+    return this.prisma.insurance.findMany({
+      where: {
         userId,
-        status: 'active',
+        status: InsuranceStatus.insurance_active,
         isActive: true,
-        endDate: { $lte: futureDate, $gte: new Date() }
-      })
-      .populate('petId', 'name species breed')
-      .exec();
+        endDate: { lte: futureDate, gte: now },
+      },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async submitClaim(userId: string, claimDto: InsuranceClaimDto): Promise<InsuranceClaim> {
+  async submitClaim(userId: string, claimDto: InsuranceClaimDto) {
     const insurance = await this.findById(claimDto.insuranceId, userId);
-    
-    if (insurance.status !== 'active') {
+
+    if (insurance.status !== InsuranceStatus.insurance_active) {
       throw new BadRequestException(`Cannot submit claim for insurance policy '${claimDto.insuranceId}' because it has status '${insurance.status}'. Only active policies can accept claims.`);
     }
 
-    const claimData = {
-      ...claimDto,
-      userId,
-      serviceDate: new Date(claimDto.serviceDate)
-    };
-
-    const claim = new this.claimModel(claimData);
-    return claim.save();
+    return this.prisma.insuranceClaim.create({
+      data: {
+        ...claimDto,
+        userId,
+        serviceDate: new Date(claimDto.serviceDate),
+      },
+    });
   }
 
-  async getUserClaims(userId: string, status?: string): Promise<InsuranceClaim[]> {
-    const filter: any = { userId, isActive: true };
-    if (status) filter.status = status;
-    
-    return this.claimModel
-      .find(filter)
-      .populate('insuranceId', 'provider policyNumber')
-      .sort({ createdAt: -1 })
-      .exec();
+  async getUserClaims(userId: string, status?: string) {
+    const where: any = { userId, isActive: true };
+    if (status) where.status = status as ClaimStatus;
+
+    return this.prisma.insuranceClaim.findMany({
+      where,
+      include: {
+        insurance: { select: { provider: true, policyNumber: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  async getClaimById(claimId: string, userId: string): Promise<InsuranceClaim> {
-    const claim = await this.claimModel
-      .findById(claimId)
-      .populate('insuranceId', 'provider policyNumber petId')
-      .exec();
-    
+  async getClaimById(claimId: string, userId: string) {
+    const claim = await this.prisma.insuranceClaim.findUnique({
+      where: { id: claimId },
+      include: {
+        insurance: { select: { provider: true, policyNumber: true, petId: true } },
+      },
+    });
+
     if (!claim) {
       throw new NotFoundException(`Insurance claim with ID '${claimId}' does not exist`);
     }
-    
-    if (claim.userId.toString() !== userId) {
+    if (claim.userId !== userId) {
       throw new ForbiddenException(`You don't have permission to access insurance claim '${claimId}'. This claim belongs to another user.`);
     }
-    
+
     return claim;
   }
 }

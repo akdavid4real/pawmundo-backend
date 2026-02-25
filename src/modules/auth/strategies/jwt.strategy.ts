@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    const userId = (user as any)._id.toString();
-    return { _id: userId, userId, email: user.email, role: user.role };
+    // Use `id` (UUID) consistently — also keep `_id` alias for backward compatibility
+    return { _id: user.id, userId: user.id, email: user.email, role: user.role };
   }
 }

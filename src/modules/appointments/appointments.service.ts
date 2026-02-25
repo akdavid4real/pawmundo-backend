@@ -1,86 +1,88 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Appointment, AppointmentDocument } from './schemas/appointment.schema';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @Injectable()
 export class AppointmentsService {
-  constructor(@InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(userId: string, createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
-    const appointment = new this.appointmentModel({
-      ...createAppointmentDto,
-      userId,
-      appointmentDate: new Date(createAppointmentDto.appointmentDate)
+  async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
+    return this.prisma.appointment.create({
+      data: {
+        ...createAppointmentDto,
+        userId,
+        appointmentDate: new Date(createAppointmentDto.appointmentDate),
+      },
     });
-    return appointment.save();
   }
 
-  async findByUser(userId: string): Promise<Appointment[]> {
-    return this.appointmentModel
-      .find({ userId, isActive: true })
-      .populate('petId', 'name species breed')
-      .sort({ appointmentDate: 1 })
-      .exec();
+  async findByUser(userId: string) {
+    return this.prisma.appointment.findMany({
+      where: { userId, isActive: true },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+      orderBy: { appointmentDate: 'asc' },
+    });
   }
 
-  async findById(id: string, userId?: string): Promise<Appointment> {
-    const appointment = await this.appointmentModel
-      .findById(id)
-      .populate('petId', 'name species breed')
-      .exec();
-    
+  async findById(id: string, userId?: string) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
+
     if (!appointment) throw new NotFoundException(`Appointment with ID '${id}' does not exist`);
-    
-    if (userId && appointment.userId.toString() !== userId) {
+
+    if (userId && appointment.userId !== userId) {
       throw new ForbiddenException(`You don't have permission to access this appointment (ID: ${id}). This appointment belongs to another user.`);
     }
-    
+
     return appointment;
   }
 
-  async update(id: string, userId: string, updateAppointmentDto: UpdateAppointmentDto): Promise<Appointment> {
+  async update(id: string, userId: string, updateAppointmentDto: UpdateAppointmentDto) {
     await this.findById(id, userId);
-    
+
     const updateData: any = { ...updateAppointmentDto };
     if (updateAppointmentDto.appointmentDate) {
       updateData.appointmentDate = new Date(updateAppointmentDto.appointmentDate);
     }
-    
-    return this.appointmentModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('petId', 'name species breed')
-      .exec();
+
+    return this.prisma.appointment.update({
+      where: { id },
+      data: updateData,
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async cancel(id: string, userId: string): Promise<Appointment> {
+  async cancel(id: string, userId: string) {
     await this.findById(id, userId);
-    return this.appointmentModel
-      .findByIdAndUpdate(id, { status: 'cancelled' }, { new: true })
-      .populate('petId', 'name species breed')
-      .exec();
+    return this.prisma.appointment.update({
+      where: { id },
+      data: { status: 'cancelled' },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+    });
   }
 
-  async delete(id: string, userId: string): Promise<Appointment> {
+  async delete(id: string, userId: string) {
     await this.findById(id, userId);
-    return this.appointmentModel
-      .findByIdAndUpdate(id, { isActive: false }, { new: true })
-      .exec();
+    return this.prisma.appointment.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 
-  async findUpcoming(userId: string): Promise<Appointment[]> {
+  async findUpcoming(userId: string) {
     const today = new Date();
-    return this.appointmentModel
-      .find({
+    return this.prisma.appointment.findMany({
+      where: {
         userId,
         isActive: true,
-        appointmentDate: { $gte: today },
-        status: { $in: ['scheduled', 'confirmed'] }
-      })
-      .populate('petId', 'name species breed')
-      .sort({ appointmentDate: 1 })
-      .exec();
+        appointmentDate: { gte: today },
+        status: { in: ['scheduled', 'confirmed'] },
+      },
+      include: { pet: { select: { name: true, species: true, breed: true } } },
+      orderBy: { appointmentDate: 'asc' },
+    });
   }
 }

@@ -10,10 +10,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('medications')
 @UseGuards(JwtAuthGuard)
 export class MedicationsController {
-  constructor(private readonly medicationsService: MedicationsService) {}
+  constructor(private readonly medicationsService: MedicationsService) { }
 
   @Post()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create medication record',
     description: `
       Track medications for your pets including prescriptions and supplements.
@@ -32,13 +32,13 @@ export class MedicationsController {
       - Maintain medication history
     `
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Medication created successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439014',
-        petId: '507f1f77bcf86cd799439012',
+        _id: 'd4e5f6a7-b8c9-0123-defa-234567890123',
+        petId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Amoxicillin',
         dosage: '500mg',
         frequency: 'twice daily',
@@ -57,7 +57,7 @@ export class MedicationsController {
   }
 
   @Get('active')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all active medications',
     description: `
       Retrieve all currently active medications for all your pets.
@@ -73,13 +73,13 @@ export class MedicationsController {
       - Medication reminders
     `
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Active medications retrieved',
     schema: {
       example: [
         {
-          _id: '507f1f77bcf86cd799439014',
+          _id: 'd4e5f6a7-b8c9-0123-defa-234567890123',
           petId: { name: 'Buddy', species: 'dog' },
           name: 'Amoxicillin',
           dosage: '500mg',
@@ -95,11 +95,11 @@ export class MedicationsController {
   }
 
   @Get('pet/:petId')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get medications for a specific pet',
     description: 'Retrieve all medication records (active and completed) for a specific pet'
   })
-  @ApiParam({ name: 'petId', description: 'Pet ID', example: '507f1f77bcf86cd799439012' })
+  @ApiParam({ name: 'petId', description: 'Pet ID', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
   @ApiResponse({ status: 200, description: 'Medications retrieved successfully' })
   @Get('pet/:petId')
   findByPet(@Param('petId') petId: string, @Request() req) {
@@ -117,7 +117,7 @@ export class MedicationsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update medication details',
     description: 'Update medication information such as dosage, frequency, or instructions'
   })
@@ -129,7 +129,7 @@ export class MedicationsController {
   }
 
   @Patch(':id/complete')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Mark medication as completed',
     description: `
       Mark a medication course as completed.
@@ -148,7 +148,7 @@ export class MedicationsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete medication record',
     description: 'Soft delete a medication record (marks as inactive)'
   })

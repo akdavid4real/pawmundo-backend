@@ -1,39 +1,46 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Activity } from './schemas/activity.schema';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
+import { ActivityType } from '@prisma/client';
 
 @Injectable()
 export class ActivityTrackingService {
-  constructor(@InjectModel(Activity.name) private activityModel: Model<Activity>) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(createActivityDto: CreateActivityDto, userId: string): Promise<Activity> {
-    const activityData = {
-      ...createActivityDto,
-      date: new Date(createActivityDto.date)
-    };
-    const activity = new this.activityModel(activityData);
-    return activity.save();
+  async create(createActivityDto: CreateActivityDto, userId: string) {
+    return this.prisma.activity.create({
+      data: {
+        ...createActivityDto,
+        type: createActivityDto.type as ActivityType,
+        date: new Date(createActivityDto.date),
+      },
+    });
   }
 
-  async findByPet(petId: string, type?: string): Promise<Activity[]> {
-    const filter: any = { petId, isActive: true };
-    if (type) filter.type = type;
-    return this.activityModel.find(filter).sort({ date: -1 }).exec();
+  async findByPet(petId: string, type?: string) {
+    const where: any = { petId, isActive: true };
+    if (type) where.type = type as ActivityType;
+
+    return this.prisma.activity.findMany({
+      where,
+      orderBy: { date: 'desc' },
+    });
   }
 
-  async findById(id: string): Promise<Activity> {
-    const activity = await this.activityModel.findById(id).exec();
+  async findById(id: string) {
+    const activity = await this.prisma.activity.findUnique({ where: { id } });
     if (!activity) {
       throw new NotFoundException(`Activity with ID '${id}' not found`);
     }
     return activity;
   }
 
-  async delete(id: string): Promise<Activity> {
-    const activity = await this.findById(id);
-    return this.activityModel.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
+  async delete(id: string) {
+    await this.findById(id);
+    return this.prisma.activity.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 
   async getDailyStats(petId: string, date: string) {
@@ -42,11 +49,13 @@ export class ActivityTrackingService {
     const endDate = new Date(date);
     endDate.setHours(23, 59, 59, 999);
 
-    const activities = await this.activityModel.find({
-      petId,
-      date: { $gte: startDate, $lte: endDate },
-      isActive: true
-    }).exec();
+    const activities = await this.prisma.activity.findMany({
+      where: {
+        petId,
+        date: { gte: startDate, lte: endDate },
+        isActive: true,
+      },
+    });
 
     return {
       totalWalks: activities.filter(a => a.type === 'walk').length,
@@ -54,7 +63,7 @@ export class ActivityTrackingService {
       totalFeedings: activities.filter(a => a.type === 'feeding').length,
       totalFoodAmount: activities.filter(a => a.type === 'feeding').reduce((sum, a) => sum + (a.foodAmount || 0), 0),
       totalWaterIntake: activities.filter(a => a.type === 'water').reduce((sum, a) => sum + (a.waterAmount || 0), 0),
-      activities
+      activities,
     };
   }
 }

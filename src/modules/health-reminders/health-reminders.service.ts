@@ -10,34 +10,28 @@ export class HealthRemindersService {
     private healthRecordsService: HealthRecordsService,
     private petsService: PetsService,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
   async sendDailyReminders() {
-    // This would integrate with a notification service
     console.log('Checking for health reminders...');
-    // Implementation would send notifications to users with upcoming/overdue reminders
   }
 
   async getRemindersForUser(userId: string) {
-    console.log('🔍 Getting reminders for userId:', userId);
     const userPets = await this.petsService.findByOwner(userId);
-    console.log('🐾 User pets:', userPets.length);
-    
+
     const [upcoming, overdue] = await Promise.all([
       this.healthRecordsService.getUpcomingReminders(userId),
       this.healthRecordsService.getOverdueReminders(userId),
     ]);
-    
-    console.log('📅 Upcoming records:', upcoming.length);
-    console.log('⏰ Overdue records:', overdue.length);
 
-    // Create notifications for overdue reminders (only if not already notified today)
+    // Create notifications for overdue reminders
     for (const record of overdue) {
-      const petId = (record.petId as any)?._id || record.petId;
-      const petName = (record.petId as any)?.name || 'Your pet';
+      const pet = (record as any).pet;
+      const petId = pet?.id || record.petId;
+      const petName = pet?.name || 'Your pet';
       const daysOverdue = Math.ceil((Date.now() - record.nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       try {
         await this.notificationsService.create({
           userId,
@@ -47,7 +41,7 @@ export class HealthRemindersService {
           type: 'reminder',
           actionUrl: `/pet/${petId}?tab=health`,
         });
-      } catch (error) {
+      } catch {
         // Notification might already exist, ignore
       }
     }
@@ -56,9 +50,10 @@ export class HealthRemindersService {
     for (const record of upcoming) {
       const daysUntil = Math.ceil((record.nextDueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       if (daysUntil <= 3) {
-        const petId = (record.petId as any)?._id || record.petId;
-        const petName = (record.petId as any)?.name || 'Your pet';
-        
+        const pet = (record as any).pet;
+        const petId = pet?.id || record.petId;
+        const petName = pet?.name || 'Your pet';
+
         try {
           await this.notificationsService.create({
             userId,
@@ -68,40 +63,46 @@ export class HealthRemindersService {
             type: 'reminder',
             actionUrl: `/pet/${petId}?tab=health`,
           });
-        } catch (error) {
+        } catch {
           // Notification might already exist, ignore
         }
       }
     }
 
     return {
-      upcoming: upcoming.map(record => ({
-        id: record._id,
-        petId: (record.petId as any)?._id || record.petId,
-        petName: (record.petId as any)?.name || 'Unknown',
-        type: record.type,
-        title: record.title,
-        dueDate: record.nextDueDate,
-        daysUntilDue: Math.ceil((record.nextDueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-      })),
-      overdue: overdue.map(record => ({
-        id: record._id,
-        petId: (record.petId as any)?._id || record.petId,
-        petName: (record.petId as any)?.name || 'Unknown',
-        type: record.type,
-        title: record.title,
-        dueDate: record.nextDueDate,
-        daysOverdue: Math.ceil((Date.now() - record.nextDueDate.getTime()) / (1000 * 60 * 60 * 24))
-      }))
+      upcoming: upcoming.map(record => {
+        const pet = (record as any).pet;
+        return {
+          id: record.id,
+          petId: pet?.id || record.petId,
+          petName: pet?.name || 'Unknown',
+          type: record.type,
+          title: record.title,
+          dueDate: record.nextDueDate,
+          daysUntilDue: Math.ceil((record.nextDueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+        };
+      }),
+      overdue: overdue.map(record => {
+        const pet = (record as any).pet;
+        return {
+          id: record.id,
+          petId: pet?.id || record.petId,
+          petName: pet?.name || 'Unknown',
+          type: record.type,
+          title: record.title,
+          dueDate: record.nextDueDate,
+          daysOverdue: Math.ceil((Date.now() - record.nextDueDate.getTime()) / (1000 * 60 * 60 * 24)),
+        };
+      }),
     };
   }
 
   async createVaccinationReminders(petId: string, userId: string) {
     const pet = await this.petsService.findById(petId, userId);
     const now = new Date();
-    
+
     const vaccinationSchedule = this.getVaccinationSchedule(pet.species, pet.dateOfBirth);
-    
+
     const reminders = vaccinationSchedule.map(vaccine => ({
       petId,
       type: 'vaccination',
@@ -109,13 +110,13 @@ export class HealthRemindersService {
       description: vaccine.description,
       date: now,
       nextDueDate: vaccine.dueDate,
-      isReminder: true
+      isReminder: true,
     }));
 
     return Promise.all(
-      reminders.map(reminder => 
-        this.healthRecordsService.create(userId, reminder)
-      )
+      reminders.map(reminder =>
+        this.healthRecordsService.create(userId, reminder),
+      ),
     );
   }
 
@@ -134,14 +135,14 @@ export class HealthRemindersService {
         { name: 'FVRCP (3rd)', description: 'Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia', weeksFromBirth: 12 },
         { name: 'Rabies', description: 'Rabies vaccination', weeksFromBirth: 16 },
         { name: 'FVRCP Annual', description: 'Annual FVRCP booster', weeksFromBirth: 52 },
-      ]
+      ],
     };
 
     const schedule = schedules[species.toLowerCase()] || schedules.dog;
-    
+
     return schedule.map(vaccine => ({
       ...vaccine,
-      dueDate: new Date(birthDate.getTime() + vaccine.weeksFromBirth * 7 * 24 * 60 * 60 * 1000)
+      dueDate: new Date(birthDate.getTime() + vaccine.weeksFromBirth * 7 * 24 * 60 * 60 * 1000),
     }));
   }
 }

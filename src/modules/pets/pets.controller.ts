@@ -6,13 +6,13 @@ import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 
 @ApiTags('Pets')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @Controller('pets')
 @UseGuards(JwtAuthGuard)
 export class PetsController {
-  constructor(private readonly petsService: PetsService) {}
+  constructor(private readonly petsService: PetsService) { }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create a new pet profile',
     description: `
       Create a comprehensive pet profile with detailed information including:
@@ -41,12 +41,12 @@ export class PetsController {
       - Include detailed behavioral notes for better pet care
     `
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Pet profile created successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439012',
+        _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Buddy',
         species: 'dog',
         breed: 'Golden Retriever',
@@ -57,15 +57,15 @@ export class PetsController {
         allergies: ['chicken', 'wheat'],
         dietaryPreferences: 'Grain-free diet',
         behavioralNotes: 'Very friendly, loves playing fetch',
-        ownerId: '507f1f77bcf86cd799439010',
+        ownerId: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
         healthStatus: 'healthy',
         isActive: true,
         createdAt: '2024-01-15T10:00:00.000Z'
       }
     }
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: 'Validation failed - Invalid pet data',
     schema: {
       example: {
@@ -99,7 +99,7 @@ export class PetsController {
     return this.petsService.create(petData);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all pets owned by the current user',
     description: `
       Retrieve all pets belonging to the authenticated user, with optional filtering by species.
@@ -114,19 +114,19 @@ export class PetsController {
       - dog, cat, bird, rabbit, hamster, fish, reptile, other
     `
   })
-  @ApiQuery({ 
-    name: 'species', 
-    required: false, 
+  @ApiQuery({
+    name: 'species',
+    required: false,
     description: 'Filter pets by species (e.g., dog, cat, bird)',
     example: 'dog'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of user pets retrieved successfully',
     schema: {
       example: [
         {
-          _id: '507f1f77bcf86cd799439012',
+          _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           name: 'Buddy',
           species: 'dog',
           breed: 'Golden Retriever',
@@ -135,7 +135,7 @@ export class PetsController {
           profileImage: 'https://example.com/buddy.jpg'
         },
         {
-          _id: '507f1f77bcf86cd799439013',
+          _id: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
           name: 'Whiskers',
           species: 'cat',
           breed: 'Persian',
@@ -152,7 +152,7 @@ export class PetsController {
     return this.petsService.findByOwner(userId, species);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get detailed information for a specific pet',
     description: `
       Retrieve complete profile information for a specific pet by ID.
@@ -172,14 +172,14 @@ export class PetsController {
   @ApiParam({
     name: 'id',
     description: 'Unique identifier of the pet',
-    example: '507f1f77bcf86cd799439012'
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Pet details retrieved successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439012',
+        _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Buddy',
         species: 'dog',
         breed: 'Golden Retriever',
@@ -197,14 +197,14 @@ export class PetsController {
         emergencyContactName: 'John Doe',
         emergencyContactPhone: '+1234567890',
         healthStatus: 'healthy',
-        ownerId: '507f1f77bcf86cd799439010',
+        ownerId: 'c3d4e5f6-a7b8-9012-cdef-123456789012',
         createdAt: '2024-01-15T10:00:00.000Z',
         updatedAt: '2024-01-15T10:00:00.000Z'
       }
     }
   })
-  @ApiResponse({ 
-    status: 403, 
+  @ApiResponse({
+    status: 403,
     description: 'Access denied - Pet belongs to another user',
     schema: {
       example: {
@@ -218,14 +218,14 @@ export class PetsController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 404, 
+  @ApiResponse({
+    status: 404,
     description: 'Pet not found',
     schema: {
       example: {
         success: false,
         statusCode: 404,
-        message: "Pet with ID '507f1f77bcf86cd799439012' does not exist",
+        message: "Pet with ID 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' does not exist",
         suggestions: [
           'Check if the pet ID is correct',
           'Verify the pet exists and you have access to it'
@@ -239,7 +239,7 @@ export class PetsController {
     return this.petsService.findById(id, userId);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update pet information',
     description: `
       Update any field of a pet's profile. Only provided fields will be updated.
@@ -254,13 +254,13 @@ export class PetsController {
       **Note:** You can only update your own pets
     `
   })
-  @ApiParam({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiParam({ name: 'id', description: 'Pet ID', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  @ApiResponse({
+    status: 200,
     description: 'Pet updated successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439012',
+        _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Buddy Updated',
         weight: 32,
         updatedAt: '2024-01-16T10:00:00.000Z'
@@ -279,7 +279,7 @@ export class PetsController {
     return this.petsService.update(id, userId, petData);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update pet health status',
     description: `
       Update the current health status of a pet.
@@ -296,13 +296,13 @@ export class PetsController {
       - Monitor recovery progress
     `
   })
-  @ApiParam({ name: 'id', description: 'Pet ID', example: '507f1f77bcf86cd799439012' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiParam({ name: 'id', description: 'Pet ID', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  @ApiResponse({
+    status: 200,
     description: 'Health status updated',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439012',
+        _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Buddy',
         healthStatus: 'sick',
         updatedAt: '2024-01-16T10:00:00.000Z'
@@ -316,7 +316,7 @@ export class PetsController {
     return this.petsService.updateHealthStatus(id, userId, status);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete pet (soft delete)',
     description: `
       Soft delete a pet profile. The pet is marked as inactive but not permanently removed.
@@ -330,13 +330,13 @@ export class PetsController {
       **Security:** Only pet owner can delete their pets
     `
   })
-  @ApiParam({ name: 'id', description: 'Pet ID to delete', example: '507f1f77bcf86cd799439012' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiParam({ name: 'id', description: 'Pet ID to delete', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  @ApiResponse({
+    status: 200,
     description: 'Pet deleted successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439012',
+        _id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         name: 'Buddy',
         isActive: false,
         updatedAt: '2024-01-16T10:00:00.000Z'

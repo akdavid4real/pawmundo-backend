@@ -1,98 +1,108 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Notification, NotificationDocument } from './schemas/notification.schema';
-import { NotificationPreference, NotificationPreferenceDocument } from './schemas/notification-preference.schema';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdatePreferenceDto } from './dto/update-preference.dto';
+import { NotificationType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class NotificationsService {
-  constructor(
-    @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
-    @InjectModel(NotificationPreference.name) private preferenceModel: Model<NotificationPreferenceDocument>,
-  ) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(createDto: CreateNotificationDto): Promise<Notification> {
+  async create(createDto: CreateNotificationDto) {
     const shouldSend = await this.shouldSendNotification(createDto.userId, createDto.petId, createDto.type);
     if (!shouldSend) return null;
 
     // Check for duplicate notification (same user, pet, type, and title within last 24 hours)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const existingNotification = await this.notificationModel.findOne({
-      userId: new Types.ObjectId(createDto.userId),
-      petId: createDto.petId ? new Types.ObjectId(createDto.petId) : undefined,
-      type: createDto.type,
-      title: createDto.title,
-      createdAt: { $gte: oneDayAgo },
-    }).exec();
+    const existingNotification = await this.prisma.notification.findFirst({
+      where: {
+        userId: createDto.userId,
+        petId: createDto.petId || undefined,
+        type: createDto.type as NotificationType,
+        title: createDto.title,
+        createdAt: { gte: oneDayAgo },
+      },
+    });
 
     if (existingNotification) {
-      return existingNotification; // Return existing instead of creating duplicate
+      return existingNotification;
     }
 
-    const notification = new this.notificationModel({
-      ...createDto,
-      userId: new Types.ObjectId(createDto.userId),
-      petId: createDto.petId ? new Types.ObjectId(createDto.petId) : undefined,
+    const data: Prisma.NotificationUncheckedCreateInput = {
+      userId: createDto.userId,
+      petId: createDto.petId || undefined,
+      title: createDto.title,
+      message: createDto.message,
+      type: createDto.type as NotificationType,
+      actionUrl: createDto.actionUrl,
+    };
+
+    return this.prisma.notification.create({ data });
+  }
+
+  async findAllByUser(userId: string, petId?: string) {
+    const where: Prisma.NotificationWhereInput = { userId, isActive: true };
+    if (petId) where.petId = petId;
+
+    return this.prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
     });
-    return notification.save();
   }
 
-  async findAllByUser(userId: string, petId?: string): Promise<Notification[]> {
-    const query: any = { userId: new Types.ObjectId(userId), isActive: true };
-    if (petId) query.petId = new Types.ObjectId(petId);
-    
-    return this.notificationModel.find(query).sort({ createdAt: -1 }).limit(50).exec();
+  async markAsRead(notificationId: string, userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { id: notificationId, userId },
+      data: { isRead: true },
+    });
   }
 
-  async markAsRead(notificationId: string, userId: string): Promise<Notification> {
-    return this.notificationModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(notificationId), userId: new Types.ObjectId(userId) },
-      { isRead: true },
-      { new: true }
-    ).exec();
-  }
-
-  async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationModel.updateMany(
-      { userId: new Types.ObjectId(userId), isRead: false },
-      { isRead: true }
-    ).exec();
+  async markAllAsRead(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
+    });
   }
 
   async getUnreadCount(userId: string): Promise<number> {
-    return this.notificationModel.countDocuments({
-      userId: new Types.ObjectId(userId),
-      isRead: false,
-      isActive: true
-    }).exec();
+    return this.prisma.notification.count({
+      where: { userId, isRead: false, isActive: true },
+    });
   }
 
-  async getPreferences(userId: string): Promise<NotificationPreferenceDocument> {
-    let prefs = await this.preferenceModel.findOne({ userId: new Types.ObjectId(userId) }).exec();
+  async getPreferences(userId: string) {
+    let prefs = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+    });
     if (!prefs) {
-      prefs = await this.preferenceModel.create({ userId: new Types.ObjectId(userId), petSettings: {} });
+      prefs = await this.prisma.notificationPreference.create({
+        data: { userId, petSettings: {} },
+      });
     }
     return prefs;
   }
 
-  async updatePreferences(userId: string, updateDto: UpdatePreferenceDto): Promise<NotificationPreferenceDocument> {
+  async updatePreferences(userId: string, updateDto: UpdatePreferenceDto) {
     try {
       const prefs = await this.getPreferences(userId);
-      
-      if (updateDto.globalEnabled !== undefined) prefs.globalEnabled = updateDto.globalEnabled;
-      if (updateDto.emailNotifications !== undefined) prefs.emailNotifications = updateDto.emailNotifications;
-      if (updateDto.pushNotifications !== undefined) prefs.pushNotifications = updateDto.pushNotifications;
-      if (updateDto.reminderHoursBefore !== undefined) prefs.reminderHoursBefore = updateDto.reminderHoursBefore;
-      
+
+      const updateData: Prisma.NotificationPreferenceUncheckedUpdateInput = {};
+      if (updateDto.globalEnabled !== undefined) updateData.globalEnabled = updateDto.globalEnabled;
+      if (updateDto.emailNotifications !== undefined) updateData.emailNotifications = updateDto.emailNotifications;
+      if (updateDto.pushNotifications !== undefined) updateData.pushNotifications = updateDto.pushNotifications;
+      if (updateDto.reminderHoursBefore !== undefined) updateData.reminderHoursBefore = updateDto.reminderHoursBefore;
+
       if (updateDto.petId && updateDto.petSettings) {
-        if (!prefs.petSettings) prefs.petSettings = {};
-        prefs.petSettings[updateDto.petId] = updateDto.petSettings as any;
-        prefs.markModified('petSettings');
+        const currentPetSettings = (prefs.petSettings as Record<string, unknown>) || {};
+        currentPetSettings[updateDto.petId] = updateDto.petSettings;
+        updateData.petSettings = currentPetSettings as Prisma.InputJsonValue;
       }
-      
-      return await prefs.save();
+
+      return this.prisma.notificationPreference.update({
+        where: { userId },
+        data: updateData,
+      });
     } catch (error) {
       console.error('Service update preferences error:', error);
       throw error;
@@ -102,49 +112,49 @@ export class NotificationsService {
   private async shouldSendNotification(userId: string, petId: string | undefined, type: string): Promise<boolean> {
     const prefs = await this.getPreferences(userId);
     if (!prefs.globalEnabled) return false;
-    
+
     if (petId) {
-      const petSettings = prefs.petSettings[petId];
+      const petSettings = (prefs.petSettings as Record<string, Record<string, boolean>>)?.[petId];
       if (!petSettings) return true;
-      
-      const typeMap = {
-        'appointment': petSettings.appointments,
-        'medication': petSettings.medications,
+
+      const typeMap: Record<string, boolean | undefined> = {
+        'appointment_notification': petSettings.appointments,
+        'medication_notification': petSettings.medications,
         'vaccination': petSettings.vaccinations,
         'checkup': petSettings.checkups,
         'health_alert': petSettings.healthAlerts,
-        'weight': petSettings.weightChanges,
+        'weight_notification': petSettings.weightChanges,
       };
-      
+
       return typeMap[type] !== false;
     }
-    
+
     return true;
   }
 
-  async notifyAppointment(userId: string, petId: string, appointmentDate: Date, vetName: string): Promise<void> {
+  async notifyAppointment(userId: string, petId: string, appointmentDate: Date, vetName: string) {
     await this.create({
       userId,
       petId,
       title: 'Upcoming Appointment',
       message: `Appointment with ${vetName} on ${appointmentDate.toLocaleDateString()}`,
-      type: 'appointment',
+      type: 'appointment_notification',
       actionUrl: `/appointments`,
     });
   }
 
-  async notifyMedication(userId: string, petId: string, medicationName: string): Promise<void> {
+  async notifyMedication(userId: string, petId: string, medicationName: string) {
     await this.create({
       userId,
       petId,
       title: 'Medication Reminder',
       message: `Time to give ${medicationName}`,
-      type: 'medication',
+      type: 'medication_notification',
       actionUrl: `/pets/${petId}/medications`,
     });
   }
 
-  async notifyVaccination(userId: string, petId: string, vaccineName: string, dueDate: Date): Promise<void> {
+  async notifyVaccination(userId: string, petId: string, vaccineName: string, dueDate: Date) {
     await this.create({
       userId,
       petId,
@@ -156,9 +166,10 @@ export class NotificationsService {
   }
 
   async removeDuplicates(userId: string): Promise<number> {
-    const notifications = await this.notificationModel.find({ 
-      userId: new Types.ObjectId(userId) 
-    }).sort({ createdAt: -1 }).exec();
+    const notifications = await this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
 
     const seen = new Map<string, string>();
     const duplicateIds: string[] = [];
@@ -166,14 +177,16 @@ export class NotificationsService {
     for (const notif of notifications) {
       const key = `${notif.userId}-${notif.petId}-${notif.type}-${notif.title}`;
       if (seen.has(key)) {
-        duplicateIds.push(notif._id.toString());
+        duplicateIds.push(notif.id);
       } else {
-        seen.set(key, notif._id.toString());
+        seen.set(key, notif.id);
       }
     }
 
     if (duplicateIds.length > 0) {
-      await this.notificationModel.deleteMany({ _id: { $in: duplicateIds } }).exec();
+      await this.prisma.notification.deleteMany({
+        where: { id: { in: duplicateIds } },
+      });
     }
 
     return duplicateIds.length;

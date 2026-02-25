@@ -1,65 +1,72 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Pet } from './schemas/pet.schema';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '@modules/prisma/prisma.service';
+import { HealthStatus } from '@prisma/client';
 
 @Injectable()
 export class PetsService {
-  constructor(@InjectModel(Pet.name) private petModel: Model<Pet>) {}
+  constructor(private prisma: PrismaService) { }
 
-  async create(petData: Partial<Pet>): Promise<Pet> {
-    const pet = new this.petModel(petData);
-    return pet.save();
+  async create(petData: any) {
+    return this.prisma.pet.create({ data: petData });
   }
 
-  async findByOwner(ownerId: string, species?: string): Promise<Pet[]> {
-    const filter: any = { ownerId: new Types.ObjectId(ownerId), isActive: true };
-    if (species) filter.species = species;
-    return this.petModel.find(filter).sort({ name: 1 }).exec();
+  async findByOwner(ownerId: string, species?: string) {
+    return this.prisma.pet.findMany({
+      where: {
+        ownerId,
+        isActive: true,
+        ...(species ? { species } : {}),
+      },
+      orderBy: { name: 'asc' },
+    });
   }
 
-  async findById(id: string, ownerId?: string): Promise<Pet> {
-    const pet = await this.petModel.findById(id).exec();
-    if (!pet) {
+  async findById(id: string, ownerId?: string) {
+    const pet = await this.prisma.pet.findUnique({ where: { id } });
+    if (!pet || !pet.isActive) {
       throw new NotFoundException(`Pet with ID '${id}' does not exist`);
     }
-
-    // If ownerId is provided, verify ownership
-    if (ownerId && !pet.ownerId.equals(new Types.ObjectId(ownerId))) {
+    if (ownerId && pet.ownerId !== ownerId) {
       throw new ForbiddenException(`Access denied`);
     }
-
     return pet;
   }
 
-  async update(id: string, ownerId: string, updateData: Partial<Pet>): Promise<Pet> {
+  async update(id: string, ownerId: string, updateData: any) {
     await this.findById(id, ownerId);
-    return this.petModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    return this.prisma.pet.update({ where: { id }, data: updateData });
   }
 
-  async delete(id: string, ownerId: string): Promise<Pet> {
+  async delete(id: string, ownerId: string) {
     await this.findById(id, ownerId);
-    return this.petModel.findByIdAndUpdate(id, { isActive: false }, { new: true }).exec();
+    return this.prisma.pet.update({ where: { id }, data: { isActive: false } });
   }
 
-  async updateHealthStatus(id: string, ownerId: string, status: string): Promise<Pet> {
+  async updateHealthStatus(id: string, ownerId: string, status: string) {
     await this.findById(id, ownerId);
     const validStatuses = ['healthy', 'sick', 'recovering', 'chronic'];
     if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid health status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
+      throw new BadRequestException(`Invalid health status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
     }
-    return this.petModel.findByIdAndUpdate(id, { healthStatus: status }, { new: true }).exec();
+    return this.prisma.pet.update({
+      where: { id },
+      data: { healthStatus: status as HealthStatus },
+    });
   }
 
-  async findByHealthStatus(ownerId: string, status: string): Promise<Pet[]> {
-    return this.petModel.find({ ownerId, healthStatus: status, isActive: true }).exec();
+  async findByHealthStatus(ownerId: string, status: string) {
+    return this.prisma.pet.findMany({
+      where: { ownerId, healthStatus: status as HealthStatus, isActive: true },
+    });
   }
 
-  async findByName(ownerId: string, name: string): Promise<Pet | null> {
-    return this.petModel.findOne({ 
-      ownerId, 
-      name: { $regex: new RegExp(name, 'i') }, 
-      isActive: true 
-    }).exec();
+  async findByName(ownerId: string, name: string) {
+    return this.prisma.pet.findFirst({
+      where: {
+        ownerId,
+        name: { contains: name, mode: 'insensitive' },
+        isActive: true,
+      },
+    });
   }
 }

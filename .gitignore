@@ -1,5 +1,12 @@
 node_modules
+dist
 .env
-
+.env.local
+.env.production
+*.log
+nul
+project planing.txt
 
 __test__
+/generated/prisma
+migration.sql

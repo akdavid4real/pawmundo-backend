@@ -5,13 +5,13 @@ import { ActivityTrackingService } from './activity-tracking.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 
 @ApiTags('Activity Tracking')
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth()
 @Controller('activity-tracking')
 @UseGuards(JwtAuthGuard)
 export class ActivityTrackingController {
-  constructor(private readonly activityTrackingService: ActivityTrackingService) {}
+  constructor(private readonly activityTrackingService: ActivityTrackingService) { }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Log a new pet activity',
     description: `
       Record a new activity for your pet such as walks, feeding, playtime, or water intake.
@@ -31,13 +31,13 @@ export class ActivityTrackingController {
       - Add notes for additional context
     `
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Activity logged successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439011',
-        petId: '507f1f77bcf86cd799439012',
+        _id: 'e5f6a7b8-c9d0-1234-efab-345678901234',
+        petId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         type: 'walk',
         date: '2024-01-15T10:30:00.000Z',
         duration: 30,
@@ -49,8 +49,8 @@ export class ActivityTrackingController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: 'Validation failed - Invalid activity data provided',
     schema: {
       example: {
@@ -73,8 +73,8 @@ export class ActivityTrackingController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 401, 
+  @ApiResponse({
+    status: 401,
     description: 'Unauthorized - Invalid or missing JWT token',
     schema: {
       example: {
@@ -94,7 +94,7 @@ export class ActivityTrackingController {
     return this.activityTrackingService.create(createActivityDto, userId);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all activities for a specific pet',
     description: `
       Retrieve all recorded activities for a pet, optionally filtered by activity type.
@@ -113,7 +113,7 @@ export class ActivityTrackingController {
   @ApiParam({
     name: 'petId',
     description: 'Unique identifier of the pet',
-    example: '507f1f77bcf86cd799439012'
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
   })
   @ApiQuery({
     name: 'type',
@@ -122,14 +122,14 @@ export class ActivityTrackingController {
     enum: ['walk', 'play', 'feeding', 'water', 'exercise', 'other'],
     example: 'walk'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of pet activities retrieved successfully',
     schema: {
       example: [
         {
-          _id: '507f1f77bcf86cd799439011',
-          petId: '507f1f77bcf86cd799439012',
+          _id: 'e5f6a7b8-c9d0-1234-efab-345678901234',
+          petId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           type: 'walk',
           date: '2024-01-15T10:30:00.000Z',
           duration: 30,
@@ -137,8 +137,8 @@ export class ActivityTrackingController {
           notes: 'Morning walk in the park'
         },
         {
-          _id: '507f1f77bcf86cd799439013',
-          petId: '507f1f77bcf86cd799439012',
+          _id: 'f6a7b8c9-d0e1-2345-fabc-456789012345',
+          petId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           type: 'feeding',
           date: '2024-01-15T08:00:00.000Z',
           foodAmount: 200,
@@ -152,7 +152,7 @@ export class ActivityTrackingController {
     return this.activityTrackingService.findByPet(petId, type);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get daily activity statistics for a pet',
     description: `
       Get comprehensive daily statistics for a pet's activities on a specific date.
@@ -175,15 +175,15 @@ export class ActivityTrackingController {
   @ApiParam({
     name: 'petId',
     description: 'Unique identifier of the pet',
-    example: '507f1f77bcf86cd799439012'
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
   })
   @ApiQuery({
     name: 'date',
     description: 'Date for statistics (YYYY-MM-DD format)',
     example: '2024-01-15'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Daily statistics retrieved successfully',
     schema: {
       example: {
@@ -194,7 +194,7 @@ export class ActivityTrackingController {
         totalWaterIntake: 500,
         activities: [
           {
-            _id: '507f1f77bcf86cd799439011',
+            _id: 'e5f6a7b8-c9d0-1234-efab-345678901234',
             type: 'walk',
             date: '2024-01-15T10:30:00.000Z',
             duration: 30,
@@ -209,7 +209,7 @@ export class ActivityTrackingController {
     return this.activityTrackingService.getDailyStats(petId, date);
   }
 
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete an activity record',
     description: `
       Soft delete an activity record. The activity will be marked as inactive but not permanently removed.
@@ -224,29 +224,29 @@ export class ActivityTrackingController {
   @ApiParam({
     name: 'id',
     description: 'Unique identifier of the activity to delete',
-    example: '507f1f77bcf86cd799439011'
+    example: 'e5f6a7b8-c9d0-1234-efab-345678901234'
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Activity deleted successfully',
     schema: {
       example: {
-        _id: '507f1f77bcf86cd799439011',
-        petId: '507f1f77bcf86cd799439012',
+        _id: 'e5f6a7b8-c9d0-1234-efab-345678901234',
+        petId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         type: 'walk',
         isActive: false,
         updatedAt: '2024-01-15T11:00:00.000Z'
       }
     }
   })
-  @ApiResponse({ 
-    status: 404, 
+  @ApiResponse({
+    status: 404,
     description: 'Activity not found',
     schema: {
       example: {
         success: false,
         statusCode: 404,
-        message: "Activity with ID '507f1f77bcf86cd799439011' not found",
+        message: "Activity with ID 'e5f6a7b8-c9d0-1234-efab-345678901234' not found",
         suggestions: [
           'Check if the activity ID is correct',
           'Verify the activity exists and you have access to it'

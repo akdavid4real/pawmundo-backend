@@ -10,13 +10,13 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug', 'verbose']
   });
-  
+
   // Global exception filter for detailed error messages
   app.useGlobalFilters(new GlobalExceptionFilter());
-  
+
   // Set global API prefix
   app.setGlobalPrefix('api/v1');
-  
+
   // Enhanced validation pipe with detailed error messages
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -46,90 +46,103 @@ async function bootstrap() {
       };
     },
   }));
-  
+
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
-  
+
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  // Setup Swagger - always enabled in development, conditional in production
-  const shouldEnableSwagger = process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true';
-  
-  if (shouldEnableSwagger) {
-    const config = new DocumentBuilder()
-      .setTitle('🐾 PawPromise API')
-      .setDescription(`
-        ## Comprehensive Pet Management Platform
-        
-        **PawPromise** is a modern pet management platform that helps pet owners:
-        - Track their pets' health and wellness
-        - Schedule appointments and manage medical records
-        - Log daily activities and diet
-        - Manage medications and vaccinations
-        - Connect with veterinarians
-        
-        ### 🔐 Authentication
-        Most endpoints require JWT authentication. Use the **Authorize** button to set your Bearer token.
-        
-        ### 📱 Features
-        - **Pet Management**: Complete pet profiles with detailed information
-        - **Health Tracking**: Medical records, medications, vaccinations
-        - **Activity Logging**: Daily walks, feeding, exercise tracking
-        - **Appointment System**: Vet appointment scheduling
-        - **Insurance Management**: Pet insurance policies and claims
-        - **Reminders**: Automated health and medication reminders
-        
-        ### 🚨 Error Handling
-        All endpoints return detailed error messages with:
-        - Clear error descriptions
-        - Validation details
-        - Suggested solutions
-        - HTTP status codes
-      `)
-      .setVersion('2.0.0')
-      .addBearerAuth()
-      .addServer(process.env.BASE_URL || 'http://localhost:3000', 'Development Server')
-      .addServer('https://pawpromise-backend.onrender.com', 'Production Server')
-      .addTag('Authentication', 'User registration, login, and account management')
-      .addTag('Pets', 'Pet profile management and detailed information')
-      .addTag('Consultations', 'Virtual veterinary consultations with real-time updates')
-      .addTag('Activity Tracking', 'Daily activity and diet logging')
-      .addTag('Health Records', 'Medical history and health tracking')
-      .addTag('Medications', 'Medication management and reminders')
-      .addTag('Appointments', 'Veterinary appointment scheduling')
-      .addTag('Insurance', 'Pet insurance policies and claims')
-      .addTag('Health Reminders', 'Automated health notifications')
-      .addTag('Seed', 'Database seeding for development')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document, {
-      customSiteTitle: '🐾 PawPromise API Documentation',
-      customfavIcon: '/favicon.ico',
-      customCss: `
-        .topbar-wrapper .link { content: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjRkY2QjM1Ii8+Cjwvc3ZnPgo='); }
-        .swagger-ui .topbar { background-color: #1f2937; }
-        .swagger-ui .info .title { color: #f59e0b; }
-      `,
-      swaggerOptions: {
-        persistAuthorization: true,
-        displayRequestDuration: true,
-        filter: true,
-        showExtensions: true,
-        showCommonExtensions: true,
-      },
-    });
-  }
-  
+  // Swagger — always enabled for easy API testing
+  const config = new DocumentBuilder()
+    .setTitle('🐾 PawPromise API')
+    .setDescription(`
+## Comprehensive Pet Management Platform
+
+### 🧪 Quick-Start Testing Guide
+1. **Register** → \`POST /auth/register\` with email, password (min 8 chars, needs uppercase + lowercase + number), firstName, lastName
+2. **Copy the \`access_token\`** from the response
+3. **Click "Authorize" 🔒** at the top → paste \`Bearer YOUR_TOKEN\` → click Authorize
+4. Now all protected endpoints will work!
+
+**Test Accounts:**
+- Register as **user** (default role) — can create pets, book consultations, post in forum
+- Register as **vet** (set \`role: "vet"\`) — can access vet queue, accept consultations
+
+---
+
+### 🔐 Authentication
+Most endpoints require JWT authentication. Use the **Authorize** button above to set your Bearer token.
+Token persists between page refreshes.
+
+### 📱 API Modules
+| Module | Description |
+|--------|-------------|
+| **Pets** | Full pet profiles with health tracking |
+| **Consultations** | Video/audio/chat vet consultations |
+| **Health Records** | Medical history and attachments |
+| **Medications** | Medication schedules and reminders |
+| **Activity Tracking** | Walks, feeding, exercise logging |
+| **Forum** | Community posts, replies, likes |
+| **Insurance** | Policies and claims management |
+| **AI Chat** | AI-powered pet health assistant |
+| **Symptom Checker** | AI symptom analysis |
+
+### 🚨 Error Handling
+All errors return: clear description, validation details, suggested solutions, and proper HTTP status codes.
+    `)
+    .setVersion('2.0.0')
+    .addBearerAuth()
+    .addServer(process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`, 'Server')
+    .addTag('Authentication', 'Register, login, profile — start here!')
+    .addTag('users', 'User profile management')
+    .addTag('Pets', 'Pet CRUD, health status, species filtering')
+    .addTag('Consultations', 'User↔Vet consultation workflow')
+    .addTag('Activity Tracking', 'Walks, feeding, exercise, daily stats')
+    .addTag('Health Records', 'Medical records, vaccinations, lab results')
+    .addTag('Medications', 'Medication schedules and adherence')
+    .addTag('Appointments', 'Vet appointment booking')
+    .addTag('insurance', 'Pet insurance policies and claims')
+    .addTag('forum', 'Community posts, replies, and likes')
+    .addTag('notifications', 'User notification management')
+    .addTag('events', 'Calendar events and reminders')
+    .addTag('health-reminders', 'Automated vaccination reminders')
+    .addTag('ai-chat', 'AI pet health chat assistant')
+    .addTag('symptom-checker', 'AI-powered symptom analysis')
+    .addTag('Seed', 'Database seeding for development')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, {
+    customSiteTitle: '🐾 PawPromise API — Test Console',
+    customfavIcon: '/favicon.ico',
+    customCss: `
+      .topbar-wrapper .link { content: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjRkY2QjM1Ii8+Cjwvc3ZnPgo='); }
+      .swagger-ui .topbar { background-color: #1f2937; }
+      .swagger-ui .info .title { color: #f59e0b; }
+      .swagger-ui .info .description { max-width: 900px; }
+    `,
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      docExpansion: 'list',
+      tagsSorterAlpha: true,
+      operationsSorter: 'method',
+      tryItOutEnabled: true,
+    },
+  });
+
   const port = parseInt(process.env.PORT || '3000', 10);
   await app.listen(port, '0.0.0.0');
-  
-  Logger.log(`PawMundo Backend running on port ${port}`, 'Bootstrap');
-  if (process.env.ENABLE_SWAGGER === 'true') {
-    const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
-    Logger.log(`Swagger documentation available at ${baseUrl}/api`, 'Bootstrap');
-  }
+
+  const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+  Logger.log(`🐾 PawMundo Backend running on port ${port}`, 'Bootstrap');
+  Logger.log(`📖 Swagger API docs: ${baseUrl}/api`, 'Bootstrap');
+  Logger.log(`📋 Swagger JSON: ${baseUrl}/api-json`, 'Bootstrap');
 }
 bootstrap();

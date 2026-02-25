@@ -26,7 +26,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
@@ -37,17 +37,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Add specific suggestions based on status code
       suggestions = this.getStatusSuggestions(status, message);
-    } else if ((exception as any)?.status) {
-      // Handle exceptions that have a status property but aren't HttpException instances
-      // This happens with @nestjs/passport's UnauthorizedException
-      status = (exception as any).status;
-      const response = (exception as any).response;
-      if (response && typeof response === 'object') {
-        message = response.message || (exception as Error).message || 'Unauthorized';
-      } else {
-        message = (exception as Error).message || 'An error occurred';
-      }
-      suggestions = this.getStatusSuggestions(status, message);
+    } else if ((exception as any)?.status || (exception as any)?.statusCode) {
+      // Handle exceptions that have a status/statusCode property but aren't HttpException instances
+      status = (exception as any).status || (exception as any).statusCode;
+      const exceptionData = exception as any;
+
+      message = exceptionData.message || (exception as Error).message || 'An error occurred';
+      details = exceptionData.details || null;
+      suggestions = exceptionData.suggestions || this.getStatusSuggestions(status, message);
     } else if (this.isMongoError(exception)) {
       status = HttpStatus.BAD_REQUEST;
       message = this.getMongoErrorMessage(exception);
@@ -68,7 +65,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       finalStatus: status,
       message: message
     });
-    
+
     this.logger.error(
       `${request.method} ${request.url} - STATUS:${status} - ${message}`,
       exception instanceof Error ? exception.stack : 'Unknown error'
@@ -178,10 +175,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private isMongoError(exception: unknown): exception is any {
-    return exception && 
-           typeof exception === 'object' && 
-           ((exception as any).name === 'MongoError' || 
-            (exception as any).code !== undefined);
+    return exception &&
+      typeof exception === 'object' &&
+      ((exception as any).name === 'MongoError' ||
+        (exception as any).code !== undefined);
   }
 
   private extractDuplicateField(message: string): string {

@@ -1,30 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AiChatController } from './ai-chat.controller';
 import { AiChatService } from './ai-chat.service';
-import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
-import { PetsService } from '../pets/pets.service';
-import { HealthRecordsService } from '../health-records/health-records.service';
-import { AppointmentsService } from '../appointments/appointments.service';
-import { Pet, PetSchema } from '../pets/schemas/pet.schema';
-import { HealthRecord, HealthRecordSchema } from '../health-records/schemas/health-record.schema';
-import { Appointment, AppointmentSchema } from '../appointments/schemas/appointment.schema';
-import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
-import { User, UserSchema } from '../auth/schemas/user.schema';
-import { SymptomCheck, SymptomCheckSchema } from '../symptom-checker/schemas/symptom-check.schema';
+import { SymptomCheckerModule } from '../symptom-checker/symptom-checker.module';
+import { PetsModule } from '../pets/pets.module';
+import { HealthRecordsModule } from '../health-records/health-records.module';
+import { AppointmentsModule } from '../appointments/appointments.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Pet.name, schema: PetSchema },
-      { name: HealthRecord.name, schema: HealthRecordSchema },
-      { name: Appointment.name, schema: AppointmentSchema },
-      { name: Medication.name, schema: MedicationSchema },
-      { name: User.name, schema: UserSchema },
-      { name: SymptomCheck.name, schema: SymptomCheckSchema },
-    ]),
-  ],
+  imports: [SymptomCheckerModule, PetsModule, HealthRecordsModule, AppointmentsModule],
   controllers: [AiChatController],
-  providers: [AiChatService, SymptomCheckerService, PetsService, HealthRecordsService, AppointmentsService],
+  providers: [AiChatService],
 })
-export class AiChatModule {}
+export class AiChatModule { }

@@ -1,80 +1,82 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Medication, MedicationDocument } from './schemas/medication.schema';
+import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateMedicationDto } from './dto/create-medication.dto';
 import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { PetsService } from '../pets/pets.service';
 import { ValidationUtil } from '../../common/utils/validation.util';
 import { DatabaseErrorHandler } from '../../common/utils/database-error.handler';
+import { MedicationFrequency } from '@prisma/client';
 
 @Injectable()
 export class MedicationsService {
   constructor(
-    @InjectModel(Medication.name) private medicationModel: Model<MedicationDocument>,
+    private prisma: PrismaService,
     private petsService: PetsService,
-  ) {}
+  ) { }
 
-  async create(userId: string, createMedicationDto: CreateMedicationDto): Promise<Medication> {
+  async create(userId: string, createMedicationDto: CreateMedicationDto) {
     try {
-      ValidationUtil.validateObjectId(createMedicationDto.petId, 'Pet ID');
-      
       await this.petsService.findById(createMedicationDto.petId, userId);
 
-      const medicationData = {
-        ...createMedicationDto,
-        petId: new Types.ObjectId(createMedicationDto.petId),
-        startDate: ValidationUtil.validateDate(createMedicationDto.startDate, 'start date'),
-        endDate: ValidationUtil.validateOptionalDate(createMedicationDto.endDate, 'end date'),
-      };
-
-      const medication = new this.medicationModel(medicationData);
-      return await medication.save();
+      return await this.prisma.medication.create({
+        data: {
+          ...createMedicationDto,
+          frequency: createMedicationDto.frequency as MedicationFrequency,
+          startDate: ValidationUtil.validateDate(createMedicationDto.startDate, 'start date'),
+          endDate: ValidationUtil.validateOptionalDate(createMedicationDto.endDate, 'end date'),
+        },
+      });
     } catch (error) {
+      if (error instanceof NotFoundException) throw error;
       DatabaseErrorHandler.handle(error, 'Create medication');
     }
   }
 
-  async findByPet(petId: string, userId: string): Promise<Medication[]> {
+  async findByPet(petId: string, userId: string) {
     try {
-      ValidationUtil.validateObjectId(petId, 'Pet ID');
       await this.petsService.findById(petId, userId);
-      
-      return this.medicationModel.find({ petId, isActive: true }).sort({ startDate: -1 });
+      return this.prisma.medication.findMany({
+        where: { petId, isActive: true },
+        orderBy: { startDate: 'desc' },
+      });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Find medications by pet');
     }
   }
 
-  async findActive(userId: string): Promise<Medication[]> {
+  async findActive(userId: string) {
     try {
       const userPets = await this.petsService.findByOwner(userId);
-      const petIds = userPets.map(pet => pet._id);
-      
-      return this.medicationModel.find({
-        petId: { $in: petIds },
-        isActive: true,
-        isCompleted: false,
-        $or: [
-          { endDate: { $exists: false } },
-          { endDate: { $gte: new Date() } }
-        ]
-      }).populate('petId', 'name species').sort({ startDate: -1 });
+      const petIds = userPets.map(pet => pet.id);
+
+      return this.prisma.medication.findMany({
+        where: {
+          petId: { in: petIds },
+          isActive: true,
+          isCompleted: false,
+          OR: [
+            { endDate: null },
+            { endDate: { gte: new Date() } },
+          ],
+        },
+        include: { pet: { select: { name: true, species: true } } },
+        orderBy: { startDate: 'desc' },
+      });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Find active medications');
     }
   }
 
-  async findById(id: string, userId: string): Promise<Medication> {
+  async findById(id: string, userId: string) {
     try {
-      ValidationUtil.validateObjectId(id, 'Medication ID');
-      
-      const medication = await this.medicationModel.findById(id).populate('petId');
+      const medication = await this.prisma.medication.findUnique({
+        where: { id },
+        include: { pet: true },
+      });
       if (!medication) {
         throw new NotFoundException(`Medication with ID '${id}' does not exist`);
       }
-
-      await this.petsService.findById(medication.petId.toString(), userId);
+      await this.petsService.findById(medication.petId, userId);
       return medication;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -82,7 +84,7 @@ export class MedicationsService {
     }
   }
 
-  async update(id: string, userId: string, updateMedicationDto: UpdateMedicationDto): Promise<Medication> {
+  async update(id: string, userId: string, updateMedicationDto: UpdateMedicationDto) {
     try {
       await this.findById(id, userId);
 
@@ -94,25 +96,25 @@ export class MedicationsService {
         updateData.endDate = ValidationUtil.validateDate(updateMedicationDto.endDate, 'end date');
       }
 
-      return this.medicationModel.findByIdAndUpdate(id, updateData, { new: true });
+      return this.prisma.medication.update({ where: { id }, data: updateData });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Update medication');
     }
   }
 
-  async delete(id: string, userId: string): Promise<Medication> {
+  async delete(id: string, userId: string) {
     try {
       await this.findById(id, userId);
-      return this.medicationModel.findByIdAndUpdate(id, { isActive: false }, { new: true });
+      return this.prisma.medication.update({ where: { id }, data: { isActive: false } });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Delete medication');
     }
   }
 
-  async markCompleted(id: string, userId: string): Promise<Medication> {
+  async markCompleted(id: string, userId: string) {
     try {
       await this.findById(id, userId);
-      return this.medicationModel.findByIdAndUpdate(id, { isCompleted: true }, { new: true });
+      return this.prisma.medication.update({ where: { id }, data: { isCompleted: true } });
     } catch (error) {
       DatabaseErrorHandler.handle(error, 'Mark medication completed');
     }

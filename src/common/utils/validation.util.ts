@@ -1,11 +1,18 @@
 import { BadRequestException } from '@nestjs/common';
-import { Types } from 'mongoose';
+
+// UUID v4 regex pattern
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class ValidationUtil {
-  static validateObjectId(id: string, fieldName = 'ID'): void {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException(`Invalid ${fieldName} format: '${id}' is not a valid MongoDB ObjectId`);
+  static validateId(id: string, fieldName = 'ID'): void {
+    if (!id || !UUID_REGEX.test(id)) {
+      throw new BadRequestException(`Invalid ${fieldName} format: '${id}' is not a valid UUID`);
     }
+  }
+
+  /** @deprecated Use validateId instead */
+  static validateObjectId(id: string, fieldName = 'ID'): void {
+    this.validateId(id, fieldName);
   }
 
   static validateDate(dateString: string, fieldName = 'date'): Date {

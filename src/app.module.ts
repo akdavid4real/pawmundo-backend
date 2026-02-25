@@ -1,13 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-
-import { BullModule } from '@nestjs/bull';
-
-// Configuration
-import { MongodbConfig } from '@config/mongodb.config';
-import { RedisConfig } from '@config/redis.config';
-import { CloudinaryConfig } from '@config/cloudinary.config';
 
 // Modules
 import { AuthModule } from '@modules/auth/auth.module';
@@ -26,33 +18,22 @@ import { NotificationsModule } from '@modules/notifications/notifications.module
 import { ActivityTrackingModule } from '@modules/activity-tracking/activity-tracking.module';
 import { EventsModule } from '@modules/events/events.module';
 import { SeedModule } from '@modules/seed/seed.module';
+import { PrismaModule } from '@modules/prisma/prisma.module';
+import { SupabaseModule } from '@modules/supabase/supabase.module';
+
+// Middleware
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [MongodbConfig, RedisConfig, CloudinaryConfig],
-    }),
-    MongooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/pawpromise',
-        maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE || '10'),
-        minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE || '2'),
-        maxIdleTimeMS: parseInt(process.env.MONGODB_MAX_IDLE_TIME || '30000'),
-        serverSelectionTimeoutMS: parseInt(process.env.MONGODB_SERVER_SELECTION_TIMEOUT || '5000'),
-        socketTimeoutMS: parseInt(process.env.MONGODB_SOCKET_TIMEOUT || '45000'),
-      }),
-    }),
-    BullModule.forRootAsync({
-      useFactory: () => ({
-        redis: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT) || 6379,
-        },
-      }),
     }),
 
-    
+    // Infrastructure Modules
+    PrismaModule,
+    SupabaseModule,
+
     // Domain Modules
     AuthModule,
     UserModule,
@@ -72,4 +53,10 @@ import { SeedModule } from '@modules/seed/seed.module';
     SeedModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

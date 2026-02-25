@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User } from '../auth/schemas/user.schema';
+import { PrismaService } from '@modules/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(private prisma: PrismaService) { }
 
-  async findById(id: string): Promise<User> {
-    return this.userModel.findById(id).select('-password').exec();
+  async findById(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      omit: { password: true },
+    });
   }
 
-  async updateProfile(id: string, updateData: Partial<User>): Promise<User> {
-    return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password').exec();
+  async updateProfile(id: string, updateData: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      omit: { password: true },
+    });
   }
 }
