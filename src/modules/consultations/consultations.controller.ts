@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ConsultationsService } from './consultations.service';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
@@ -255,5 +255,20 @@ export class ConsultationsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
   checkAssignmentStatus(@Param('id') id: string, @Request() req) {
     return this.consultationsService.isConsultationAssignedToVet(id, req.user.id);
+  }
+
+  @Put(':id/messages/read')
+  @ApiOperation({ summary: 'Mark messages as read in a consultation' })
+  @ApiParam({ name: 'id', description: 'Consultation ID' })
+  @ApiBody({ schema: { properties: { messageIds: { type: 'array', items: { type: 'string' } } } } })
+  @ApiResponse({ status: 200, description: 'Messages marked as read' })
+  @ApiResponse({ status: 404, description: 'Consultation not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  markMessagesAsRead(
+    @Param('id') id: string,
+    @Request() req,
+    @Body('messageIds') messageIds?: string[],
+  ) {
+    return this.consultationsService.markMessagesAsRead(id, req.user.id, messageIds);
   }
 }

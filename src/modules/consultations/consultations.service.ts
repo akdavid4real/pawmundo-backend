@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException, forwardRef, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@modules/prisma/prisma.service';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { PetsService } from '../pets/pets.service';
-import { ConsultationsGateway } from './consultations.gateway';
 import { v4 as uuidv4 } from 'uuid';
 import { ConsultationStatus, Prisma } from '@prisma/client';
 
@@ -12,8 +11,6 @@ export class ConsultationsService {
   constructor(
     private prisma: PrismaService,
     private petsService: PetsService,
-    @Inject(forwardRef(() => ConsultationsGateway))
-    private consultationsGateway: ConsultationsGateway,
   ) { }
 
   async create(userId: string, createConsultationDto: CreateConsultationDto) {
@@ -53,7 +50,10 @@ export class ConsultationsService {
   async findById(id: string, userId: string) {
     const consultation = await this.prisma.consultation.findUnique({
       where: { id },
-      include: { pet: true },
+      include: {
+        pet: true,
+        messages: { orderBy: { createdAt: 'asc' } },
+      },
     });
 
     if (!consultation) {
@@ -225,6 +225,7 @@ export class ConsultationsService {
       include: {
         user: { select: { firstName: true, lastName: true, email: true, phone: true } },
         pet: { select: { name: true, species: true, breed: true, age: true, weight: true } },
+        messages: { orderBy: { createdAt: 'asc' } },
       },
     });
 
@@ -255,6 +256,10 @@ export class ConsultationsService {
   async sendMessage(consultationId: string, userId: string, message: string, isVet: boolean = false) {
     const consultation = await this.prisma.consultation.findFirst({
       where: { id: consultationId, isActive: true },
+      include: {
+        messages: { orderBy: { createdAt: 'asc' } },
+        pet: { select: { name: true, species: true } },
+      },
     });
 
     if (!consultation) {
@@ -278,31 +283,22 @@ export class ConsultationsService {
       },
     });
 
-    // Update consultation metadata
-    const updateData: Prisma.ConsultationUncheckedUpdateInput = { lastMessageAt: new Date() };
-    if (!isVet) {
-      updateData.unreadCount = { increment: 1 };
-    }
-    await this.prisma.consultation.update({
+    // Update consultation metadata (fire and forget — don't await)
+    this.prisma.consultation.update({
       where: { id: consultationId },
-      data: updateData,
-    });
-
-    // Emit WebSocket event for real-time updates
-    this.consultationsGateway.notifyConsultationUpdated(consultationId, {
-      newMessage,
-      unreadCount: (consultation.unreadCount || 0) + (isVet ? 0 : 1),
-      lastMessageAt: new Date(),
-    });
-
-    return this.prisma.consultation.findUnique({
-      where: { id: consultationId },
-      include: {
-        user: { select: { firstName: true, lastName: true, email: true, phone: true } },
-        pet: { select: { name: true, species: true, breed: true, age: true, weight: true } },
-        messages: { orderBy: { createdAt: 'asc' } },
+      data: {
+        lastMessageAt: new Date(),
+        ...(!isVet ? { unreadCount: { increment: 1 } } : {}),
       },
-    });
+    }).catch(e => console.error('Failed to update consultation metadata:', e));
+
+    // Supabase Realtime will automatically pick up this INSERT
+    // Return the consultation with all messages including the new one
+    return {
+      ...consultation,
+      messages: [...consultation.messages, newMessage],
+      lastMessageAt: new Date(),
+    };
   }
 
   // Debug method
@@ -360,10 +356,7 @@ export class ConsultationsService {
         data: { unreadCount: 0 },
       });
 
-      this.consultationsGateway.notifyConsultationUpdated(consultationId, {
-        messagesRead: true,
-        messageIds: messagesToUpdate.map(m => m.id),
-      });
+      // Supabase Realtime will pick up the UPDATE on consultation_messages
     }
 
     return this.prisma.consultation.findUnique({

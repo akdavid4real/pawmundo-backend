@@ -38,7 +38,6 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
       client.data.userId = payload.sub;
       client.data.role = payload.role;
 
-      console.log(`Client connected: ${client.id}, userId: ${payload.sub}, role: ${payload.role}`);
     } catch (error) {
       console.error('Connection auth error:', error.message);
       client.disconnect();
@@ -49,7 +48,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     if (client.data.role === 'vet') {
       this.vetConnections.delete(client.data.userId);
     }
-    console.log(`Client disconnected: ${client.id}`);
+
   }
 
   @SubscribeMessage('consultation:register')
@@ -72,7 +71,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     try {
       const roomName = `consultation:${data.consultationId}`;
       await client.join(roomName);
-      console.log(`Client ${client.id} joined room ${roomName}`);
+
       return { success: true, message: `Joined consultation ${data.consultationId}` };
     } catch (error) {
       return { success: false, error: error.message };
@@ -182,7 +181,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   notifyConsultationUpdated(consultationId: string, updates: any) {
     const roomName = `consultation:${consultationId}`;
-    console.log(`Emitting consultation:updated to room ${roomName}:`, updates);
+
     this.server.to(roomName).emit('consultation:updated', { consultationId, ...updates });
   }
 }
