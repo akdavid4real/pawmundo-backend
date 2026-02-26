@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
@@ -90,7 +91,7 @@ export class PetsController {
   })
   @Post()
   async create(@Request() req, @Body() createPetDto: CreatePetDto) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const petData = {
       ...createPetDto,
       ownerId: userId,
@@ -146,10 +147,87 @@ export class PetsController {
     }
   })
   @Get()
+  @Get('my-pets')
   async findMyPets(@Request() req, @Query('species') species?: string) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     console.log('🐾 Finding pets for userId:', userId);
     return this.petsService.findByOwner(userId, species);
+  }
+
+  // ── Profile Image ────────────────────────────────
+
+  @Post(':id/profile-image')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a pet profile image' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile image uploaded successfully' })
+  async uploadProfileImage(
+    @Param('id') id: string,
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded.');
+    }
+    const userId = req.user.id;
+    return this.petsService.uploadProfileImage(id, userId, file.buffer, file.mimetype);
+  }
+
+  // ── Photo Management ─────────────────────────────
+
+  @Post(':id/photos')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a photo for a pet' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        caption: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Photo uploaded successfully' })
+  async uploadPhoto(
+    @Param('id') id: string,
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('caption') caption?: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded. Please send a file with the field name "file".');
+    }
+    const userId = req.user.id;
+    return this.petsService.uploadPhoto(id, userId, file.buffer, file.mimetype, caption);
+  }
+
+  @Get(':id/photos')
+  @ApiOperation({ summary: 'Get all photos for a pet' })
+  @ApiResponse({ status: 200, description: 'Photos retrieved successfully' })
+  async getPhotos(@Param('id') id: string, @Request() req) {
+    const userId = req.user.id;
+    return this.petsService.getPhotos(id, userId);
+  }
+
+  @Delete(':id/photos/:photoId')
+  @ApiOperation({ summary: 'Delete a pet photo' })
+  @ApiResponse({ status: 200, description: 'Photo deleted successfully' })
+  async deletePhoto(
+    @Param('id') id: string,
+    @Param('photoId') photoId: string,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    return this.petsService.deletePhoto(photoId, userId);
   }
 
   @ApiOperation({
@@ -235,7 +313,7 @@ export class PetsController {
   })
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     return this.petsService.findById(id, userId);
   }
 
@@ -271,7 +349,7 @@ export class PetsController {
   @ApiResponse({ status: 404, description: 'Pet not found' })
   @Put(':id')
   async update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto, @Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const petData: any = { ...updatePetDto };
     if (updatePetDto.dateOfBirth) {
       petData.dateOfBirth = new Date(updatePetDto.dateOfBirth);
@@ -312,7 +390,7 @@ export class PetsController {
   @ApiResponse({ status: 400, description: 'Invalid health status' })
   @Put(':id/health-status')
   async updateHealthStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     return this.petsService.updateHealthStatus(id, userId, status);
   }
 
@@ -347,7 +425,7 @@ export class PetsController {
   @ApiResponse({ status: 404, description: 'Pet not found' })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     return this.petsService.delete(id, userId);
   }
 }

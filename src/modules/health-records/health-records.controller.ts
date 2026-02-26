@@ -22,7 +22,7 @@ export class HealthRecordsController {
       date: new Date(createDto.date),
       nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : undefined,
     };
-    return this.healthRecordsService.create(req.user.userId, healthRecordData);
+    return this.healthRecordsService.create(req.user.id, healthRecordData);
   }
 
   @ApiOperation({ summary: 'Get health records by pet' })
@@ -30,35 +30,35 @@ export class HealthRecordsController {
   @ApiQuery({ name: 'type', required: false, description: 'Filter by record type' })
   @Get('pet/:petId')
   async findByPet(@Param('petId') petId: string, @Query('type') type: string, @Request() req) {
-    return this.healthRecordsService.findByPet(petId, req.user.userId, type);
+    return this.healthRecordsService.findByPet(petId, req.user.id, type);
   }
 
   @ApiOperation({ summary: 'Get upcoming reminders' })
   @ApiResponse({ status: 200, description: 'List of upcoming health reminders' })
   @Get('reminders/upcoming')
   async getUpcomingReminders(@Request() req) {
-    return this.healthRecordsService.getUpcomingReminders(req.user.userId);
+    return this.healthRecordsService.getUpcomingReminders(req.user.id);
   }
 
   @ApiOperation({ summary: 'Get vaccination history' })
   @ApiResponse({ status: 200, description: 'Vaccination records for pet' })
   @Get('pet/:petId/vaccinations')
   async getVaccinations(@Param('petId') petId: string, @Request() req) {
-    return this.healthRecordsService.getVaccinations(petId, req.user.userId);
+    return this.healthRecordsService.getVaccinations(petId, req.user.id);
   }
 
   @ApiOperation({ summary: 'Get health summary for pet' })
   @ApiResponse({ status: 200, description: 'Health summary statistics' })
   @Get('pet/:petId/summary')
   async getHealthSummary(@Param('petId') petId: string, @Request() req) {
-    return this.healthRecordsService.getHealthSummary(petId, req.user.userId);
+    return this.healthRecordsService.getHealthSummary(petId, req.user.id);
   }
 
   @ApiOperation({ summary: 'Get health record by ID' })
   @ApiResponse({ status: 200, description: 'Health record details' })
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
-    return this.healthRecordsService.findById(id, req.user.userId);
+    return this.healthRecordsService.findById(id, req.user.id);
   }
 
   @ApiOperation({ summary: 'Update health record' })
@@ -72,35 +72,35 @@ export class HealthRecordsController {
     if (updateDto.nextDueDate) {
       healthRecordData.nextDueDate = new Date(updateDto.nextDueDate);
     }
-    return this.healthRecordsService.update(id, req.user.userId, healthRecordData);
+    return this.healthRecordsService.update(id, req.user.id, healthRecordData);
   }
 
   @ApiOperation({ summary: 'Delete health record' })
   @ApiResponse({ status: 200, description: 'Health record deleted successfully' })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
-    return this.healthRecordsService.delete(id, req.user.userId);
+    return this.healthRecordsService.delete(id, req.user.id);
   }
 
   @ApiOperation({ summary: 'Get overdue reminders' })
   @ApiResponse({ status: 200, description: 'List of overdue health reminders' })
   @Get('reminders/overdue')
   async getOverdueReminders(@Request() req) {
-    return this.healthRecordsService.getOverdueReminders(req.user.userId);
+    return this.healthRecordsService.getOverdueReminders(req.user.id);
   }
 
   @ApiOperation({ summary: 'Add attachment to health record' })
   @ApiResponse({ status: 200, description: 'Attachment added successfully' })
   @Post(':id/attachments')
   async addAttachment(@Param('id') id: string, @Body('url') url: string, @Request() req) {
-    return this.healthRecordsService.addAttachment(id, req.user.userId, url);
+    return this.healthRecordsService.addAttachment(id, req.user.id, url);
   }
 
   @ApiOperation({ summary: 'Remove attachment from health record' })
   @ApiResponse({ status: 200, description: 'Attachment removed successfully' })
   @Delete(':id/attachments')
   async removeAttachment(@Param('id') id: string, @Body('url') url: string, @Request() req) {
-    return this.healthRecordsService.removeAttachment(id, req.user.userId, url);
+    return this.healthRecordsService.removeAttachment(id, req.user.id, url);
   }
 
   @ApiOperation({ summary: 'Get health records by date range' })
@@ -116,7 +116,7 @@ export class HealthRecordsController {
   ) {
     return this.healthRecordsService.getRecordsByDateRange(
       petId,
-      req.user.userId,
+      req.user.id,
       new Date(startDate),
       new Date(endDate),
     );
@@ -126,6 +126,6 @@ export class HealthRecordsController {
   @ApiResponse({ status: 200, description: 'Health analytics and statistics' })
   @Get('analytics')
   async getHealthAnalytics(@Request() req) {
-    return this.healthRecordsService.getHealthAnalytics(req.user.userId);
+    return this.healthRecordsService.getHealthAnalytics(req.user.id);
   }
 }

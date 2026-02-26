@@ -33,7 +33,8 @@
     },
     "types": [
       "jest",
-      "node"
+      "node",
+      "multer"
     ]
   },
   "exclude": [

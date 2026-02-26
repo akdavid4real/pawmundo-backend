@@ -9,12 +9,12 @@ import { AiChatDto } from './dto/ai-chat.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class AiChatController {
-  constructor(private readonly aiChatService: AiChatService) {}
+  constructor(private readonly aiChatService: AiChatService) { }
 
   @Post()
   @ApiOperation({ summary: 'General AI chat with Mistral AI' })
   async chat(@Request() req, @Body() aiChatDto: AiChatDto) {
-    return this.aiChatService.chat(req.user.userId, aiChatDto);
+    return this.aiChatService.chat(req.user.id, aiChatDto);
   }
 
   @Post('typing')
@@ -26,6 +26,6 @@ export class AiChatController {
   @Post('offline')
   @ApiOperation({ summary: 'Get offline response with user context' })
   async getOfflineResponse(@Request() req, @Body() aiChatDto: AiChatDto) {
-    return this.aiChatService.getOfflineResponse(req.user.userId, aiChatDto.message);
+    return this.aiChatService.getOfflineResponse(req.user.id, aiChatDto.message);
   }
 }

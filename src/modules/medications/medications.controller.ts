@@ -53,7 +53,7 @@ export class MedicationsController {
   @ApiResponse({ status: 400, description: 'Invalid medication data' })
   @Post()
   create(@Request() req, @Body() createMedicationDto: CreateMedicationDto) {
-    return this.medicationsService.create(req.user.userId, createMedicationDto);
+    return this.medicationsService.create(req.user.id, createMedicationDto);
   }
 
   @Get('active')
@@ -91,7 +91,7 @@ export class MedicationsController {
   })
   @Get('active')
   findActive(@Request() req) {
-    return this.medicationsService.findActive(req.user.userId);
+    return this.medicationsService.findActive(req.user.id);
   }
 
   @Get('pet/:petId')
@@ -103,7 +103,7 @@ export class MedicationsController {
   @ApiResponse({ status: 200, description: 'Medications retrieved successfully' })
   @Get('pet/:petId')
   findByPet(@Param('petId') petId: string, @Request() req) {
-    return this.medicationsService.findByPet(petId, req.user.userId);
+    return this.medicationsService.findByPet(petId, req.user.id);
   }
 
   @Get(':id')
@@ -113,7 +113,7 @@ export class MedicationsController {
   @ApiResponse({ status: 404, description: 'Medication not found' })
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req) {
-    return this.medicationsService.findById(id, req.user.userId);
+    return this.medicationsService.findById(id, req.user.id);
   }
 
   @Patch(':id')
@@ -125,7 +125,7 @@ export class MedicationsController {
   @ApiResponse({ status: 200, description: 'Medication updated successfully' })
   @Patch(':id')
   update(@Param('id') id: string, @Request() req, @Body() updateMedicationDto: UpdateMedicationDto) {
-    return this.medicationsService.update(id, req.user.userId, updateMedicationDto);
+    return this.medicationsService.update(id, req.user.id, updateMedicationDto);
   }
 
   @Patch(':id/complete')
@@ -144,7 +144,7 @@ export class MedicationsController {
   @ApiResponse({ status: 200, description: 'Medication marked as completed' })
   @Patch(':id/complete')
   markCompleted(@Param('id') id: string, @Request() req) {
-    return this.medicationsService.markCompleted(id, req.user.userId);
+    return this.medicationsService.markCompleted(id, req.user.id);
   }
 
   @Delete(':id')
@@ -156,6 +156,6 @@ export class MedicationsController {
   @ApiResponse({ status: 200, description: 'Medication deleted successfully' })
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
-    return this.medicationsService.delete(id, req.user.userId);
+    return this.medicationsService.delete(id, req.user.id);
   }
 }

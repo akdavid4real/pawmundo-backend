@@ -10,13 +10,13 @@ import { CreateReplyDto } from './dto/create-reply.dto';
 @Controller('forum')
 @UseGuards(JwtAuthGuard)
 export class ForumController {
-  constructor(private readonly forumService: ForumService) {}
+  constructor(private readonly forumService: ForumService) { }
 
   @ApiOperation({ summary: 'Create a new forum post' })
   @ApiResponse({ status: 201, description: 'Post created successfully' })
   @Post()
   async create(@Request() req, @Body() createForumPostDto: CreateForumPostDto) {
-    return this.forumService.create(createForumPostDto, req.user._id);
+    return this.forumService.create(createForumPostDto, req.user.id);
   }
 
   @ApiOperation({ summary: 'Get all forum posts' })
@@ -44,20 +44,20 @@ export class ForumController {
   @ApiResponse({ status: 200, description: 'Like toggled successfully' })
   @Post(':id/like')
   async toggleLike(@Param('id') id: string, @Request() req) {
-    return this.forumService.toggleLike(id, req.user._id);
+    return this.forumService.toggleLike(id, req.user.id);
   }
 
   @ApiOperation({ summary: 'Add reply to a forum post' })
   @ApiResponse({ status: 201, description: 'Reply added successfully' })
   @Post(':id/replies')
   async addReply(@Param('id') id: string, @Body() createReplyDto: CreateReplyDto, @Request() req) {
-    return this.forumService.addReply(id, createReplyDto, req.user._id);
+    return this.forumService.addReply(id, createReplyDto, req.user.id);
   }
 
   @ApiOperation({ summary: 'Delete forum post' })
   @ApiResponse({ status: 200, description: 'Post deleted successfully' })
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
-    return this.forumService.delete(id, req.user._id);
+    return this.forumService.delete(id, req.user.id);
   }
 }

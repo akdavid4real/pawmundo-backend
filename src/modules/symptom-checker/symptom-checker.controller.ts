@@ -15,24 +15,24 @@ class ChatMessageDto {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class SymptomCheckerController {
-  constructor(private readonly symptomCheckerService: SymptomCheckerService) {}
+  constructor(private readonly symptomCheckerService: SymptomCheckerService) { }
 
   @Post('check')
   @ApiOperation({ summary: 'AI-powered symptom analysis for pets' })
   async checkSymptoms(@Request() req, @Body() symptomCheckDto: SymptomCheckDto) {
-    return this.symptomCheckerService.checkSymptoms(req.user.userId, symptomCheckDto);
+    return this.symptomCheckerService.checkSymptoms(req.user.id, symptomCheckDto);
   }
 
   @Post('chat')
   @ApiOperation({ summary: 'Chat with Dr. Woofson AI veterinarian' })
   async chatWithAI(@Request() req, @Body() chatDto: ChatMessageDto) {
-    const response = await this.symptomCheckerService.chatWithAI(req.user.userId, chatDto.message);
+    const response = await this.symptomCheckerService.chatWithAI(req.user.id, chatDto.message);
     return { response };
   }
 
   @Get('history')
   @ApiOperation({ summary: 'Get symptom check history' })
   async getHistory(@Request() req) {
-    return this.symptomCheckerService.getHistory(req.user.userId);
+    return this.symptomCheckerService.getHistory(req.user.id);
   }
 }

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@modules/prisma/prisma.service';
 import { HealthStatus } from '@prisma/client';
+import { SupabaseStorageService, STORAGE_BUCKETS } from '../supabase/supabase-storage.service';
 
 @Injectable()
 export class PetsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private readonly storageService: SupabaseStorageService,
+  ) { }
 
   async create(petData: any) {
     return this.prisma.pet.create({ data: petData });
@@ -68,5 +72,78 @@ export class PetsService {
         isActive: true,
       },
     });
+  }
+
+  // ── Profile Image ────────────────────────────────
+
+  async uploadProfileImage(petId: string, ownerId: string, file: Buffer, mimetype: string) {
+    await this.findById(petId, ownerId);
+
+    const fileExt = mimetype.split('/')[1] || 'png';
+    const filePath = `${petId}/profile_${Date.now()}.${fileExt}`;
+
+    const publicUrl = await this.storageService.uploadFile(
+      STORAGE_BUCKETS.PET_IMAGES.name,
+      filePath,
+      file,
+      mimetype,
+    );
+
+    return this.prisma.pet.update({
+      where: { id: petId },
+      data: { profileImage: publicUrl },
+    });
+  }
+
+  // ── Photo Management ─────────────────────────────
+
+  async uploadPhoto(petId: string, ownerId: string, file: Buffer, mimetype: string, caption?: string) {
+    await this.findById(petId, ownerId);
+
+    const fileExt = mimetype.split('/')[1] || 'png';
+    const filePath = `${petId}/${Date.now()}.${fileExt}`;
+
+    const publicUrl = await this.storageService.uploadFile(
+      STORAGE_BUCKETS.PET_IMAGES.name,
+      filePath,
+      file,
+      mimetype,
+    );
+
+    return this.prisma.petPhoto.create({
+      data: { petId, url: publicUrl, caption },
+    });
+  }
+
+  async getPhotos(petId: string, ownerId: string) {
+    await this.findById(petId, ownerId);
+    return this.prisma.petPhoto.findMany({
+      where: { petId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deletePhoto(photoId: string, ownerId: string) {
+    const photo = await this.prisma.petPhoto.findUnique({
+      where: { id: photoId },
+      include: { pet: true },
+    });
+
+    if (!photo) {
+      throw new NotFoundException(`Photo not found`);
+    }
+
+    if (photo.pet.ownerId !== ownerId) {
+      throw new ForbiddenException(`Access denied`);
+    }
+
+    // Extract storage path from the public URL
+    const urlParts = photo.url.split(`/${STORAGE_BUCKETS.PET_IMAGES.name}/`);
+    if (urlParts.length > 1) {
+      await this.storageService.deleteFile(STORAGE_BUCKETS.PET_IMAGES.name, urlParts[1]);
+    }
+
+    await this.prisma.petPhoto.delete({ where: { id: photoId } });
+    return { message: 'Photo deleted successfully' };
   }
 }

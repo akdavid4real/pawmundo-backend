@@ -14,10 +14,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 
 export class ConsultationsController {
-  constructor(private readonly consultationsService: ConsultationsService) {}
+  constructor(private readonly consultationsService: ConsultationsService) { }
 
   @Post()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create a new consultation request',
     description: `
       Request a virtual consultation with a veterinarian.
@@ -39,8 +39,8 @@ export class ConsultationsController {
       - Expected duration
     `
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Consultation created successfully',
     schema: {
       example: {
@@ -61,7 +61,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(@Request() req, @Body() createConsultationDto: CreateConsultationDto) {
-    return this.consultationsService.create(req.user.userId, createConsultationDto);
+    return this.consultationsService.create(req.user.id, createConsultationDto);
   }
 
   @Get()
@@ -71,9 +71,9 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Request() req, @Query('status') status?: string) {
     if (status) {
-      return this.consultationsService.findByStatus(req.user.userId, status);
+      return this.consultationsService.findByStatus(req.user.id, status);
     }
-    return this.consultationsService.findAll(req.user.userId);
+    return this.consultationsService.findAll(req.user.id);
   }
 
   @Get('upcoming')
@@ -81,7 +81,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 200, description: 'Upcoming consultations retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getUpcoming(@Request() req) {
-    return this.consultationsService.getUpcoming(req.user.userId);
+    return this.consultationsService.getUpcoming(req.user.id);
   }
 
 
@@ -103,7 +103,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
   getVetActive(@Request() req) {
-    return this.consultationsService.getVetActive(req.user.userId);
+    return this.consultationsService.getVetActive(req.user.id);
   }
 
   @Get('vet/history')
@@ -113,7 +113,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
   getVetHistory(@Request() req) {
-    return this.consultationsService.getVetHistory(req.user.userId);
+    return this.consultationsService.getVetHistory(req.user.id);
   }
 
   @Get('vet/:id')
@@ -136,7 +136,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findOne(@Param('id') id: string, @Request() req) {
-    return this.consultationsService.findById(id, req.user.userId);
+    return this.consultationsService.findById(id, req.user.id);
   }
 
   @Patch(':id')
@@ -147,7 +147,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   update(@Param('id') id: string, @Request() req, @Body() updateConsultationDto: UpdateConsultationDto) {
-    return this.consultationsService.update(id, req.user.userId, updateConsultationDto);
+    return this.consultationsService.update(id, req.user.id, updateConsultationDto);
   }
 
   @Patch(':id/cancel')
@@ -158,53 +158,53 @@ export class ConsultationsController {
   @ApiResponse({ status: 400, description: 'Cannot cancel consultation in current status' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   cancel(@Param('id') id: string, @Request() req) {
-    return this.consultationsService.cancel(id, req.user.userId);
+    return this.consultationsService.cancel(id, req.user.id);
   }
 
   @Patch(':id/start')
   @ApiOperation({ summary: 'Start a consultation session with meeting link' })
   @ApiParam({ name: 'id', description: 'Consultation ID' })
-  @ApiBody({ 
-    schema: { 
+  @ApiBody({
+    schema: {
       type: 'object',
-      properties: { 
+      properties: {
         meetingLink: { type: 'string', example: 'https://meet.example.com/room/123' }
       },
       required: ['meetingLink']
-    } 
+    }
   })
   @ApiResponse({ status: 200, description: 'Consultation started successfully' })
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 400, description: 'Cannot start consultation in current status' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   startConsultation(@Param('id') id: string, @Request() req, @Body('meetingLink') meetingLink: string) {
-    return this.consultationsService.startConsultation(id, req.user.userId, meetingLink);
+    return this.consultationsService.startConsultation(id, req.user.id, meetingLink);
   }
 
   @Patch(':id/complete')
   @ApiOperation({ summary: 'Complete a consultation with notes and prescription' })
   @ApiParam({ name: 'id', description: 'Consultation ID' })
-  @ApiBody({ 
-    schema: { 
+  @ApiBody({
+    schema: {
       type: 'object',
-      properties: { 
+      properties: {
         notes: { type: 'string', example: 'Patient responded well to treatment' },
         prescription: { type: 'string', example: 'Amoxicillin 500mg twice daily for 7 days' }
       },
       required: ['notes']
-    } 
+    }
   })
   @ApiResponse({ status: 200, description: 'Consultation completed successfully' })
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 400, description: 'Cannot complete consultation in current status' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   completeConsultation(
-    @Param('id') id: string, 
-    @Request() req, 
+    @Param('id') id: string,
+    @Request() req,
     @Body('notes') notes: string,
     @Body('prescription') prescription?: string
   ) {
-    return this.consultationsService.completeConsultation(id, req.user.userId, notes, prescription);
+    return this.consultationsService.completeConsultation(id, req.user.id, notes, prescription);
   }
 
   @Post(':id/accept')
@@ -217,7 +217,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
   acceptConsultation(@Param('id') id: string, @Request() req) {
-    return this.consultationsService.acceptConsultation(id, req.user.userId);
+    return this.consultationsService.acceptConsultation(id, req.user.id);
   }
 
   @Post(':id/release')
@@ -229,7 +229,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 403, description: 'Forbidden - Not assigned to this vet' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   releaseConsultation(@Param('id') id: string, @Request() req) {
-    return this.consultationsService.releaseConsultation(id, req.user.userId);
+    return this.consultationsService.releaseConsultation(id, req.user.id);
   }
 
   @Post(':id/messages')
@@ -242,7 +242,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   sendMessage(@Param('id') id: string, @Request() req, @Body('message') message: string) {
     const isVet = req.user.role === 'vet';
-    return this.consultationsService.sendMessage(id, req.user.userId, message, isVet);
+    return this.consultationsService.sendMessage(id, req.user.id, message, isVet);
   }
 
   @Get(':id/assignment-status')
@@ -254,6 +254,6 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
   checkAssignmentStatus(@Param('id') id: string, @Request() req) {
-    return this.consultationsService.isConsultationAssignedToVet(id, req.user.userId);
+    return this.consultationsService.isConsultationAssignedToVet(id, req.user.id);
   }
 }

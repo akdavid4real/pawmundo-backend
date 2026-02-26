@@ -104,11 +104,25 @@ model Pet {
   notifications         Notification[]
   events                Event[]
   symptomChecks         SymptomCheck[]
+  photos                PetPhoto[]
 
   @@index([ownerId, isActive])
   @@index([ownerId, species, isActive])
   @@index([ownerId, healthStatus, isActive])
   @@map("pets")
+}
+
+model PetPhoto {
+  id        String   @id @default(uuid())
+  petId     String
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  pet       Pet      @relation(fields: [petId], references: [id])
+
+  @@index([petId, createdAt(sort: Desc)])
+  @@map("pet_photos")
 }
 
 // ─────────────────────────────────────────────────

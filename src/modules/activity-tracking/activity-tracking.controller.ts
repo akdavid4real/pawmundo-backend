@@ -90,7 +90,7 @@ export class ActivityTrackingController {
   })
   @Post()
   async create(@Request() req, @Body() createActivityDto: CreateActivityDto) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user.id;
     return this.activityTrackingService.create(createActivityDto, userId);
   }
 

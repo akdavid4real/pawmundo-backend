@@ -50,26 +50,23 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message = this.getMongoErrorMessage(exception);
       suggestions = this.getMongoSuggestions(exception);
     } else if (exception instanceof Error) {
-      console.log('🔥 Error details:', { name: exception.name, message: exception.message, stack: exception.stack });
+
       message = exception.message;
       suggestions = this.getGenericSuggestions(exception.message);
     } else {
-      console.log('🔥 Unknown exception type:', typeof exception, exception);
+
     }
 
-    // Log the error for debugging
-    console.log('🔥 Full exception:', exception);
-    console.log('🔥 Exception type check:', {
-      isHttpException: exception instanceof HttpException,
-      constructor: exception?.constructor?.name,
-      finalStatus: status,
-      message: message
-    });
-
-    this.logger.error(
-      `${request.method} ${request.url} - STATUS:${status} - ${message}`,
-      exception instanceof Error ? exception.stack : 'Unknown error'
-    );
+    // Log a clean one-liner for each error
+    if (status >= 500) {
+      this.logger.error(
+        `${request.method} ${request.url} - ${status} - ${message}`,
+      );
+    } else {
+      this.logger.warn(
+        `${request.method} ${request.url} - ${status} - ${message}`,
+      );
+    }
 
     // Prepare detailed error response
     const errorResponse = {
@@ -86,7 +83,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }),
     };
 
-    console.log('🔥 Sending response with status:', status);
+
     response.status(status).json(errorResponse);
   }
 
