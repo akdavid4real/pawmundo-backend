@@ -10,3 +10,4 @@ project planing.txt
 __test__
 /generated/prisma
 migration.sql
+.vercel

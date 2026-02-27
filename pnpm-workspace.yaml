@@ -1,2 +1,13 @@
+packages:
+  - .
+
 ignoredBuiltDependencies:
   - bcrypt
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - core-js
+  - msgpackr-extract
+  - prisma

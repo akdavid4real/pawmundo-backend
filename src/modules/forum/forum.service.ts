@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '@modules/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateForumPostDto } from './dto/create-forum-post.dto';
 import { UpdateForumPostDto } from './dto/update-forum-post.dto';
 import { CreateReplyDto } from './dto/create-reply.dto';

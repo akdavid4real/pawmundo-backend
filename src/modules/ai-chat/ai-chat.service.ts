@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@modules/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
 import { PetsService } from '../pets/pets.service';

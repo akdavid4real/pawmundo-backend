@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InsuranceStatus, ClaimStatus } from '@prisma/client';
-import { PrismaService } from '@modules/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateInsuranceDto } from './dto/create-insurance.dto';
 import { UpdateInsuranceDto } from './dto/update-insurance.dto';
 import { InsuranceClaimDto } from './dto/insurance-claim.dto';

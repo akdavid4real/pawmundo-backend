@@ -24,6 +24,12 @@ async function bootstrap(): Promise<NestExpressApplication> {
         transformOptions: { enableImplicitConversion: true },
     }));
 
+    // Add a root handler so Vercel doesn't return 404 on the base URL 
+    const httpAdapter = app.getHttpAdapter();
+    httpAdapter.get('/', (req, res: any) => {
+        res.redirect('/api');
+    });
+
     app.enableCors({
         origin: process.env.CORS_ORIGIN || '*',
         credentials: true,
@@ -40,6 +46,11 @@ async function bootstrap(): Promise<NestExpressApplication> {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document, {
         customSiteTitle: '🐾 PawPromise API Documentation',
+        customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+        customJs: [
+            'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js',
+        ],
         swaggerOptions: { persistAuthorization: true },
     });
 
@@ -50,6 +61,6 @@ async function bootstrap(): Promise<NestExpressApplication> {
 
 export default async function handler(req: any, res: any) {
     const app = await bootstrap();
-    const instance = app.getHttpAdapter().getInstance();
+    const instance: any = app.getHttpAdapter().getInstance();
     return instance(req, res);
 }

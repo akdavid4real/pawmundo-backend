@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '@modules/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { HealthStatus } from '@prisma/client';
 import { SupabaseStorageService, STORAGE_BUCKETS } from '../supabase/supabase-storage.service';
 
