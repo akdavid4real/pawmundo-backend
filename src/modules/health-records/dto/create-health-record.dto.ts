@@ -1,9 +1,9 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsArray, IsNumber, IsMongoId, Min, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsArray, IsNumber, IsUUID, Min, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateHealthRecordDto {
   @ApiProperty({ description: 'Pet ID' })
-  @IsMongoId()
+  @IsUUID()
   @IsNotEmpty()
   petId: string;
 

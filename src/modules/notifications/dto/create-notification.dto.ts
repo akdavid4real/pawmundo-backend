@@ -1,10 +1,10 @@
-import { IsString, IsEnum, IsOptional, IsMongoId } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateNotificationDto {
-  @IsMongoId()
+  @IsUUID()
   userId: string;
 
-  @IsMongoId()
+  @IsUUID()
   @IsOptional()
   petId?: string;
 
