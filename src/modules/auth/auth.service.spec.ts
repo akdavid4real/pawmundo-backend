@@ -1,62 +1,46 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../../common/utils/mail.service';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
 
-describe.skip('AuthService', () => {
+describe('AuthService', () => {
   let service: AuthService;
-  let userModel: any;
+  let prisma: PrismaService;
   let jwtService: JwtService;
 
   const mockUser = {
-    _id: 'user123',
+    id: 'user-uuid-123',
     email: 'test@example.com',
     password: 'hashedPassword',
     firstName: 'John',
     lastName: 'Doe',
     role: 'user',
     isEmailVerified: false,
-    save: jest.fn().mockResolvedValue(this),
-    toObject: jest.fn().mockReturnValue({
-      _id: 'user123',
-      email: 'test@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'user',
-    }),
   };
 
   const mockVetUser = {
-    _id: 'vet123',
+    id: 'vet-uuid-123',
     email: 'vet@example.com',
     password: 'hashedPassword',
     firstName: 'Dr. Sarah',
     lastName: 'Johnson',
     role: 'vet',
     isEmailVerified: false,
-    save: jest.fn().mockResolvedValue(this),
-    toObject: jest.fn().mockReturnValue({
-      _id: 'vet123',
-      email: 'vet@example.com',
-      firstName: 'Dr. Sarah',
-      lastName: 'Johnson',
-      role: 'vet',
-    }),
   };
 
-  const mockUserModel: any = jest.fn().mockImplementation((dto) => ({
-    ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: 'user123' }),
-  }));
-  
-  mockUserModel.findOne = jest.fn();
-  mockUserModel.findById = jest.fn();
-  mockUserModel.findByIdAndUpdate = jest.fn();
+  const mockPrismaService = {
+    user: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+  };
 
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mock-jwt-token'),
@@ -70,29 +54,20 @@ describe.skip('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        {
-          provide: getModelToken(User.name),
-          useValue: mockUserModel,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
-        {
-          provide: MailService,
-          useValue: mockMailService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: MailService, useValue: mockMailService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    userModel = module.get(getModelToken(User.name));
+    prisma = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
 
     jest.clearAllMocks();
   });
 
-  describe.skip('register', () => {
+  describe('register', () => {
     it('should register a new user with default role', async () => {
       const registerDto = {
         email: 'test@example.com',
@@ -101,20 +76,13 @@ describe.skip('AuthService', () => {
         lastName: 'Doe',
       };
 
-      mockUserModel.findOne.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockPrismaService.user.create.mockResolvedValue(mockUser);
 
-      const newUser = {
-        ...mockUser,
-        save: jest.fn().mockResolvedValue(mockUser),
-      };
+      const result = await service.register(registerDto as any);
 
-      userModel.prototype = newUser;
-      jest.spyOn(userModel, 'constructor' as any).mockReturnValue(newUser);
-
-      const result = await service.register(registerDto);
-
-      expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: registerDto.email });
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({ where: { email: registerDto.email } });
       expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
       expect(result).toHaveProperty('access_token');
       expect(result.user.role).toBe('user');
@@ -129,18 +97,11 @@ describe.skip('AuthService', () => {
         role: 'vet',
       };
 
-      mockUserModel.findOne.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockPrismaService.user.create.mockResolvedValue(mockVetUser);
 
-      const newVet = {
-        ...mockVetUser,
-        save: jest.fn().mockResolvedValue(mockVetUser),
-      };
-
-      userModel.prototype = newVet;
-      jest.spyOn(userModel, 'constructor' as any).mockReturnValue(newVet);
-
-      const result = await service.register(registerDto);
+      const result = await service.register(registerDto as any);
 
       expect(result.user.role).toBe('vet');
       expect(jwtService.sign).toHaveBeenCalledWith(
@@ -156,13 +117,13 @@ describe.skip('AuthService', () => {
         lastName: 'Doe',
       };
 
-      mockUserModel.findOne.mockResolvedValue(mockUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(service.register(registerDto as any)).rejects.toThrow(ConflictException);
     });
   });
 
-  describe.skip('login', () => {
+  describe('login', () => {
     it('should login user and return token with role', async () => {
       const loginDto = {
         email: 'test@example.com',
@@ -170,8 +131,8 @@ describe.skip('AuthService', () => {
       };
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockUserModel.findOne.mockResolvedValue(mockUser);
-      mockUserModel.findByIdAndUpdate.mockResolvedValue(mockUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.user.update.mockResolvedValue(mockUser);
 
       const result = await service.login(loginDto);
 
@@ -180,7 +141,7 @@ describe.skip('AuthService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({
           email: loginDto.email,
-          sub: mockUser._id,
+          sub: mockUser.id,
           role: 'user',
         }),
       );
@@ -193,8 +154,8 @@ describe.skip('AuthService', () => {
       };
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockUserModel.findOne.mockResolvedValue(mockVetUser);
-      mockUserModel.findByIdAndUpdate.mockResolvedValue(mockVetUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockVetUser);
+      mockPrismaService.user.update.mockResolvedValue(mockVetUser);
 
       const result = await service.login(loginDto);
 
@@ -213,16 +174,16 @@ describe.skip('AuthService', () => {
       };
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      mockUserModel.findOne.mockResolvedValue(mockUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
   });
 
-  describe.skip('validateUser', () => {
+  describe('validateUser', () => {
     it('should validate user credentials', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockUserModel.findOne.mockResolvedValue(mockUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await service.validateUser('test@example.com', 'Password123');
 
@@ -232,7 +193,7 @@ describe.skip('AuthService', () => {
 
     it('should return null for invalid credentials', async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      mockUserModel.findOne.mockResolvedValue(mockUser);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await service.validateUser('test@example.com', 'WrongPassword');
 
@@ -240,18 +201,21 @@ describe.skip('AuthService', () => {
     });
   });
 
-  describe.skip('findById', () => {
+  describe('findById', () => {
     it('should find user by id', async () => {
-      const userId = 'test-uuid-123';
-      const userWithId = { ...mockUser, _id: userId };
-      mockUserModel.findById.mockReturnValue({
-        select: jest.fn().mockResolvedValue(userWithId),
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+
+      const result = await service.findById('user-uuid-123');
+
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'user-uuid-123' },
+        omit: {
+          password: true,
+          emailVerificationToken: true,
+          passwordResetToken: true,
+        },
       });
-
-      const result = await service.findById(userId);
-
-      expect(mockUserModel.findById).toHaveBeenCalledWith(userId);
-      expect(result).toEqual(userWithId);
+      expect(result).toEqual(mockUser);
     });
   });
 });

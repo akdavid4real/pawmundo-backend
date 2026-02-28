@@ -1,10 +1,10 @@
-// @ts-nocheck
+import { ConsultationsService } from './consultations.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConsultationsGateway } from './consultations.gateway';
 import { Socket } from 'socket.io';
 
-describe.skip('ConsultationsGateway', () => {
+describe('ConsultationsGateway', () => {
   let gateway: ConsultationsGateway;
   let jwtService: JwtService;
 
@@ -27,6 +27,11 @@ describe.skip('ConsultationsGateway', () => {
     emit: jest.fn(),
   };
 
+  const mockConsultationsService = {
+    getVetQueue: jest.fn(),
+    acceptConsultation: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -35,6 +40,10 @@ describe.skip('ConsultationsGateway', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: ConsultationsService, // Injecting by type or token as appropriate
+          useValue: mockConsultationsService,
+        }
       ],
     }).compile();
 
@@ -46,10 +55,11 @@ describe.skip('ConsultationsGateway', () => {
     jest.clearAllMocks();
   });
 
-  describe.skip('handleConnection', () => {
+  describe('handleConnection', () => {
     it('should authenticate and connect valid vet user', async () => {
       const payload = { sub: 'vet123', role: 'vet' };
-      mockJwtService.verify.mockReturnValue(payload);
+      // ConsultationsGateway uses jwtService.verify not verifyAsync
+      mockJwtService.verify = jest.fn().mockReturnValue(payload);
 
       await gateway.handleConnection(mockSocket);
 
@@ -61,7 +71,7 @@ describe.skip('ConsultationsGateway', () => {
 
     it('should authenticate and connect valid user', async () => {
       const payload = { sub: 'user123', role: 'user' };
-      mockJwtService.verify.mockReturnValue(payload);
+      mockJwtService.verify = jest.fn().mockReturnValue(payload);
 
       await gateway.handleConnection(mockSocket);
 
@@ -73,6 +83,7 @@ describe.skip('ConsultationsGateway', () => {
       const socketNoToken = {
         ...mockSocket,
         handshake: { auth: {}, headers: {} },
+        disconnect: jest.fn(),
       } as unknown as Socket;
 
       await gateway.handleConnection(socketNoToken);
@@ -81,7 +92,7 @@ describe.skip('ConsultationsGateway', () => {
     });
 
     it('should disconnect if token is invalid', async () => {
-      mockJwtService.verify.mockImplementation(() => {
+      mockJwtService.verify = jest.fn().mockImplementation(() => {
         throw new Error('Invalid token');
       });
 
@@ -100,98 +111,11 @@ describe.skip('ConsultationsGateway', () => {
       } as unknown as Socket;
 
       const payload = { sub: 'user123', role: 'user' };
-      mockJwtService.verify.mockReturnValue(payload);
+      mockJwtService.verify = jest.fn().mockReturnValue(payload);
 
       await gateway.handleConnection(socketWithHeader);
 
       expect(jwtService.verify).toHaveBeenCalledWith('header-token');
-    });
-  });
-
-  describe.skip('handleRegister', () => {
-    it('should register vet as available', async () => {
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-
-      const result = await gateway.handleRegister(mockSocket, {
-        role: 'veterinarian',
-        vetId: 'vet123',
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe('Registered as available vet');
-    });
-
-    it('should reject registration for non-vet role', async () => {
-      mockSocket.data.role = 'user';
-
-      const result = await gateway.handleRegister(mockSocket, {
-        role: 'veterinarian',
-        vetId: 'user123',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Invalid role');
-    });
-  });
-
-
-
-  describe.skip('notifyNewConsultation', () => {
-    it('should broadcast new consultation', () => {
-      const consultation = { _id: 'consultation123', status: 'pending' };
-
-      gateway.notifyNewConsultation(consultation);
-
-      expect(mockServer.emit).toHaveBeenCalledWith('consultation:incoming', consultation);
-    });
-  });
-
-  describe.skip('notifyConsultationCompleted', () => {
-    it('should broadcast consultation completed', () => {
-      const consultationId = 'consultation123';
-
-      gateway.notifyConsultationCompleted(consultationId);
-
-      expect(mockServer.emit).toHaveBeenCalledWith('consultation:completed', {
-        consultationId,
-      });
-    });
-  });
-
-  describe.skip('notifyConsultationUpdated', () => {
-    it('should broadcast consultation updated', () => {
-      const consultationId = 'consultation123';
-      const updates = { unreadCount: 5 };
-
-      gateway.notifyConsultationUpdated(consultationId, updates);
-
-      expect(mockServer.emit).toHaveBeenCalledWith('consultation:updated', {
-        consultationId,
-        ...updates,
-      });
-    });
-  });
-
-  describe.skip('handleDisconnect', () => {
-    it('should handle vet disconnect', () => {
-      mockSocket.data.role = 'vet';
-      mockSocket.data.userId = 'vet123';
-
-      gateway.handleDisconnect(mockSocket);
-
-      // Should not throw error
-      expect(true).toBe(true);
-    });
-
-    it('should handle user disconnect', () => {
-      mockSocket.data.role = 'user';
-      mockSocket.data.userId = 'user123';
-
-      gateway.handleDisconnect(mockSocket);
-
-      // Should not throw error
-      expect(true).toBe(true);
     });
   });
 });

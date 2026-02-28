@@ -1,16 +1,17 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
-import { InsuranceService } from './insurance.service';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { InsuranceService } from './insurance.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SupabaseStorageService } from '../supabase/supabase-storage.service';
 
-describe.skip('InsuranceService', () => {
+describe('InsuranceService', () => {
   let service: InsuranceService;
-  let model: Model<Insurance>;
+  let prisma: PrismaService;
 
   const mockInsurance = {
-    _id: '507f1f77bcf86cd799439011',
-    userId: '507f1f77bcf86cd799439012',
-    petId: '507f1f77bcf86cd799439013',
+    id: 'insurance-uuid-123',
+    userId: 'user-uuid-123',
+    petId: 'pet-uuid-123',
     provider: 'PetSure',
     policyNumber: 'PS123456',
     planType: 'Comprehensive',
@@ -21,57 +22,54 @@ describe.skip('InsuranceService', () => {
     endDate: new Date('2024-12-31'),
     status: 'active',
     isActive: true,
-    save: jest.fn().mockResolvedValue(this),
   };
 
-  const mockModel: any = jest.fn().mockImplementation((dto) => ({
-    ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: '507f1f77bcf86cd799439011' }),
-  }));
-  
-  mockModel.find = jest.fn();
-  mockModel.findById = jest.fn();
-  mockModel.findByIdAndUpdate = jest.fn();
-  mockModel.create = jest.fn();
-  mockModel.exec = jest.fn();
-  mockModel.populate = jest.fn();
-  mockModel.sort = jest.fn();
-  
-  const mockClaimModel: any = jest.fn().mockImplementation((dto) => ({
-    ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: 'claim123' }),
-  }));
-  
-  mockClaimModel.find = jest.fn();
-  mockClaimModel.findById = jest.fn();
+  const mockPrismaService = {
+    insurance: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
+    insuranceClaim: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    }
+  };
+
+  const mockStorageService = {
+    uploadFile: jest.fn(),
+    deleteFile: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InsuranceService,
-        {
-          provide: getModelToken(Insurance.name),
-          useValue: mockModel,
-        },
-        {
-          provide: getModelToken('InsuranceClaim'),
-          useValue: mockClaimModel,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: SupabaseStorageService, useValue: mockStorageService },
       ],
     }).compile();
 
     service = module.get<InsuranceService>(InsuranceService);
-    model = module.get<Model<Insurance>>(getModelToken(Insurance.name));
+    prisma = module.get<PrismaService>(PrismaService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe.skip('create', () => {
+  describe('create', () => {
     it('should create insurance policy successfully', async () => {
       const createDto = {
-        petId: '507f1f77bcf86cd799439013',
+        petId: 'pet-uuid-123',
         provider: 'PetSure',
         policyNumber: 'PS123456',
         planType: 'Comprehensive',
@@ -82,17 +80,17 @@ describe.skip('InsuranceService', () => {
         endDate: '2024-12-31',
       };
 
-      jest.spyOn(model, 'constructor' as any).mockImplementationOnce(() => ({
-        save: jest.fn().mockResolvedValue(mockInsurance),
-      }));
+      mockPrismaService.insurance.create.mockResolvedValue(mockInsurance);
 
-      const result = await service.create('507f1f77bcf86cd799439012', createDto);
+      const result = await service.create('user-uuid-123', createDto as any);
+
+      expect(mockPrismaService.insurance.create).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
     it('should throw error for invalid dates', async () => {
       const createDto = {
-        petId: '507f1f77bcf86cd799439013',
+        petId: 'pet-uuid-123',
         provider: 'PetSure',
         policyNumber: 'PS123456',
         planType: 'Comprehensive',
@@ -100,50 +98,43 @@ describe.skip('InsuranceService', () => {
         deductible: 200,
         coverageLimit: 10000,
         startDate: '2024-12-31',
-        endDate: '2024-01-01',
+        endDate: '2024-01-01', // End date before start date
       };
 
-      await expect(service.create('507f1f77bcf86cd799439012', createDto))
+      await expect(service.create('user-uuid-123', createDto as any))
         .rejects.toThrow(BadRequestException);
     });
   });
 
-  describe.skip('findById', () => {
+  describe('findById', () => {
     it('should return insurance policy when found', async () => {
-      mockModel.findById.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(mockInsurance),
-        }),
-      });
+      mockPrismaService.insurance.findUnique.mockResolvedValue(mockInsurance);
 
-      const result = await service.findById('507f1f77bcf86cd799439011');
+      const result = await service.findById('insurance-uuid-123');
+
+      expect(mockPrismaService.insurance.findUnique).toHaveBeenCalledWith({
+        where: { id: 'insurance-uuid-123' },
+        include: { pet: { select: { name: true, species: true, breed: true } } },
+      });
       expect(result).toEqual(mockInsurance);
     });
 
     it('should throw NotFoundException when not found', async () => {
-      mockModel.findById.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(null),
-        }),
-      });
+      mockPrismaService.insurance.findUnique.mockResolvedValue(null);
 
-      await expect(service.findById('507f1f77bcf86cd799439011'))
+      await expect(service.findById('insurance-uuid-123'))
         .rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException for wrong user', async () => {
-      mockModel.findById.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(mockInsurance),
-        }),
-      });
+      mockPrismaService.insurance.findUnique.mockResolvedValue(mockInsurance);
 
-      await expect(service.findById('507f1f77bcf86cd799439011', 'wronguser'))
+      await expect(service.findById('insurance-uuid-123', 'wronguser'))
         .rejects.toThrow(ForbiddenException);
     });
   });
 
-  describe.skip('checkCoverage', () => {
+  describe('checkCoverage', () => {
     it('should calculate coverage correctly', async () => {
       const today = new Date();
       const pastDate = new Date(today);
@@ -153,19 +144,15 @@ describe.skip('InsuranceService', () => {
       
       const activeInsurance = {
         ...mockInsurance,
-        status: 'active',
+        status: 'insurance_active',
         startDate: pastDate,
         endDate: futureDate,
-        userId: { toString: () => '507f1f77bcf86cd799439012' }
+        userId: 'user-uuid-123'
       };
       
-      mockModel.findById.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(activeInsurance),
-        }),
-      });
+      mockPrismaService.insurance.findUnique.mockResolvedValue(activeInsurance);
 
-      const result = await service.checkCoverage('507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012', 1000);
+      const result = await service.checkCoverage('insurance-uuid-123', 'user-uuid-123', 1000);
       
       expect(result.covered).toBe(true);
       expect(result.coverageAmount).toBe(800); // 1000 - 200 deductible

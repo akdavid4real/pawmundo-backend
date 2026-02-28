@@ -1,60 +1,72 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConsultationsService } from './consultations.service';
 import { PetsService } from '../pets/pets.service';
-import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ConfigService } from '@nestjs/config';
 
-describe.skip('ConsultationsService', () => {
+describe('ConsultationsService', () => {
   let service: ConsultationsService;
-  let model: Model<Consultation>;
+  let prisma: PrismaService;
   let petsService: PetsService;
 
   const mockConsultation = {
-    _id: 'test-uuid-123',
-    userId: 'test-uuid-123',
-    petId: 'test-uuid-123',
+    id: 'test-consult-uuid',
+    userId: 'user-uuid-123',
+    petId: 'pet-uuid-123',
     status: 'pending',
     scheduledDate: new Date(),
     reason: 'Checkup',
+    symptoms: 'None',
     duration: 30,
     consultationType: 'video',
     isActive: true,
-    save: jest.fn().mockResolvedValue(this),
+    assignedVetId: null,
   };
 
-  const mockConsultationModel: any = jest.fn().mockImplementation((dto) => ({
-    ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: 'test-uuid-123' }),
-  }));
-  
-  mockConsultationModel.find = jest.fn();
-  mockConsultationModel.findOne = jest.fn();
-  mockConsultationModel.findById = jest.fn();
-  mockConsultationModel.findByIdAndUpdate = jest.fn();
-  mockConsultationModel.create = jest.fn();
-  mockConsultationModel.exec = jest.fn();
+  const mockPet = {
+    id: 'pet-uuid-123',
+    name: 'Buddy',
+    species: 'dog',
+    ownerId: 'user-uuid-123',
+  };
+
+  const mockPrismaService = {
+    consultation: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+    },
+  };
 
   const mockPetsService = {
     findById: jest.fn(),
+  };
+
+  const mockEventEmitter = {
+    emit: jest.fn(),
+  };
+
+  const mockConfigService = {
+    get: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConsultationsService,
-        {
-          provide: getModelToken(Consultation.name),
-          useValue: mockConsultationModel,
-        },
-        {
-          provide: PetsService,
-          useValue: mockPetsService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PetsService, useValue: mockPetsService },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     service = module.get<ConsultationsService>(ConsultationsService);
-    model = module.get<Model<Consultation>>(getModelToken(Consultation.name));
+    prisma = module.get<PrismaService>(PrismaService);
     petsService = module.get<PetsService>(PetsService);
   });
 
@@ -62,139 +74,132 @@ describe.skip('ConsultationsService', () => {
     jest.clearAllMocks();
   });
 
-  describe.skip('create', () => {
+  describe('create', () => {
     it('should create a consultation', async () => {
-      const userId = 'test-uuid-123';
+      const userId = 'user-uuid-123';
       const createDto = {
-        petId: 'test-uuid-123',
+        petId: 'pet-uuid-123',
         scheduledDate: new Date().toISOString(),
         reason: 'Annual checkup',
         symptoms: 'None',
       };
 
-      mockPetsService.findById.mockResolvedValue({ _id: createDto.petId });
+      mockPetsService.findById.mockResolvedValue(mockPet);
+      mockPrismaService.consultation.create.mockResolvedValue(mockConsultation);
 
-      const result = await service.create(userId, createDto);
+      const result = await service.create(userId, createDto as any);
 
       expect(mockPetsService.findById).toHaveBeenCalledWith(createDto.petId, userId);
-      expect(mockConsultationModel).toHaveBeenCalled();
+      expect(mockPrismaService.consultation.create).toHaveBeenCalled();
+      expect(result).toEqual(mockConsultation);
     });
   });
 
-  describe.skip('getVetQueue', () => {
+  describe('getVetQueue', () => {
     it('should return pending consultations', async () => {
       const mockQueue = [mockConsultation];
       
-      mockConsultationModel.find.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            sort: jest.fn().mockResolvedValue(mockQueue),
-          }),
-        }),
-      });
+      mockPrismaService.consultation.findMany.mockResolvedValue(mockQueue);
 
       const result = await service.getVetQueue();
 
-      expect(mockConsultationModel.find).toHaveBeenCalledWith({
-        status: 'pending',
-        isActive: true,
+      expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
+        where: { status: 'pending', isActive: true },
+        include: {
+          pet: { select: { name: true, species: true, breed: true, age: true } },
+          user: { select: { firstName: true, lastName: true, email: true } }
+        },
+        orderBy: { scheduledDate: 'asc' },
       });
       expect(result).toEqual(mockQueue);
     });
   });
 
-  describe.skip('getVetActive', () => {
+  describe('getVetActive', () => {
     it('should return active consultations for vet', async () => {
-      const vetId = 'test-uuid-123';
+      const vetId = 'vet-uuid-123';
       const mockActive = [mockConsultation];
 
-      mockConsultationModel.find.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            sort: jest.fn().mockResolvedValue(mockActive),
-          }),
-        }),
-      });
+      mockPrismaService.consultation.findMany.mockResolvedValue(mockActive);
 
       const result = await service.getVetActive(vetId);
 
-      expect(mockConsultationModel.find).toHaveBeenCalledWith({
-        assignedVet: new Types.ObjectId(vetId),
-        status: { $in: ['assigned', 'in-progress'] },
-        isActive: true,
+      expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
+        where: {
+          assignedVetId: vetId,
+          status: { in: ['assigned', 'in_progress'] },
+          isActive: true,
+        },
+        include: {
+          pet: { select: { name: true, species: true, breed: true, age: true, weight: true } },
+          user: { select: { firstName: true, lastName: true, email: true, phone: true } }
+        },
+        orderBy: { scheduledDate: 'asc' },
       });
       expect(result).toEqual(mockActive);
     });
   });
 
-  describe.skip('getVetHistory', () => {
+  describe('getVetHistory', () => {
     it('should return completed consultations for vet', async () => {
-      const vetId = 'test-uuid-123';
+      const vetId = 'vet-uuid-123';
       const mockHistory = [mockConsultation];
 
-      mockConsultationModel.find.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockReturnValue({
-            sort: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue(mockHistory),
-            }),
-          }),
-        }),
-      });
+      mockPrismaService.consultation.findMany.mockResolvedValue(mockHistory);
 
       const result = await service.getVetHistory(vetId);
 
-      expect(mockConsultationModel.find).toHaveBeenCalledWith({
-        assignedVet: new Types.ObjectId(vetId),
-        status: 'completed',
-        isActive: true,
+      expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
+        where: {
+          assignedVetId: vetId,
+          status: 'completed',
+          isActive: true,
+        },
+        include: {
+          pet: { select: { name: true, species: true } },
+          user: { select: { firstName: true, lastName: true } }
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
       });
       expect(result).toEqual(mockHistory);
     });
   });
 
-  describe.skip('acceptConsultation', () => {
+  describe('acceptConsultation', () => {
     it('should accept a pending consultation', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
       
       const consultation = {
         ...mockConsultation,
         status: 'pending',
-        assignedVet: undefined,
-        save: jest.fn().mockResolvedValue({
-          ...mockConsultation,
-          assignedVet: new Types.ObjectId(vetId),
-          status: 'assigned',
-        }),
       };
 
-      mockConsultationModel.findOne.mockResolvedValue(consultation);
-      mockConsultationModel.findById.mockReturnValue({
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockResolvedValue({
-            ...consultation,
-            assignedVet: new Types.ObjectId(vetId),
-            status: 'assigned',
-          }),
-        }),
-      });
+      const updatedConsultation = {
+        ...consultation,
+        status: 'assigned',
+        assignedVetId: vetId
+      }
+
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      // The service also calls findUnique at the end of the method
+      mockPrismaService.consultation.findUnique.mockResolvedValue(updatedConsultation);
 
       const result = await service.acceptConsultation(consultationId, vetId);
 
-      expect(mockConsultationModel.findOne).toHaveBeenCalledWith({
-        _id: consultationId,
-        isActive: true,
+      expect(mockPrismaService.consultation.findFirst).toHaveBeenCalledWith({
+        where: { id: consultationId, isActive: true },
       });
-      expect(consultation.save).toHaveBeenCalled();
+      expect(mockPrismaService.consultation.update).toHaveBeenCalled();
       expect(result.status).toBe('assigned');
     });
 
     it('should throw NotFoundException if consultation not found', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
+      const consultationId = 'nonexistent';
+      const vetId = 'vet-uuid-123';
 
-      mockConsultationModel.findOne.mockResolvedValue(null);
+      mockPrismaService.consultation.findFirst.mockResolvedValue(null);
 
       await expect(
         service.acceptConsultation(consultationId, vetId),
@@ -202,15 +207,16 @@ describe.skip('ConsultationsService', () => {
     });
 
     it('should throw ConflictException if already assigned', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
 
       const consultation = {
         ...mockConsultation,
         status: 'assigned',
+        assignedVetId: 'another-vet'
       };
 
-      mockConsultationModel.findOne.mockResolvedValue(consultation);
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
 
       await expect(
         service.acceptConsultation(consultationId, vetId),
@@ -218,38 +224,32 @@ describe.skip('ConsultationsService', () => {
     });
   });
 
-  describe.skip('releaseConsultation', () => {
+  describe('releaseConsultation', () => {
     it('should release an assigned consultation', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
 
       const consultation = {
         ...mockConsultation,
-        assignedVet: new Types.ObjectId(vetId),
+        assignedVetId: vetId,
         status: 'assigned',
-        save: jest.fn().mockResolvedValue({
-          ...mockConsultation,
-          assignedVet: undefined,
-          status: 'pending',
-        }),
       };
 
-      mockConsultationModel.findOne.mockResolvedValue(consultation);
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
 
-      const result = await service.releaseConsultation(consultationId, vetId);
+      await service.releaseConsultation(consultationId, vetId);
 
-      expect(mockConsultationModel.findOne).toHaveBeenCalledWith({
-        _id: consultationId,
-        isActive: true,
+      expect(mockPrismaService.consultation.findFirst).toHaveBeenCalledWith({
+        where: { id: consultationId, isActive: true },
       });
-      expect(consultation.save).toHaveBeenCalled();
+      expect(mockPrismaService.consultation.update).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if consultation not found', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
+      const consultationId = 'nonexistent';
+      const vetId = 'vet-uuid-123';
 
-      mockConsultationModel.findOne.mockResolvedValue(null);
+      mockPrismaService.consultation.findFirst.mockResolvedValue(null);
 
       await expect(
         service.releaseConsultation(consultationId, vetId),
@@ -257,16 +257,16 @@ describe.skip('ConsultationsService', () => {
     });
 
     it('should throw ForbiddenException if not assigned to vet', async () => {
-      const consultationId = 'test-uuid-123';
-      const vetId = 'test-uuid-123';
-      const otherVetId = 'test-uuid-123';
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
+      const otherVetId = 'other-vet-123';
 
       const consultation = {
         ...mockConsultation,
-        assignedVet: new Types.ObjectId(otherVetId),
+        assignedVetId: otherVetId,
       };
 
-      mockConsultationModel.findOne.mockResolvedValue(consultation);
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
 
       await expect(
         service.releaseConsultation(consultationId, vetId),

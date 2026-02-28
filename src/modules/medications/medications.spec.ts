@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
 import { MedicationsService } from './medications.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { PetsService } from '../pets/pets.service';
 
-describe.skip('MedicationsService', () => {
+describe('MedicationsService', () => {
   let service: MedicationsService;
 
   beforeEach(async () => {
@@ -11,7 +11,7 @@ describe.skip('MedicationsService', () => {
       providers: [
         MedicationsService,
         {
-          provide: getModelToken('Medication'),
+          provide: PrismaService,
           useValue: {},
         },
         {
