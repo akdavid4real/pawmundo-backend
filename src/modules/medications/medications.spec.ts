@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
 import { MedicationsService } from './medications.service';
-import { getModelToken } from '@nestjs/mongoose';
+import { PrismaService } from '../prisma/prisma.service';
 import { PetsService } from '../pets/pets.service';
 
 describe('MedicationsService', () => {
@@ -12,7 +11,7 @@ describe('MedicationsService', () => {
       providers: [
         MedicationsService,
         {
-          provide: getModelToken('Medication'),
+          provide: PrismaService,
           useValue: {},
         },
         {

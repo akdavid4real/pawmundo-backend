@@ -1,46 +1,57 @@
-// @ts-nocheck
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
-import { Types } from 'mongoose';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PetsService } from './pets.service';
-import { Pet } from './schemas/pet.schema';
+import { PrismaService } from '../prisma/prisma.service';
+import { SupabaseStorageService } from '../supabase/supabase-storage.service';
 
 describe('PetsService', () => {
   let service: PetsService;
+  let prisma: PrismaService;
 
   const mockPet = {
-    _id: 'petId123',
+    id: 'test-pet-uuid',
     name: 'Buddy',
     species: 'dog',
     breed: 'Golden Retriever',
     age: 3,
     gender: 'male',
-    ownerId: 'ownerId123',
+    ownerId: 'test-owner-uuid',
     healthStatus: 'healthy',
     isActive: true,
-    save: jest.fn().mockResolvedValue(this),
   };
 
-  const mockPetModel: any = jest.fn().mockImplementation((dto) => ({
-    ...dto,
-    save: jest.fn().mockResolvedValue({ ...dto, _id: 'petId123' })
-  }));
-  mockPetModel.find = jest.fn().mockReturnThis();
-  mockPetModel.findById = jest.fn();
-  mockPetModel.findByIdAndUpdate = jest.fn();
-  mockPetModel.sort = jest.fn().mockReturnThis();
-  mockPetModel.exec = jest.fn();
+  const mockPrismaService = {
+    pet: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      findFirst: jest.fn(),
+    },
+    petPhoto: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      delete: jest.fn(),
+      findUnique: jest.fn(),
+    }
+  };
+
+  const mockStorageService = {
+    uploadFile: jest.fn(),
+    deleteFile: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PetsService,
-        { provide: getModelToken(Pet.name), useValue: mockPetModel },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: SupabaseStorageService, useValue: mockStorageService },
       ],
     }).compile();
 
     service = module.get<PetsService>(PetsService);
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -49,132 +60,128 @@ describe('PetsService', () => {
 
   describe('create', () => {
     it('should create a new pet successfully', async () => {
-      const petData = { name: 'Buddy', species: 'dog', ownerId: '507f1f77bcf86cd799439011' } as any;
-      const savedPet = { ...petData, _id: 'petId123' };
+      const petData = { name: 'Buddy', species: 'dog', ownerId: 'test-owner-uuid' };
+      const savedPet = { ...petData, id: 'test-pet-uuid' };
       
+      mockPrismaService.pet.create.mockResolvedValue(savedPet);
+
       const result = await service.create(petData);
 
-      expect(mockPetModel).toHaveBeenCalledWith(petData);
+      expect(mockPrismaService.pet.create).toHaveBeenCalledWith({ data: petData });
       expect(result).toEqual(savedPet);
     });
   });
 
   describe('findByOwner', () => {
     it('should return pets for owner', async () => {
-      const ownerId = new Types.ObjectId().toString();
+      const ownerId = 'test-owner-uuid';
       const pets = [mockPet];
-      mockPetModel.exec.mockResolvedValue(pets);
+      mockPrismaService.pet.findMany.mockResolvedValue(pets);
 
       const result = await service.findByOwner(ownerId);
 
-      expect(mockPetModel.find).toHaveBeenCalled();
-      expect(mockPetModel.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockPrismaService.pet.findMany).toHaveBeenCalledWith({
+        where: { ownerId, isActive: true },
+        orderBy: { name: 'asc' }
+      });
       expect(result).toEqual(pets);
     });
 
     it('should filter by species when provided', async () => {
-      const ownerId = new Types.ObjectId().toString();
-      const pets = [mockPet];
-      mockPetModel.exec.mockResolvedValue(pets);
+      const ownerId = 'test-owner-uuid';
+      mockPrismaService.pet.findMany.mockResolvedValue([mockPet]);
 
       await service.findByOwner(ownerId, 'dog');
 
-      expect(mockPetModel.find).toHaveBeenCalled();
+      expect(mockPrismaService.pet.findMany).toHaveBeenCalledWith({
+         where: { ownerId, isActive: true, species: 'dog' },
+         orderBy: { name: 'asc' }
+      });
     });
   });
 
   describe('findById', () => {
     it('should return pet by id', async () => {
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockPet) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
 
-      const result = await service.findById('petId123');
+      const result = await service.findById('test-pet-uuid');
 
-      expect(mockPetModel.findById).toHaveBeenCalledWith('petId123');
+      expect(mockPrismaService.pet.findUnique).toHaveBeenCalledWith({ where: { id: 'test-pet-uuid'} });
       expect(result).toEqual(mockPet);
     });
 
     it('should throw NotFoundException when pet not found', async () => {
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(null);
 
       await expect(service.findById('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when owner mismatch', async () => {
-      const ownerId = new Types.ObjectId();
-      const differentOwnerId = new Types.ObjectId();
-      const petWithDifferentOwner = { ...mockPet, ownerId: { equals: jest.fn().mockReturnValue(false), toString: () => differentOwnerId.toString() } };
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(petWithDifferentOwner) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
 
-      await expect(service.findById('petId123', ownerId.toString())).rejects.toThrow(ForbiddenException);
+      await expect(service.findById('test-pet-uuid', 'different-owner-uuid')).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('update', () => {
     it('should update pet successfully', async () => {
-      const ownerId = new Types.ObjectId();
       const updateData = { name: 'Updated Buddy' };
       const updatedPet = { ...mockPet, ...updateData };
-      const petWithOwner = { ...mockPet, ownerId: { equals: jest.fn().mockReturnValue(true) } };
       
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(petWithOwner) });
-      mockPetModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(updatedPet) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockPrismaService.pet.update.mockResolvedValue(updatedPet);
 
-      const result = await service.update('petId123', ownerId.toString(), updateData);
+      const result = await service.update('test-pet-uuid', 'test-owner-uuid', updateData);
 
-      expect(mockPetModel.findByIdAndUpdate).toHaveBeenCalledWith('petId123', updateData, { new: true });
+      expect(mockPrismaService.pet.update).toHaveBeenCalledWith({ where: { id: 'test-pet-uuid'}, data: updateData });
       expect(result).toEqual(updatedPet);
     });
   });
 
   describe('delete', () => {
     it('should soft delete pet successfully', async () => {
-      const ownerId = new Types.ObjectId();
       const deletedPet = { ...mockPet, isActive: false };
-      const petWithOwner = { ...mockPet, ownerId: { equals: jest.fn().mockReturnValue(true) } };
       
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(petWithOwner) });
-      mockPetModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(deletedPet) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockPrismaService.pet.update.mockResolvedValue(deletedPet);
 
-      const result = await service.delete('petId123', ownerId.toString());
+      const result = await service.delete('test-pet-uuid', 'test-owner-uuid');
 
-      expect(mockPetModel.findByIdAndUpdate).toHaveBeenCalledWith('petId123', { isActive: false }, { new: true });
+      expect(mockPrismaService.pet.update).toHaveBeenCalledWith({ where: { id: 'test-pet-uuid'}, data: { isActive: false } });
       expect(result).toEqual(deletedPet);
     });
   });
 
   describe('updateHealthStatus', () => {
     it('should update health status successfully', async () => {
-      const ownerId = new Types.ObjectId();
       const updatedPet = { ...mockPet, healthStatus: 'sick' };
-      const petWithOwner = { ...mockPet, ownerId: { equals: jest.fn().mockReturnValue(true) } };
       
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(petWithOwner) });
-      mockPetModel.findByIdAndUpdate.mockReturnValue({ exec: jest.fn().mockResolvedValue(updatedPet) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockPrismaService.pet.update.mockResolvedValue(updatedPet);
 
-      const result = await service.updateHealthStatus('petId123', ownerId.toString(), 'sick');
+      const result = await service.updateHealthStatus('test-pet-uuid', 'test-owner-uuid', 'sick');
 
-      expect(mockPetModel.findByIdAndUpdate).toHaveBeenCalledWith('petId123', { healthStatus: 'sick' }, { new: true });
+      expect(mockPrismaService.pet.update).toHaveBeenCalledWith({ where: { id: 'test-pet-uuid'}, data: { healthStatus: 'sick' } });
       expect(result).toEqual(updatedPet);
     });
 
     it('should throw error for invalid health status', async () => {
-      const ownerId = new Types.ObjectId();
-      const petWithOwner = { ...mockPet, ownerId: { equals: jest.fn().mockReturnValue(true) } };
-      mockPetModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(petWithOwner) });
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
 
-      await expect(service.updateHealthStatus('petId123', ownerId.toString(), 'invalid')).rejects.toThrow('Invalid health status');
+      await expect(service.updateHealthStatus('test-pet-uuid', 'test-owner-uuid', 'invalid')).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findByHealthStatus', () => {
     it('should return pets by health status', async () => {
-      const ownerId = new Types.ObjectId().toString();
       const sickPets = [{ ...mockPet, healthStatus: 'sick' }];
-      mockPetModel.exec.mockResolvedValue(sickPets);
+      mockPrismaService.pet.findMany.mockResolvedValue(sickPets);
 
-      const result = await service.findByHealthStatus(ownerId, 'sick');
+      const result = await service.findByHealthStatus('test-owner-uuid', 'sick');
 
-      expect(mockPetModel.find).toHaveBeenCalled();
+      expect(mockPrismaService.pet.findMany).toHaveBeenCalledWith({
+         where: { ownerId: 'test-owner-uuid', healthStatus: 'sick', isActive: true }
+      });
       expect(result).toEqual(sickPets);
     });
   });
