@@ -12,7 +12,7 @@ export class EventsService {
     const data: Prisma.EventUncheckedCreateInput = {
       title: createEventDto.title,
       description: createEventDto.description,
-      eventDate: createEventDto.eventDate,
+      eventDate: new Date(createEventDto.eventDate),
       eventTime: createEventDto.eventTime,
       category: createEventDto.category as EventCategory,
       location: createEventDto.location,
@@ -63,9 +63,10 @@ export class EventsService {
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
     await this.findById(id, userId);
 
-    const { petId, category, status, ...rest } = updateEventDto;
+    const { petId, category, status, eventDate, ...rest } = updateEventDto;
     const data: Prisma.EventUncheckedUpdateInput = {
       ...rest,
+      ...(eventDate ? { eventDate: new Date(eventDate) } : {}),
       ...(category ? { category: category as EventCategory } : {}),
       ...(status ? { status: status as EventStatus } : {}),
       ...(petId !== undefined ? { petId: petId || null } : {}),
