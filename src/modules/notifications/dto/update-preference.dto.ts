@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsNumber, IsObject, IsMongoId } from 'class-validator';
+import { IsBoolean, IsOptional, IsNumber, IsObject, IsUUID } from 'class-validator';
 
 export class PetNotificationSettingsDto {
   @IsBoolean()
@@ -31,7 +31,7 @@ export class UpdatePreferenceDto {
   @IsOptional()
   globalEnabled?: boolean;
 
-  @IsMongoId()
+  @IsUUID()
   @IsOptional()
   petId?: string;
 

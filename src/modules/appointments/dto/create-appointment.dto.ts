@@ -1,9 +1,9 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsMongoId, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum, IsUUID, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAppointmentDto {
   @ApiProperty({ description: 'Pet ID' })
-  @IsMongoId()
+  @IsUUID()
   @IsNotEmpty()
   petId: string;
 

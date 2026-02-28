@@ -1,10 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsEnum, IsBoolean, IsMongoId } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsEnum, IsBoolean, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEventDto {
   @ApiPropertyOptional({ description: 'Pet ID associated with the event' })
   @IsOptional()
-  @IsMongoId()
+  @IsUUID()
   petId?: string;
 
   @ApiProperty({ description: 'Event title' })
