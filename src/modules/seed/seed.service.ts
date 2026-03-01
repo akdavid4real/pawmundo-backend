@@ -33,6 +33,19 @@ export class SeedService {
       // Create sample users
       console.log('👥 Creating users...');
       const hashedPassword = await bcrypt.hash('password123', 10);
+      const akDavid = await this.prisma.user.create({
+        data: {
+          firstName: 'David',
+          lastName: 'Ak',
+          email: 'akdavid4real@gmail.com',
+          password: await bcrypt.hash('Shadowfight@2', 10),
+          role: 'user',
+          isEmailVerified: true,
+          phone: '+1234567890',
+          address: '123 Main St, City, State 12345',
+        },
+      });
+
       const user1 = await this.prisma.user.create({
         data: {
           firstName: 'John',
