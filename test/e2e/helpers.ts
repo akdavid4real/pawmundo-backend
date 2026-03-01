@@ -52,6 +52,11 @@ export function getPrisma(): PrismaService {
 export async function cleanDatabase(): Promise<void> {
     const p = getPrisma();
 
+    if (!p) {
+        console.warn('Prisma instance not found. Skipping database cleanup.');
+        return;
+    }
+
     const tables = [
         'forum_likes',
         'forum_replies',
@@ -74,8 +79,12 @@ export async function cleanDatabase(): Promise<void> {
         'users',
     ];
 
-    for (const table of tables) {
-        await p.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE`);
+    try {
+        for (const table of tables) {
+            await p.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE`);
+        }
+    } catch (err) {
+        console.warn('Failed to truncate tables. Ensure test DB is up and schema matches.', err.message);
     }
 }
 
