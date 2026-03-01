@@ -11,3 +11,4 @@ __test__
 /generated/prisma
 migration.sql
 .vercel
+.env.vercel
