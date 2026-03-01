@@ -1,17 +1,30 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
     constructor() {
-        const connectionString = process.env.DATABASE_URL;
-        console.log(`📡 PrismaService: Initializing with host: ${connectionString?.split('@')[1]?.split('/')[0]}`);
+        let connectionString = process.env.DATABASE_URL || '';
+        console.log(`📡 PrismaService: Initializing with host: ${connectionString.split('@')[1]?.split('/')[0]}`);
 
-        // Prisma v7 requires a driver adapter — use PrismaPg with connectionString
-        const adapter = new PrismaPg({ connectionString });
+        // Supabase specific connection pooling fix for Vercel Serverless
+        // Convert Session mode port (5432) to Transaction mode port (6543)
+        if (connectionString.includes('.pooler.supabase.com:5432')) {
+            connectionString = connectionString.replace(':5432', ':6543');
+        }
 
-        super({ adapter } as any);
+        // Initialize pg Pool with max connections = 1 to prevent exhausting the pool in serverless environments
+        const pool = new Pool({
+            connectionString,
+            max: 1 // Crucial for Vercel Serverless functions!
+        });
+
+        // Prisma v7 requires a driver adapter
+        const adapter = new PrismaPg(pool);
+
+        super({ adapter });
     }
 
     async onModuleInit() {
