@@ -80,7 +80,7 @@ export class SeedService {
           weight: 28,
           color: 'Golden',
           dateOfBirth: new Date('2023-01-15'),
-          ownerId: user1.id,
+          ownerId: akDavid.id,
           healthStatus: 'healthy',
         },
       });
@@ -95,7 +95,7 @@ export class SeedService {
           weight: 4.5,
           color: 'Gray',
           dateOfBirth: new Date('2021-06-20'),
-          ownerId: user1.id,
+          ownerId: akDavid.id,
           healthStatus: 'healthy',
         },
       });
@@ -110,7 +110,7 @@ export class SeedService {
           weight: 30,
           color: 'Black',
           dateOfBirth: new Date('2024-03-10'),
-          ownerId: user1.id,
+          ownerId: akDavid.id,
           healthStatus: 'healthy',
         },
       });
@@ -174,7 +174,7 @@ export class SeedService {
       console.log('🔔 Creating notifications...');
       const notifications: Prisma.NotificationUncheckedCreateInput[] = [
         {
-          userId: user1.id,
+          userId: akDavid.id,
           petId: luna.id,
           title: 'Vaccination Due',
           message: "Luna's rabies vaccination is due soon",
@@ -182,7 +182,7 @@ export class SeedService {
           actionUrl: `/pets/${luna.id}/health-records`,
         },
         {
-          userId: user1.id,
+          userId: akDavid.id,
           petId: shadow.id,
           title: 'Medication Reminder',
           message: "Time to give Shadow's Frontline Plus",
@@ -196,7 +196,7 @@ export class SeedService {
       console.log('📅 Creating events...');
       const events: Prisma.EventUncheckedCreateInput[] = [
         {
-          userId: user1.id,
+          userId: akDavid.id,
           petId: luna.id,
           title: 'Vet Visit',
           description: 'Annual checkup at City Vet Clinic',
@@ -205,7 +205,7 @@ export class SeedService {
           status: EventStatus.event_scheduled,
         },
         {
-          userId: user1.id,
+          userId: akDavid.id,
           petId: luna.id,
           title: 'Dog Park Meetup',
           description: 'Weekly dog park meetup',
