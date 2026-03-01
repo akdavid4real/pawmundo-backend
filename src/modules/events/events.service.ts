@@ -9,12 +9,18 @@ export class EventsService {
   constructor(private prisma: PrismaService) { }
 
   async create(userId: string, createEventDto: CreateEventDto) {
+    // Map DTO category to Prisma EventCategory
+    const mapCategory = (cat: string): EventCategory => {
+      const isPrefixed = ['grooming', 'training'].includes(cat);
+      return (isPrefixed ? cat : `event_${cat}`) as EventCategory;
+    };
+
     const data: Prisma.EventUncheckedCreateInput = {
       title: createEventDto.title,
       description: createEventDto.description,
       eventDate: new Date(createEventDto.eventDate),
       eventTime: createEventDto.eventTime,
-      category: createEventDto.category as EventCategory,
+      category: mapCategory(createEventDto.category),
       location: createEventDto.location,
       notes: createEventDto.notes,
       isRecurring: createEventDto.isRecurring,
@@ -63,12 +69,23 @@ export class EventsService {
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
     await this.findById(id, userId);
 
+    // Map DTO category to Prisma EventCategory
+    const mapCategory = (cat: string): EventCategory => {
+      const isPrefixed = ['grooming', 'training'].includes(cat);
+      return (isPrefixed ? cat : `event_${cat}`) as EventCategory;
+    };
+
+    // Map DTO status to Prisma EventStatus
+    const mapStatus = (stat: string): EventStatus => {
+      return `event_${stat}` as EventStatus;
+    };
+
     const { petId, category, status, eventDate, ...rest } = updateEventDto;
     const data: Prisma.EventUncheckedUpdateInput = {
       ...rest,
       ...(eventDate ? { eventDate: new Date(eventDate) } : {}),
-      ...(category ? { category: category as EventCategory } : {}),
-      ...(status ? { status: status as EventStatus } : {}),
+      ...(category ? { category: mapCategory(category) } : {}),
+      ...(status ? { status: mapStatus(status) } : {}),
       ...(petId !== undefined ? { petId: petId || null } : {}),
     };
 
