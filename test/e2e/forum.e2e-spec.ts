@@ -83,9 +83,9 @@ describe('Forum (e2e)', () => {
                 .set('Authorization', `Bearer ${userToken}`)
                 .expect(200);
 
-            expect(res.body).toHaveProperty('data');
-            expect(Array.isArray(res.body.data)).toBe(true);
-            expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+            expect(res.body).toHaveProperty('posts');
+            expect(Array.isArray(res.body.posts)).toBe(true);
+            expect(res.body.posts.length).toBeGreaterThanOrEqual(2);
         });
 
         it('should filter posts by category', async () => {
@@ -94,7 +94,7 @@ describe('Forum (e2e)', () => {
                 .set('Authorization', `Bearer ${userToken}`)
                 .expect(200);
 
-            expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+            expect(res.body.posts.length).toBeGreaterThanOrEqual(1);
         });
     });
 
@@ -121,7 +121,8 @@ describe('Forum (e2e)', () => {
                 .set('Authorization', `Bearer ${vetToken}`)
                 .expect(201);
 
-            expect(res.body).toHaveProperty('likesCount');
+            expect(res.body).toHaveProperty('likes');
+            expect(res.body.likes.length).toBe(1);
         });
 
         it('should toggle like off when liked again', async () => {

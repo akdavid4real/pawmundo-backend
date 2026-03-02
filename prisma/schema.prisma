@@ -384,6 +384,7 @@ model HealthRecord {
   weight      Float?
   temperature Float?
   heartRate   Int?
+  respiration Int?
   cost        Float?
   notes       String?
   isReminder  Boolean  @default(false)

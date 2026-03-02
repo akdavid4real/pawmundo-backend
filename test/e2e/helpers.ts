@@ -80,10 +80,11 @@ export async function cleanDatabase(): Promise<void> {
     ];
 
     try {
-        for (const table of tables) {
-            await p.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE`);
+        if (tables.length > 0) {
+            const tableList = tables.map(t => `"${t}"`).join(', ');
+            await p.$executeRawUnsafe(`TRUNCATE TABLE ${tableList} CASCADE`);
         }
-    } catch (err) {
+    } catch (err: any) {
         console.warn('Failed to truncate tables. Ensure test DB is up and schema matches.', err.message);
     }
 }

@@ -73,7 +73,7 @@ export class AuthService {
 
       const user = await this.validateUser(email, password);
       if (!user) {
-        throw new UnauthorizedException(`Login failed: Invalid email or password. Please check your credentials and try again.`);
+        throw new UnauthorizedException(`The account for this email doesn't exist or the password is incorrect. Please try again.`);
       }
 
       const lastLogin = new Date();

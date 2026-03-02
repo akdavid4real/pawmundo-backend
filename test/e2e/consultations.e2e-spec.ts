@@ -115,11 +115,11 @@ describe('Consultations (e2e)', () => {
                 .expect(403);
         });
 
-        it('should return 409 if already assigned', async () => {
+        it('should return 201 idempotently if already assigned to the same vet', async () => {
             await request(getHttpServer())
                 .post(`/api/v1/consultations/${consultationId}/accept`)
                 .set('Authorization', `Bearer ${vetToken}`)
-                .expect(409);
+                .expect(201);
         });
     });
 
@@ -165,10 +165,10 @@ describe('Consultations (e2e)', () => {
 
     // ─── Cancel Consultation ───────────────────────────────────────
 
-    describe('DELETE /api/v1/consultations/:id', () => {
+    describe('PATCH /api/v1/consultations/:id/cancel', () => {
         it('should allow user to cancel their consultation', async () => {
             await request(getHttpServer())
-                .delete(`/api/v1/consultations/${consultationId}`)
+                .patch(`/api/v1/consultations/${consultationId}/cancel`)
                 .set('Authorization', `Bearer ${userToken}`)
                 .expect(200);
         });

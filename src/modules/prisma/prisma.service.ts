@@ -5,26 +5,20 @@ import { Pool } from 'pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+    declare pool: Pool; // Use declare to avoid transpilation of a property definition before super()
+
     constructor() {
-        let connectionString = process.env.DATABASE_URL || '';
-        console.log(`📡 PrismaService: Initializing with host: ${connectionString.split('@')[1]?.split('/')[0]}`);
-
-        // Supabase specific connection pooling fix for Vercel Serverless
-        // Convert Session mode port (5432) to Transaction mode port (6543)
-        if (connectionString.includes('.pooler.supabase.com:5432')) {
-            connectionString = connectionString.replace(':5432', ':6543');
-        }
-
-        // Initialize pg Pool with max connections = 1 to prevent exhausting the pool in serverless environments
+        const connectionString = process.env.DATABASE_URL || '';
         const pool = new Pool({
-            connectionString,
-            max: 1 // Crucial for Vercel Serverless functions!
+            connectionString: connectionString.includes('.pooler.supabase.com:5432')
+                ? connectionString.replace(':5432', ':6543')
+                : connectionString
         });
 
-        // Prisma v7 requires a driver adapter
-        const adapter = new PrismaPg(pool);
+        super({ adapter: new PrismaPg(pool) });
+        this.pool = pool;
 
-        super({ adapter });
+        console.log(`📡 PrismaService: Initializing with host: ${connectionString.split('@')[1]?.split('/')[0]}`);
     }
 
     async onModuleInit() {
@@ -40,5 +34,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     async onModuleDestroy() {
         await this.$disconnect();
+        if (this.pool) {
+            await this.pool.end();
+        }
     }
 }

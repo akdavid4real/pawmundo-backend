@@ -214,7 +214,7 @@ export class ConsultationsService {
 
     return this.prisma.consultation.update({
       where: { id: consultationId },
-      data: { status: ConsultationStatus.completed },
+      data: { status: ConsultationStatus.pending, assignedVetId: null },
     });
   }
 

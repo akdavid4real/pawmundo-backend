@@ -7,7 +7,7 @@ export class CreateHealthRecordDto {
   @IsNotEmpty()
   petId: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Record type',
     enum: ['vaccination', 'checkup', 'surgery', 'medication', 'treatment', 'emergency', 'grooming', 'other']
   })
@@ -67,6 +67,12 @@ export class CreateHealthRecordDto {
   @IsNumber()
   @Min(0)
   heartRate?: number;
+
+  @ApiPropertyOptional({ description: 'Respiration rate (RPM)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  respiration?: number;
 
   @ApiPropertyOptional({ description: 'Cost of treatment' })
   @IsOptional()

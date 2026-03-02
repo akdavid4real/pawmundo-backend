@@ -29,8 +29,9 @@ describe('Authentication (e2e)', () => {
         it('should register a regular user', async () => {
             const res = await request(getHttpServer())
                 .post('/api/v1/auth/register')
-                .send(TEST_USERS.user)
-                .expect(201);
+                .send(TEST_USERS.user);
+
+            expect(res.status).toBe(201);
 
             expect(res.body).toHaveProperty('access_token');
             expect(res.body.user.role).toBe('user');

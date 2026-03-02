@@ -12,3 +12,4 @@ __test__
 migration.sql
 .vercel
 .env.vercel
+.env.test
