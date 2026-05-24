@@ -15,6 +15,14 @@ async function bootstrap(): Promise<NestExpressApplication> {
     });
 
     app.useGlobalFilters(new GlobalExceptionFilter());
+
+    app.use((req: any, _res: any, next: any) => {
+        if (req.url?.startsWith('/api/auth/')) {
+            req.url = req.url.replace(/^\/api\/auth\//, '/api/v1/auth/');
+        }
+        next();
+    });
+
     app.setGlobalPrefix('api/v1');
 
     app.useGlobalPipes(new ValidationPipe({

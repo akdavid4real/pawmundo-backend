@@ -14,6 +14,13 @@ async function bootstrap() {
   // Global exception filter for detailed error messages
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  app.use((req: any, _res: any, next: any) => {
+    if (req.url?.startsWith('/api/auth/')) {
+      req.url = req.url.replace(/^\/api\/auth\//, '/api/v1/auth/');
+    }
+    next();
+  });
+
   // Set global API prefix
   app.setGlobalPrefix('api/v1');
 
