@@ -3,24 +3,31 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventStatus, EventCategory, Prisma } from '@prisma/client';
+import { PetsService } from '../pets/pets.service';
 
 @Injectable()
 export class EventsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private petsService: PetsService,
+  ) { }
+
+  private mapCategory(cat: string): EventCategory {
+    const isPrefixed = ['grooming', 'training'].includes(cat);
+    return (isPrefixed ? cat : `event_${cat}`) as EventCategory;
+  }
 
   async create(userId: string, createEventDto: CreateEventDto) {
-    // Map DTO category to Prisma EventCategory
-    const mapCategory = (cat: string): EventCategory => {
-      const isPrefixed = ['grooming', 'training'].includes(cat);
-      return (isPrefixed ? cat : `event_${cat}`) as EventCategory;
-    };
+    if (createEventDto.petId) {
+      await this.petsService.findById(createEventDto.petId, userId);
+    }
 
     const data: Prisma.EventUncheckedCreateInput = {
       title: createEventDto.title,
       description: createEventDto.description,
       eventDate: new Date(createEventDto.eventDate),
       eventTime: createEventDto.eventTime,
-      category: mapCategory(createEventDto.category),
+      category: this.mapCategory(createEventDto.category),
       location: createEventDto.location,
       notes: createEventDto.notes,
       isRecurring: createEventDto.isRecurring,
@@ -68,12 +75,9 @@ export class EventsService {
 
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
     await this.findById(id, userId);
-
-    // Map DTO category to Prisma EventCategory
-    const mapCategory = (cat: string): EventCategory => {
-      const isPrefixed = ['grooming', 'training'].includes(cat);
-      return (isPrefixed ? cat : `event_${cat}`) as EventCategory;
-    };
+    if (updateEventDto.petId) {
+      await this.petsService.findById(updateEventDto.petId, userId);
+    }
 
     // Map DTO status to Prisma EventStatus
     const mapStatus = (stat: string): EventStatus => {
@@ -84,7 +88,7 @@ export class EventsService {
     const data: Prisma.EventUncheckedUpdateInput = {
       ...rest,
       ...(eventDate ? { eventDate: new Date(eventDate) } : {}),
-      ...(category ? { category: mapCategory(category) } : {}),
+      ...(category ? { category: this.mapCategory(category) } : {}),
       ...(status ? { status: mapStatus(status) } : {}),
       ...(petId !== undefined ? { petId: petId || null } : {}),
     };
@@ -106,7 +110,7 @@ export class EventsService {
 
   async findByCategory(userId: string, category: string) {
     return this.prisma.event.findMany({
-      where: { userId, category: category as EventCategory, isActive: true },
+      where: { userId, category: this.mapCategory(category), isActive: true },
       include: { pet: { select: { name: true, breed: true } } },
       orderBy: { eventDate: 'asc' },
     });

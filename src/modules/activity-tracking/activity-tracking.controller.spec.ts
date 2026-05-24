@@ -59,9 +59,9 @@ describe('ActivityTrackingController', () => {
       const mockActivities = [{ id: 'activity-id', type: 'walk', petId: 'pet-uuid' }];
       mockActivityTrackingService.findByPet.mockResolvedValue(mockActivities);
 
-      const result = await controller.findByPet('pet-uuid');
+      const result = await controller.findByPet('pet-uuid', { user: { id: 'user-uuid' } });
 
-      expect(mockActivityTrackingService.findByPet).toHaveBeenCalledWith('pet-uuid', undefined);
+      expect(mockActivityTrackingService.findByPet).toHaveBeenCalledWith('pet-uuid', 'user-uuid', undefined);
       expect(result).toEqual(mockActivities);
     });
 
@@ -69,9 +69,9 @@ describe('ActivityTrackingController', () => {
       const mockActivities = [{ id: 'activity-id', type: 'feeding', petId: 'pet-uuid' }];
       mockActivityTrackingService.findByPet.mockResolvedValue(mockActivities);
 
-      const result = await controller.findByPet('pet-uuid', 'feeding');
+      const result = await controller.findByPet('pet-uuid', { user: { id: 'user-uuid' } }, 'feeding');
 
-      expect(mockActivityTrackingService.findByPet).toHaveBeenCalledWith('pet-uuid', 'feeding');
+      expect(mockActivityTrackingService.findByPet).toHaveBeenCalledWith('pet-uuid', 'user-uuid', 'feeding');
       expect(result).toEqual(mockActivities);
     });
   });
@@ -81,9 +81,9 @@ describe('ActivityTrackingController', () => {
       const mockStats = { totalWalks: 1, totalDistance: 2.5, totalFeedings: 0, totalFoodAmount: 0, totalWaterIntake: 0, activities: [] };
       mockActivityTrackingService.getDailyStats.mockResolvedValue(mockStats);
 
-      const result = await controller.getDailyStats('pet-uuid', '2024-01-15');
+      const result = await controller.getDailyStats('pet-uuid', { user: { id: 'user-uuid' } }, '2024-01-15');
 
-      expect(mockActivityTrackingService.getDailyStats).toHaveBeenCalledWith('pet-uuid', '2024-01-15');
+      expect(mockActivityTrackingService.getDailyStats).toHaveBeenCalledWith('pet-uuid', 'user-uuid', '2024-01-15');
       expect(result).toEqual(mockStats);
     });
   });
@@ -93,9 +93,9 @@ describe('ActivityTrackingController', () => {
       const mockDeleted = { id: 'activity-id', isActive: false };
       mockActivityTrackingService.delete.mockResolvedValue(mockDeleted);
 
-      const result = await controller.remove('activity-id');
+      const result = await controller.remove('activity-id', { user: { id: 'user-uuid' } });
 
-      expect(mockActivityTrackingService.delete).toHaveBeenCalledWith('activity-id');
+      expect(mockActivityTrackingService.delete).toHaveBeenCalledWith('activity-id', 'user-uuid');
       expect(result).toEqual(mockDeleted);
     });
   });

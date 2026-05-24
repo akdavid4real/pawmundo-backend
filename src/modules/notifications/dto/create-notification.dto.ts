@@ -14,7 +14,7 @@ export class CreateNotificationDto {
   @IsString()
   message: string;
 
-  @IsEnum(['appointment', 'medication', 'vaccination', 'checkup', 'weight', 'health_alert', 'reminder', 'info'])
+  @IsEnum(['appointment_notification', 'medication_notification', 'vaccination', 'checkup', 'weight_notification', 'health_alert', 'reminder', 'info'])
   type: string;
 
   @IsString()

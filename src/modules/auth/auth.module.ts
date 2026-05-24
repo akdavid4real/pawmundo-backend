@@ -14,10 +14,18 @@ import { MailService } from '../../common/utils/mail.service';
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '24h' },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+
+        if (!secret) {
+          throw new Error('JWT_SECRET is not configured');
+        }
+
+        return {
+          secret,
+          signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '24h' },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

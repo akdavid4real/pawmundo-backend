@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PetsService } from '../pets/pets.service';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
@@ -30,11 +31,16 @@ describe('AppointmentsService', () => {
     },
   };
 
+  const mockPetsService = {
+    findById: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppointmentsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PetsService, useValue: mockPetsService },
       ],
     }).compile();
 
@@ -61,10 +67,12 @@ describe('AppointmentsService', () => {
         reason: 'Checkup'
       };
 
+      mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
       mockPrismaService.appointment.create.mockResolvedValue(mockAppointment);
 
       const result = await service.create('user-uuid-123', createDto as any);
 
+      expect(mockPetsService.findById).toHaveBeenCalledWith('pet-uuid-123', 'user-uuid-123');
       expect(mockPrismaService.appointment.create).toHaveBeenCalledWith({
         data: {
           ...createDto,
@@ -73,6 +81,22 @@ describe('AppointmentsService', () => {
         }
       });
       expect(result).toEqual(mockAppointment);
+    });
+
+    it('should reject creation when the pet is not owned by the user', async () => {
+      const createDto = {
+        petId: 'foreign-pet-uuid',
+        vetName: 'Dr. Smith',
+        vetClinic: 'Pet Clinic',
+        appointmentDate: '2024-12-25',
+        appointmentTime: '10:00 AM',
+        reason: 'Checkup'
+      };
+
+      mockPetsService.findById.mockRejectedValue(new ForbiddenException('Access denied'));
+
+      await expect(service.create('user-uuid-123', createDto as any)).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.appointment.create).not.toHaveBeenCalled();
     });
   });
 
@@ -152,6 +176,17 @@ describe('AppointmentsService', () => {
         data: { appointmentDate: new Date('2024-12-26') },
         include: { pet: { select: { name: true, species: true, breed: true } } },
       });
+    });
+
+    it('should verify ownership of a new petId during update', async () => {
+      const updateDto = { petId: 'new-pet-uuid', reason: 'Updated reason' };
+      jest.spyOn(service, 'findById').mockResolvedValue(mockAppointment as any);
+      mockPetsService.findById.mockResolvedValue({ id: 'new-pet-uuid', ownerId: 'user-uuid-123' });
+      mockPrismaService.appointment.update.mockResolvedValue({ ...mockAppointment, ...updateDto });
+
+      await service.update('appointment-uuid-123', 'user-uuid-123', updateDto as any);
+
+      expect(mockPetsService.findById).toHaveBeenCalledWith('new-pet-uuid', 'user-uuid-123');
     });
   });
 

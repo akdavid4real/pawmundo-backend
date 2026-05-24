@@ -2,12 +2,18 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { PetsService } from '../pets/pets.service';
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private petsService: PetsService,
+  ) { }
 
   async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
+    await this.petsService.findById(createAppointmentDto.petId, userId);
+
     return this.prisma.appointment.create({
       data: {
         ...createAppointmentDto,
@@ -42,6 +48,9 @@ export class AppointmentsService {
 
   async update(id: string, userId: string, updateAppointmentDto: UpdateAppointmentDto) {
     await this.findById(id, userId);
+    if (updateAppointmentDto.petId) {
+      await this.petsService.findById(updateAppointmentDto.petId, userId);
+    }
 
     const updateData: any = { ...updateAppointmentDto };
     if (updateAppointmentDto.appointmentDate) {

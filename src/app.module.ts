@@ -1,5 +1,6 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -29,6 +30,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
 
     // Infrastructure Modules
     PrismaModule,

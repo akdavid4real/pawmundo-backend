@@ -4,12 +4,32 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateInsuranceDto } from './dto/create-insurance.dto';
 import { UpdateInsuranceDto } from './dto/update-insurance.dto';
 import { InsuranceClaimDto } from './dto/insurance-claim.dto';
+import { PetsService } from '../pets/pets.service';
 
 @Injectable()
 export class InsuranceService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private petsService: PetsService,
+  ) { }
+
+  private mapInsuranceStatus(status: string): InsuranceStatus {
+    const statusMap: Record<string, InsuranceStatus> = {
+      active: InsuranceStatus.insurance_active,
+      insurance_active: InsuranceStatus.insurance_active,
+      expired: InsuranceStatus.expired,
+      cancelled: InsuranceStatus.insurance_cancelled,
+      insurance_cancelled: InsuranceStatus.insurance_cancelled,
+      pending: InsuranceStatus.insurance_pending,
+      insurance_pending: InsuranceStatus.insurance_pending,
+    };
+
+    return statusMap[status] || (status as InsuranceStatus);
+  }
 
   async create(userId: string, createInsuranceDto: CreateInsuranceDto) {
+    await this.petsService.findById(createInsuranceDto.petId, userId);
+
     const startDate = new Date(createInsuranceDto.startDate);
     const endDate = new Date(createInsuranceDto.endDate);
 
@@ -29,8 +49,11 @@ export class InsuranceService {
 
   async findByUser(userId: string, status?: string, petId?: string) {
     const where: any = { userId, isActive: true };
-    if (status) where.status = status as InsuranceStatus;
-    if (petId) where.petId = petId;
+    if (status) where.status = this.mapInsuranceStatus(status);
+    if (petId) {
+      await this.petsService.findById(petId, userId);
+      where.petId = petId;
+    }
 
     return this.prisma.insurance.findMany({
       where,
@@ -57,10 +80,14 @@ export class InsuranceService {
 
   async update(id: string, userId: string, updateInsuranceDto: UpdateInsuranceDto) {
     await this.findById(id, userId);
+    if (updateInsuranceDto.petId) {
+      await this.petsService.findById(updateInsuranceDto.petId, userId);
+    }
 
     const updateData: any = { ...updateInsuranceDto };
     if (updateInsuranceDto.startDate) updateData.startDate = new Date(updateInsuranceDto.startDate);
     if (updateInsuranceDto.endDate) updateData.endDate = new Date(updateInsuranceDto.endDate);
+    if (updateInsuranceDto.status) updateData.status = this.mapInsuranceStatus(updateInsuranceDto.status);
 
     return this.prisma.insurance.update({
       where: { id },
@@ -71,6 +98,7 @@ export class InsuranceService {
 
   async updateStatus(id: string, userId: string, status: string) {
     await this.findById(id, userId);
+    const mappedStatus = this.mapInsuranceStatus(status);
 
     const validStatuses: InsuranceStatus[] = [
       InsuranceStatus.insurance_active,
@@ -78,13 +106,13 @@ export class InsuranceService {
       InsuranceStatus.insurance_cancelled,
       InsuranceStatus.insurance_pending,
     ];
-    if (!validStatuses.includes(status as InsuranceStatus)) {
+    if (!validStatuses.includes(mappedStatus)) {
       throw new BadRequestException(`Invalid insurance status '${status}'. Valid options are: ${validStatuses.join(', ')}`);
     }
 
     return this.prisma.insurance.update({
       where: { id },
-      data: { status: status as InsuranceStatus },
+      data: { status: mappedStatus },
       include: { pet: { select: { name: true, species: true, breed: true } } },
     });
   }

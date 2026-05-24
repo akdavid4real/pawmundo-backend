@@ -56,7 +56,7 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { role: string; vetId: string },
   ) {
-    if (data.role === 'veterinarian' && client.data.role === 'vet') {
+    if ((data.role === 'veterinarian' || data.role === 'vet') && client.data.role === 'vet') {
       this.vetConnections.set(client.data.userId, client.id);
       return { success: true, message: 'Registered as available vet' };
     }

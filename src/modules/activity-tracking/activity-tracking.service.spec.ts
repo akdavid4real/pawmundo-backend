@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActivityTrackingService } from './activity-tracking.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PetsService } from '../pets/pets.service';
 
 describe('ActivityTrackingService', () => {
   let service: ActivityTrackingService;
@@ -15,11 +16,16 @@ describe('ActivityTrackingService', () => {
     },
   };
 
+  const mockPetsService = {
+    findById: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActivityTrackingService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PetsService, useValue: mockPetsService },
       ],
     }).compile();
 
@@ -45,15 +51,15 @@ describe('ActivityTrackingService', () => {
     };
 
     const mockActivity = { id: 'activity-uuid-123', ...createActivityDto, userId: 'user-uuid-123' };
+    mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
     mockPrismaService.activity.create.mockResolvedValue(mockActivity);
 
-    // service.create signature is probably `create(createActivityDto, userId)` or similar
-    // The previous implementation of tracking service apparently did not inject userId into the data explicitly, let's verify how it does it.
     const result = await service.create(createActivityDto as any, 'user-uuid-123');
 
     expect(mockPrismaService.activity.create).toHaveBeenCalledWith({
       data: {
         ...createActivityDto,
+        type: 'walk',
         date: new Date(createActivityDto.date)
       }
     });
@@ -62,9 +68,10 @@ describe('ActivityTrackingService', () => {
 
   it('should find activities by pet', async () => {
     const mockActivities = [{ petId: 'pet-uuid-123', type: 'walk' }];
+    mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
     mockPrismaService.activity.findMany.mockResolvedValue(mockActivities);
 
-    const result = await service.findByPet('pet-uuid-123');
+    const result = await service.findByPet('pet-uuid-123', 'user-uuid-123');
 
     expect(mockPrismaService.activity.findMany).toHaveBeenCalledWith({
       where: { petId: 'pet-uuid-123', isActive: true },

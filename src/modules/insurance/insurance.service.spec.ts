@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InsuranceService } from './insurance.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { SupabaseStorageService } from '../supabase/supabase-storage.service';
+import { PetsService } from '../pets/pets.service';
 
 describe('InsuranceService', () => {
   let service: InsuranceService;
@@ -40,9 +40,8 @@ describe('InsuranceService', () => {
     }
   };
 
-  const mockStorageService = {
-    uploadFile: jest.fn(),
-    deleteFile: jest.fn(),
+  const mockPetsService = {
+    findById: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -50,7 +49,7 @@ describe('InsuranceService', () => {
       providers: [
         InsuranceService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: SupabaseStorageService, useValue: mockStorageService },
+        { provide: PetsService, useValue: mockPetsService },
       ],
     }).compile();
 
@@ -80,12 +79,21 @@ describe('InsuranceService', () => {
         endDate: '2024-12-31',
       };
 
+      mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
       mockPrismaService.insurance.create.mockResolvedValue(mockInsurance);
 
       const result = await service.create('user-uuid-123', createDto as any);
 
-      expect(mockPrismaService.insurance.create).toHaveBeenCalled();
-      expect(result).toBeDefined();
+      expect(mockPetsService.findById).toHaveBeenCalledWith('pet-uuid-123', 'user-uuid-123');
+      expect(mockPrismaService.insurance.create).toHaveBeenCalledWith({
+        data: {
+          ...createDto,
+          userId: 'user-uuid-123',
+          startDate: new Date('2024-01-01'),
+          endDate: new Date('2024-12-31'),
+        },
+      });
+      expect(result).toEqual(mockInsurance);
     });
 
     it('should throw error for invalid dates', async () => {
@@ -103,6 +111,42 @@ describe('InsuranceService', () => {
 
       await expect(service.create('user-uuid-123', createDto as any))
         .rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject creation when the pet is not owned by the user', async () => {
+      const createDto = {
+        petId: 'foreign-pet-uuid',
+        provider: 'PetSure',
+        policyNumber: 'PS123456',
+        planType: 'Comprehensive',
+        monthlyPremium: 50,
+        deductible: 200,
+        coverageLimit: 10000,
+        startDate: '2024-01-01',
+        endDate: '2024-12-31',
+      };
+
+      mockPetsService.findById.mockRejectedValue(new ForbiddenException('Access denied'));
+
+      await expect(service.create('user-uuid-123', createDto as any)).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.insurance.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findByUser', () => {
+    it('should map public status aliases and validate pet ownership when filtering', async () => {
+      mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
+      mockPrismaService.insurance.findMany.mockResolvedValue([mockInsurance]);
+
+      const result = await service.findByUser('user-uuid-123', 'active', 'pet-uuid-123');
+
+      expect(mockPetsService.findById).toHaveBeenCalledWith('pet-uuid-123', 'user-uuid-123');
+      expect(mockPrismaService.insurance.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-uuid-123', isActive: true, status: 'insurance_active', petId: 'pet-uuid-123' },
+        include: { pet: { select: { name: true, species: true, breed: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toEqual([mockInsurance]);
     });
   });
 
@@ -157,6 +201,21 @@ describe('InsuranceService', () => {
       expect(result.covered).toBe(true);
       expect(result.coverageAmount).toBe(800); // 1000 - 200 deductible
       expect(result.deductible).toBe(200);
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should accept public status aliases and map them to prisma enums', async () => {
+      mockPrismaService.insurance.findUnique.mockResolvedValue({ ...mockInsurance, status: 'insurance_active' });
+      mockPrismaService.insurance.update.mockResolvedValue({ ...mockInsurance, status: 'insurance_cancelled' });
+
+      await service.updateStatus('insurance-uuid-123', 'user-uuid-123', 'cancelled');
+
+      expect(mockPrismaService.insurance.update).toHaveBeenCalledWith({
+        where: { id: 'insurance-uuid-123' },
+        data: { status: 'insurance_cancelled' },
+        include: { pet: { select: { name: true, species: true, breed: true } } },
+      });
     });
   });
 });

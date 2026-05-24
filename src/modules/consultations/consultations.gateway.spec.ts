@@ -7,6 +7,7 @@ import { Socket } from 'socket.io';
 describe('ConsultationsGateway', () => {
   let gateway: ConsultationsGateway;
   let jwtService: JwtService;
+  let consoleErrorSpy: jest.SpyInstance;
 
   const mockJwtService = {
     verify: jest.fn(),
@@ -25,6 +26,7 @@ describe('ConsultationsGateway', () => {
 
   const mockServer = {
     emit: jest.fn(),
+    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
   };
 
   const mockConsultationsService = {
@@ -49,10 +51,15 @@ describe('ConsultationsGateway', () => {
 
     gateway = module.get<ConsultationsGateway>(ConsultationsGateway);
     jwtService = module.get<JwtService>(JwtService);
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     gateway.server = mockServer as any;
 
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe('handleConnection', () => {
@@ -116,6 +123,32 @@ describe('ConsultationsGateway', () => {
       await gateway.handleConnection(socketWithHeader);
 
       expect(jwtService.verify).toHaveBeenCalledWith('header-token');
+    });
+  });
+
+  describe('handleRegister', () => {
+    it('should register a vet when the client role and payload role are aligned', async () => {
+      mockSocket.data = { userId: 'vet123', role: 'vet' };
+
+      const result = await gateway.handleRegister(mockSocket, { role: 'vet', vetId: 'vet123' });
+
+      expect(result).toEqual({ success: true, message: 'Registered as available vet' });
+    });
+
+    it('should also accept the legacy veterinarian payload role', async () => {
+      mockSocket.data = { userId: 'vet123', role: 'vet' };
+
+      const result = await gateway.handleRegister(mockSocket, { role: 'veterinarian', vetId: 'vet123' });
+
+      expect(result).toEqual({ success: true, message: 'Registered as available vet' });
+    });
+
+    it('should reject non-vet clients trying to register as available vets', async () => {
+      mockSocket.data = { userId: 'user123', role: 'user' };
+
+      const result = await gateway.handleRegister(mockSocket, { role: 'vet', vetId: 'user123' });
+
+      expect(result).toEqual({ success: false, error: 'Invalid role' });
     });
   });
 });

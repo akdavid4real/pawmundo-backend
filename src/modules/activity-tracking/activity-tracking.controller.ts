@@ -148,8 +148,8 @@ export class ActivityTrackingController {
     }
   })
   @Get('pet/:petId')
-  async findByPet(@Param('petId') petId: string, @Query('type') type?: string) {
-    return this.activityTrackingService.findByPet(petId, type);
+  async findByPet(@Param('petId') petId: string, @Request() req, @Query('type') type?: string) {
+    return this.activityTrackingService.findByPet(petId, req.user.id, type);
   }
 
   @ApiOperation({
@@ -205,8 +205,8 @@ export class ActivityTrackingController {
     }
   })
   @Get('pet/:petId/daily-stats')
-  async getDailyStats(@Param('petId') petId: string, @Query('date') date: string) {
-    return this.activityTrackingService.getDailyStats(petId, date);
+  async getDailyStats(@Param('petId') petId: string, @Request() req, @Query('date') date: string) {
+    return this.activityTrackingService.getDailyStats(petId, req.user.id, date);
   }
 
   @ApiOperation({
@@ -255,7 +255,7 @@ export class ActivityTrackingController {
     }
   })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.activityTrackingService.delete(id);
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.activityTrackingService.delete(id, req.user.id);
   }
 }

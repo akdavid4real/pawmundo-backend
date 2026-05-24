@@ -119,7 +119,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
-      "<rootDir>/../test/setup.ts"
+      "<rootDir>/../test/setup-unit.ts"
     ]
   }
 }

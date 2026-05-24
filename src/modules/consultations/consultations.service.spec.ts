@@ -2,9 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConsultationsService } from './consultations.service';
 import { PetsService } from '../pets/pets.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ConfigService } from '@nestjs/config';
+import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 
 describe('ConsultationsService', () => {
   let service: ConsultationsService;
@@ -46,22 +44,12 @@ describe('ConsultationsService', () => {
     findById: jest.fn(),
   };
 
-  const mockEventEmitter = {
-    emit: jest.fn(),
-  };
-
-  const mockConfigService = {
-    get: jest.fn(),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConsultationsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PetsService, useValue: mockPetsService },
-        { provide: EventEmitter2, useValue: mockEventEmitter },
-        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -92,6 +80,40 @@ describe('ConsultationsService', () => {
       expect(mockPetsService.findById).toHaveBeenCalledWith(createDto.petId, userId);
       expect(mockPrismaService.consultation.create).toHaveBeenCalled();
       expect(result).toEqual(mockConsultation);
+    });
+  });
+
+  describe('findByStatus', () => {
+    it('should map public in-progress status values to prisma enum values', async () => {
+      mockPrismaService.consultation.findMany.mockResolvedValue([mockConsultation]);
+
+      await service.findByStatus('user-uuid-123', 'in-progress');
+
+      expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-uuid-123', status: 'in_progress', isActive: true },
+        include: { pet: { select: { name: true, species: true } } },
+        orderBy: { scheduledDate: 'desc' },
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('should map public status and payment aliases before persisting', async () => {
+      jest.spyOn(service, 'findById').mockResolvedValue(mockConsultation as any);
+      mockPrismaService.consultation.update.mockResolvedValue({ ...mockConsultation, status: 'in_progress' });
+
+      await service.update('test-consult-uuid', 'user-uuid-123', {
+        status: 'in-progress',
+        paymentStatus: 'pending',
+      } as any);
+
+      expect(mockPrismaService.consultation.update).toHaveBeenCalledWith({
+        where: { id: 'test-consult-uuid' },
+        data: {
+          status: 'in_progress',
+          paymentStatus: 'pending_payment',
+        },
+      });
     });
   });
 

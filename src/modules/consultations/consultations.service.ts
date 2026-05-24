@@ -13,6 +13,22 @@ export class ConsultationsService {
     private petsService: PetsService,
   ) { }
 
+  private mapConsultationStatus(status: string): ConsultationStatus {
+    if (status === 'in-progress') {
+      return ConsultationStatus.in_progress;
+    }
+
+    return status as ConsultationStatus;
+  }
+
+  private mapPaymentStatus(paymentStatus: string): Prisma.ConsultationUncheckedUpdateInput['paymentStatus'] {
+    if (paymentStatus === 'pending') {
+      return 'pending_payment';
+    }
+
+    return paymentStatus as Prisma.ConsultationUncheckedUpdateInput['paymentStatus'];
+  }
+
   async create(userId: string, createConsultationDto: CreateConsultationDto) {
     await this.petsService.findById(createConsultationDto.petId, userId);
 
@@ -41,7 +57,7 @@ export class ConsultationsService {
 
   async findByStatus(userId: string, status: string) {
     return this.prisma.consultation.findMany({
-      where: { userId, status: status as ConsultationStatus, isActive: true },
+      where: { userId, status: this.mapConsultationStatus(status), isActive: true },
       include: { pet: { select: { name: true, species: true } } },
       orderBy: { scheduledDate: 'desc' },
     });
@@ -75,10 +91,10 @@ export class ConsultationsService {
     const { status, followUpDate, consultationType, paymentStatus, ...rest } = updateConsultationDto;
     const updateData: Prisma.ConsultationUncheckedUpdateInput = {
       ...rest,
-      ...(status ? { status: status as ConsultationStatus } : {}),
+      ...(status ? { status: this.mapConsultationStatus(status) } : {}),
       ...(followUpDate ? { followUpDate: new Date(followUpDate) } : {}),
       ...(consultationType ? { consultationType: consultationType as Prisma.ConsultationUncheckedUpdateInput['consultationType'] } : {}),
-      ...(paymentStatus ? { paymentStatus: paymentStatus as Prisma.ConsultationUncheckedUpdateInput['paymentStatus'] } : {}),
+      ...(paymentStatus ? { paymentStatus: this.mapPaymentStatus(paymentStatus) } : {}),
     };
 
     return this.prisma.consultation.update({ where: { id }, data: updateData });
