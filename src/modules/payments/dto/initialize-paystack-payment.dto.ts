@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 
 export class InitializePaystackPaymentDto {
   @IsIn(['plus', 'pro'])
@@ -12,6 +12,5 @@ export class InitializePaystackPaymentDto {
 
   @IsString()
   @IsNotEmpty()
-  @IsUrl({ require_tld: false, require_protocol: true })
   callbackUrl: string;
 }

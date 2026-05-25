@@ -40,6 +40,27 @@ export class HealthRecordsController {
     return this.healthRecordsService.getUpcomingReminders(req.user.id);
   }
 
+  @ApiOperation({ summary: 'Get health reminders grouped by status' })
+  @ApiResponse({ status: 200, description: 'Upcoming and overdue health reminders' })
+  @Get('reminders')
+  async getReminders(@Request() req) {
+    return this.healthRecordsService.getReminders(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get overdue reminders' })
+  @ApiResponse({ status: 200, description: 'List of overdue health reminders' })
+  @Get('reminders/overdue')
+  async getOverdueReminders(@Request() req) {
+    return this.healthRecordsService.getOverdueReminders(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get health analytics for user' })
+  @ApiResponse({ status: 200, description: 'Health analytics and statistics' })
+  @Get('analytics')
+  async getHealthAnalytics(@Request() req) {
+    return this.healthRecordsService.getHealthAnalytics(req.user.id);
+  }
+
   @ApiOperation({ summary: 'Get vaccination history' })
   @ApiResponse({ status: 200, description: 'Vaccination records for pet' })
   @Get('pet/:petId/vaccinations')
@@ -82,13 +103,6 @@ export class HealthRecordsController {
     return this.healthRecordsService.delete(id, req.user.id);
   }
 
-  @ApiOperation({ summary: 'Get overdue reminders' })
-  @ApiResponse({ status: 200, description: 'List of overdue health reminders' })
-  @Get('reminders/overdue')
-  async getOverdueReminders(@Request() req) {
-    return this.healthRecordsService.getOverdueReminders(req.user.id);
-  }
-
   @ApiOperation({ summary: 'Add attachment to health record' })
   @ApiResponse({ status: 200, description: 'Attachment added successfully' })
   @Post(':id/attachments')
@@ -122,10 +136,4 @@ export class HealthRecordsController {
     );
   }
 
-  @ApiOperation({ summary: 'Get health analytics for user' })
-  @ApiResponse({ status: 200, description: 'Health analytics and statistics' })
-  @Get('analytics')
-  async getHealthAnalytics(@Request() req) {
-    return this.healthRecordsService.getHealthAnalytics(req.user.id);
-  }
 }

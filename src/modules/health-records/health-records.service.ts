@@ -75,6 +75,15 @@ export class HealthRecordsService {
     return records;
   }
 
+  async getReminders(userId: string) {
+    const [upcoming, overdue] = await Promise.all([
+      this.getUpcomingReminders(userId),
+      this.getOverdueReminders(userId),
+    ]);
+
+    return { upcoming, overdue };
+  }
+
   async getVaccinations(petId: string, userId: string) {
     await this.petsService.findById(petId, userId);
     return this.prisma.healthRecord.findMany({
