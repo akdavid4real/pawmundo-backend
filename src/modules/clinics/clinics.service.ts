@@ -195,6 +195,33 @@ export class ClinicsService {
     return clinic;
   }
 
+  async listApprovedClinicVets(clinicId: string) {
+    await this.findApprovedClinicOrThrow(clinicId);
+
+    return this.prisma.clinicMembership.findMany({
+      where: {
+        clinicId,
+        role: ClinicMembershipRole.vet,
+        status: ClinicMembershipStatus.active,
+        user: { isActive: true, role: UserRole.vet },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            role: true,
+            profileImage: true,
+          },
+        },
+      },
+      orderBy: [{ user: { firstName: 'asc' } }, { user: { lastName: 'asc' } }],
+    });
+  }
+
   async getAdminDashboard(userId: string) {
     const membership = await this.requireClinicAdmin(userId);
     const clinicId = membership.clinicId;

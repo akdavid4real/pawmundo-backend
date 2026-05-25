@@ -33,6 +33,12 @@ export class ClinicsController {
     return this.clinicsService.requestVetMembership(req.user.id, clinicId);
   }
 
+  @Get(':clinicId/vets')
+  @ApiOperation({ summary: 'List active vets for an approved clinic' })
+  listApprovedClinicVets(@Param('clinicId') clinicId: string) {
+    return this.clinicsService.listApprovedClinicVets(clinicId);
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
