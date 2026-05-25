@@ -7,6 +7,11 @@ export class CreateAppointmentDto {
   @IsNotEmpty()
   petId: string;
 
+  @ApiPropertyOptional({ description: 'Approved clinic ID for clinic-owned bookings' })
+  @IsOptional()
+  @IsUUID()
+  clinicId?: string;
+
   @ApiProperty({ description: 'Veterinarian name' })
   @IsString()
   @IsNotEmpty()

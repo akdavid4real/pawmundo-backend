@@ -21,6 +21,7 @@ import { EventsModule } from './modules/events/events.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
+import { ClinicsModule } from './modules/clinics/clinics.module';
 
 // Middleware
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
@@ -39,6 +40,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     // Domain Modules
     AuthModule,
     UserModule,
+    ClinicsModule,
     PetsModule,
     AppointmentsModule,
     HealthRecordsModule,

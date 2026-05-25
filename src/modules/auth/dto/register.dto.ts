@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsPhoneNumber, Matches, IsEnum } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, Matches, IsEnum, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -34,6 +34,11 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(['user', 'vet'])
   role?: string;
+
+  @ApiPropertyOptional({ description: 'Approved clinic ID to request access to when registering as a vet' })
+  @IsOptional()
+  @IsUUID()
+  clinicId?: string;
 
   @ApiPropertyOptional({ description: 'Phone number' })
   @IsOptional()

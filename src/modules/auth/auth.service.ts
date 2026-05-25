@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -10,7 +10,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { MailService } from '../../common/utils/mail.service';
 import { DatabaseErrorHandler } from '../../common/utils/database-error.handler';
-import { UserRole } from '@prisma/client';
+import { ClinicMembershipRole, ClinicMembershipStatus, ClinicVerificationStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +24,7 @@ export class AuthService {
     let user: any;
 
     try {
-      const { email, password, firstName, lastName, phone, address } = registerDto;
+      const { email, password, firstName, lastName, phone, address, clinicId } = registerDto;
 
       const existingUser = await this.prisma.user.findUnique({ where: { email } });
       if (existingUser) {
@@ -34,20 +34,55 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(password, 12);
       const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          firstName,
-          lastName,
-          role: (registerDto.role as UserRole) || 'user',
-          phone,
-          address,
-          emailVerificationToken,
-        },
+      const role = (registerDto.role as UserRole) || UserRole.user;
+
+      if (clinicId && role !== UserRole.vet) {
+        throw new BadRequestException('Only vet registrations can request clinic membership');
+      }
+
+      user = await this.prisma.$transaction(async tx => {
+        if (clinicId) {
+          const clinic = await tx.clinic.findFirst({
+            where: {
+              id: clinicId,
+              isActive: true,
+              verificationStatus: ClinicVerificationStatus.approved,
+            },
+          });
+
+          if (!clinic) {
+            throw new BadRequestException('Clinic not found or not approved yet');
+          }
+        }
+
+        const createdUser = await tx.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            role,
+            phone,
+            address,
+            emailVerificationToken,
+          },
+        });
+
+        if (clinicId) {
+          await tx.clinicMembership.create({
+            data: {
+              clinicId,
+              userId: createdUser.id,
+              role: ClinicMembershipRole.vet,
+              status: ClinicMembershipStatus.pending,
+            },
+          });
+        }
+
+        return createdUser;
       });
     } catch (error) {
-      if (error instanceof ConflictException) throw error;
+      if (error instanceof ConflictException || error instanceof BadRequestException) throw error;
       DatabaseErrorHandler.handle(error, 'User registration');
     }
 
@@ -63,6 +98,7 @@ export class AuthService {
         lastName: user.lastName,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
+        clinicMembershipStatus: registerDto.clinicId ? ClinicMembershipStatus.pending : undefined,
       },
     };
   }
@@ -75,6 +111,8 @@ export class AuthService {
       if (!user) {
         throw new UnauthorizedException(`The account for this email doesn't exist or the password is incorrect. Please try again.`);
       }
+
+      await this.ensureUserCanLogin(user.id, user.role);
 
       const lastLogin = new Date();
       await this.prisma.user.update({
@@ -98,8 +136,33 @@ export class AuthService {
         },
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
+      if (error instanceof UnauthorizedException || error instanceof ForbiddenException) throw error;
       DatabaseErrorHandler.handle(error, 'User login');
+    }
+  }
+
+  private async ensureUserCanLogin(userId: string, role: UserRole) {
+    if (role !== UserRole.vet && role !== UserRole.clinic_admin) return;
+
+    const memberships = await this.prisma.clinicMembership.findMany({
+      where: { userId },
+      include: { clinic: true },
+    });
+
+    if (memberships.length === 0) return;
+
+    const hasActiveApprovedMembership = memberships.some(membership =>
+      membership.status === ClinicMembershipStatus.active &&
+      membership.clinic.isActive &&
+      membership.clinic.verificationStatus === ClinicVerificationStatus.approved,
+    );
+
+    if (!hasActiveApprovedMembership) {
+      throw new ForbiddenException(
+        role === UserRole.clinic_admin
+          ? 'Clinic account is waiting for platform approval'
+          : 'Vet account is waiting for clinic approval',
+      );
     }
   }
 

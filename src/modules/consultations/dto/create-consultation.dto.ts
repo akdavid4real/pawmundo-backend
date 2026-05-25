@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsNumber, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsNumber, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateConsultationDto {
@@ -9,6 +9,14 @@ export class CreateConsultationDto {
   @IsString()
   @IsNotEmpty()
   petId: string;
+
+  @ApiProperty({
+    description: 'Approved clinic ID for clinic-owned consultation requests',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  clinicId?: string;
 
   @ApiProperty({
     description: 'Scheduled date and time for the consultation',

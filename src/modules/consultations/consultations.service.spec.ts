@@ -3,11 +3,13 @@ import { ConsultationsService } from './consultations.service';
 import { PetsService } from '../pets/pets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { ClinicsService } from '../clinics/clinics.service';
 
 describe('ConsultationsService', () => {
   let service: ConsultationsService;
   let prisma: PrismaService;
   let petsService: PetsService;
+  let clinicsService: ClinicsService;
 
   const mockConsultation = {
     id: 'test-consult-uuid',
@@ -44,18 +46,26 @@ describe('ConsultationsService', () => {
     findById: jest.fn(),
   };
 
+  const mockClinicsService = {
+    findApprovedClinicOrThrow: jest.fn(),
+    getActiveClinicForUser: jest.fn(),
+    requireVetClinicAccess: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConsultationsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PetsService, useValue: mockPetsService },
+        { provide: ClinicsService, useValue: mockClinicsService },
       ],
     }).compile();
 
     service = module.get<ConsultationsService>(ConsultationsService);
     prisma = module.get<PrismaService>(PrismaService);
     petsService = module.get<PetsService>(PetsService);
+    clinicsService = module.get<ClinicsService>(ClinicsService);
   });
 
   afterEach(() => {
@@ -120,11 +130,14 @@ describe('ConsultationsService', () => {
   describe('getVetQueue', () => {
     it('should return pending consultations', async () => {
       const mockQueue = [mockConsultation];
+      const vetId = 'vet-uuid-123';
       
+      mockClinicsService.getActiveClinicForUser.mockResolvedValue(null);
       mockPrismaService.consultation.findMany.mockResolvedValue(mockQueue);
 
-      const result = await service.getVetQueue();
+      const result = await service.getVetQueue(vetId);
 
+      expect(mockClinicsService.getActiveClinicForUser).toHaveBeenCalledWith(vetId);
       expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
         where: { status: 'pending', isActive: true },
         include: {
@@ -205,6 +218,7 @@ describe('ConsultationsService', () => {
       }
 
       mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      mockClinicsService.requireVetClinicAccess.mockResolvedValue(null);
       // The service also calls findUnique at the end of the method
       mockPrismaService.consultation.findUnique.mockResolvedValue(updatedConsultation);
 
@@ -213,6 +227,7 @@ describe('ConsultationsService', () => {
       expect(mockPrismaService.consultation.findFirst).toHaveBeenCalledWith({
         where: { id: consultationId, isActive: true },
       });
+      expect(mockClinicsService.requireVetClinicAccess).toHaveBeenCalledWith(vetId, undefined);
       expect(mockPrismaService.consultation.update).toHaveBeenCalled();
       expect(result.status).toBe('assigned');
     });

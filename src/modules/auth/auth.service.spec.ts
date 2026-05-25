@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../../common/utils/mail.service';
@@ -34,11 +34,19 @@ describe('AuthService', () => {
   };
 
   const mockPrismaService = {
+    $transaction: jest.fn((callback) => callback(mockPrismaService)),
     user: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    },
+    clinic: {
+      findFirst: jest.fn(),
+    },
+    clinicMembership: {
+      create: jest.fn(),
+      findMany: jest.fn(),
     },
   };
 
@@ -65,6 +73,8 @@ describe('AuthService', () => {
     jwtService = module.get<JwtService>(JwtService);
 
     jest.clearAllMocks();
+    mockPrismaService.$transaction.mockImplementation((callback) => callback(mockPrismaService));
+    mockPrismaService.clinicMembership.findMany.mockResolvedValue([]);
   });
 
   describe('register', () => {
@@ -107,6 +117,46 @@ describe('AuthService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({ role: 'vet' }),
       );
+    });
+
+    it('should register a vet with pending clinic membership', async () => {
+      const registerDto = {
+        email: 'vet@example.com',
+        password: 'VetPass123',
+        firstName: 'Dr. Sarah',
+        lastName: 'Johnson',
+        role: 'vet',
+        clinicId: 'clinic-uuid-123',
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.clinic.findFirst.mockResolvedValue({ id: registerDto.clinicId });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      mockPrismaService.user.create.mockResolvedValue(mockVetUser);
+      mockPrismaService.clinicMembership.create.mockResolvedValue({
+        clinicId: registerDto.clinicId,
+        userId: mockVetUser.id,
+        status: 'pending',
+      });
+
+      const result = await service.register(registerDto as any);
+
+      expect(mockPrismaService.clinic.findFirst).toHaveBeenCalledWith({
+        where: {
+          id: registerDto.clinicId,
+          isActive: true,
+          verificationStatus: 'approved',
+        },
+      });
+      expect(mockPrismaService.clinicMembership.create).toHaveBeenCalledWith({
+        data: {
+          clinicId: registerDto.clinicId,
+          userId: mockVetUser.id,
+          role: 'vet',
+          status: 'pending',
+        },
+      });
+      expect(result.user.clinicMembershipStatus).toBe('pending');
     });
 
     it('should throw ConflictException if email exists', async () => {
@@ -155,6 +205,7 @@ describe('AuthService', () => {
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockPrismaService.user.findUnique.mockResolvedValue(mockVetUser);
+      mockPrismaService.clinicMembership.findMany.mockResolvedValue([]);
       mockPrismaService.user.update.mockResolvedValue(mockVetUser);
 
       const result = await service.login(loginDto);
@@ -165,6 +216,24 @@ describe('AuthService', () => {
           role: 'vet',
         }),
       );
+    });
+
+    it('should block clinic-linked vet login until membership is approved', async () => {
+      const loginDto = {
+        email: 'vet@example.com',
+        password: 'VetPass123',
+      };
+
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockVetUser);
+      mockPrismaService.clinicMembership.findMany.mockResolvedValue([
+        {
+          status: 'pending',
+          clinic: { isActive: true, verificationStatus: 'approved' },
+        },
+      ]);
+
+      await expect(service.login(loginDto)).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {

@@ -3,16 +3,22 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PetsService } from '../pets/pets.service';
+import { ClinicsService } from '../clinics/clinics.service';
 
 @Injectable()
 export class AppointmentsService {
   constructor(
     private prisma: PrismaService,
     private petsService: PetsService,
+    private clinicsService: ClinicsService,
   ) { }
 
   async create(userId: string, createAppointmentDto: CreateAppointmentDto) {
     await this.petsService.findById(createAppointmentDto.petId, userId);
+    if (createAppointmentDto.clinicId) {
+      const clinic = await this.clinicsService.findApprovedClinicOrThrow(createAppointmentDto.clinicId);
+      createAppointmentDto.vetClinic = createAppointmentDto.vetClinic || clinic.name;
+    }
 
     return this.prisma.appointment.create({
       data: {
@@ -50,6 +56,10 @@ export class AppointmentsService {
     await this.findById(id, userId);
     if (updateAppointmentDto.petId) {
       await this.petsService.findById(updateAppointmentDto.petId, userId);
+    }
+    if (updateAppointmentDto.clinicId) {
+      const clinic = await this.clinicsService.findApprovedClinicOrThrow(updateAppointmentDto.clinicId);
+      updateAppointmentDto.vetClinic = updateAppointmentDto.vetClinic || clinic.name;
     }
 
     const updateData: any = { ...updateAppointmentDto };

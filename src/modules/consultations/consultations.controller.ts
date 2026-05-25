@@ -96,8 +96,8 @@ export class ConsultationsController {
   @ApiResponse({ status: 200, description: 'Queue retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  getVetQueue() {
-    return this.consultationsService.getVetQueue();
+  getVetQueue(@Request() req) {
+    return this.consultationsService.getVetQueue(req.user.id);
   }
 
   @Get('vet/active')
@@ -128,8 +128,8 @@ export class ConsultationsController {
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  findOneForVet(@Param('id') id: string) {
-    return this.consultationsService.findByIdForVet(id);
+  findOneForVet(@Param('id') id: string, @Request() req) {
+    return this.consultationsService.findByIdForVet(id, req.user.id);
   }
 
   @Get(':id')

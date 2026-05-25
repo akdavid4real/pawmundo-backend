@@ -116,9 +116,9 @@ describe('ConsultationsController', () => {
       const mockQueue = [{ id: 'consult-uuid', status: 'pending' }];
       mockConsultationsService.getVetQueue.mockResolvedValue(mockQueue);
 
-      const result = await controller.getVetQueue();
+      const result = await controller.getVetQueue(mockVetRequest);
 
-      expect(service.getVetQueue).toHaveBeenCalled();
+      expect(service.getVetQueue).toHaveBeenCalledWith(mockVetRequest.user.id);
       expect(result).toEqual(mockQueue);
     });
   });

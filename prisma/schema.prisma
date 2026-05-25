@@ -12,6 +12,7 @@ datasource db {
 enum UserRole {
   user
   vet
+  clinic_admin
   admin
 }
 
@@ -52,8 +53,78 @@ model User {
   forumLikes             ForumLike[]
   symptomChecks          SymptomCheck[]
   sentMessages           ConsultationMessage[] @relation("MessageSender")
+  clinicMemberships      ClinicMembership[]    @relation("ClinicMember")
+  clinicInvitesSent      ClinicMembership[]    @relation("ClinicInviteSender")
+  clinicApprovals        ClinicMembership[]    @relation("ClinicMembershipApprover")
 
   @@map("users")
+}
+
+enum ClinicVerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ClinicMembershipRole {
+  clinic_admin
+  vet
+}
+
+enum ClinicMembershipStatus {
+  pending
+  active
+  suspended
+  removed
+}
+
+model Clinic {
+  id                    String                   @id @default(uuid())
+  name                  String
+  email                 String?
+  phone                 String?
+  address               String?
+  registrationNumber    String?
+  verificationDocuments String[]
+  verificationStatus    ClinicVerificationStatus @default(pending)
+  rejectionReason       String?
+  isActive              Boolean                  @default(true)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  memberships           ClinicMembership[]
+  appointments          Appointment[]
+  consultations         Consultation[]
+
+  @@index([verificationStatus, isActive])
+  @@index([name])
+  @@map("clinics")
+}
+
+model ClinicMembership {
+  id           String                 @id @default(uuid())
+  clinicId     String
+  userId       String
+  role         ClinicMembershipRole
+  status       ClinicMembershipStatus @default(pending)
+  invitedById  String?
+  approvedById String?
+  approvedAt   DateTime?
+  removedAt    DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  clinic       Clinic                 @relation(fields: [clinicId], references: [id])
+  user         User                   @relation("ClinicMember", fields: [userId], references: [id])
+  invitedBy    User?                  @relation("ClinicInviteSender", fields: [invitedById], references: [id])
+  approvedBy   User?                  @relation("ClinicMembershipApprover", fields: [approvedById], references: [id])
+
+  @@unique([clinicId, userId])
+  @@index([userId, status])
+  @@index([clinicId, status, role])
+  @@index([invitedById])
+  @@index([approvedById])
+  @@map("clinic_memberships")
 }
 
 // ─────────────────────────────────────────────────
@@ -139,6 +210,7 @@ model Appointment {
   id              String            @id @default(uuid())
   userId          String
   petId           String
+  clinicId        String?
   vetName         String
   vetClinic       String
   appointmentDate DateTime
@@ -154,7 +226,9 @@ model Appointment {
 
   user            User              @relation(fields: [userId], references: [id])
   pet             Pet               @relation(fields: [petId], references: [id])
+  clinic          Clinic?           @relation(fields: [clinicId], references: [id])
 
+  @@index([clinicId, appointmentDate])
   @@map("appointments")
 }
 
@@ -185,6 +259,7 @@ model Consultation {
   id                String             @id @default(uuid())
   userId            String
   petId             String
+  clinicId          String?
   assignedVetId     String?
   veterinarianName  String?
   status            ConsultationStatus @default(pending)
@@ -210,12 +285,14 @@ model Consultation {
   // Relations
   user              User               @relation("ConsultationUser", fields: [userId], references: [id])
   pet               Pet                @relation(fields: [petId], references: [id])
+  clinic            Clinic?            @relation(fields: [clinicId], references: [id])
   assignedVet       User?              @relation("ConsultationVet", fields: [assignedVetId], references: [id])
   messages          ConsultationMessage[]
   consultationNotes ConsultationNote[]
   prescriptions     Prescription[]
 
   @@index([assignedVetId, status])
+  @@index([clinicId, status])
   @@index([status, scheduledDate])
   @@map("consultations")
 }

@@ -5,12 +5,14 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { PetsService } from '../pets/pets.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ConsultationStatus, Prisma } from '@prisma/client';
+import { ClinicsService } from '../clinics/clinics.service';
 
 @Injectable()
 export class ConsultationsService {
   constructor(
     private prisma: PrismaService,
     private petsService: PetsService,
+    private clinicsService: ClinicsService,
   ) { }
 
   private mapConsultationStatus(status: string): ConsultationStatus {
@@ -31,6 +33,9 @@ export class ConsultationsService {
 
   async create(userId: string, createConsultationDto: CreateConsultationDto) {
     await this.petsService.findById(createConsultationDto.petId, userId);
+    if (createConsultationDto.clinicId) {
+      await this.clinicsService.findApprovedClinicOrThrow(createConsultationDto.clinicId);
+    }
 
     const data: Prisma.ConsultationUncheckedCreateInput = {
       reason: createConsultationDto.reason,
@@ -39,6 +44,7 @@ export class ConsultationsService {
       duration: createConsultationDto.duration,
       cost: createConsultationDto.cost,
       petId: createConsultationDto.petId,
+      clinicId: createConsultationDto.clinicId,
       userId,
       status: ConsultationStatus.pending,
       scheduledDate: new Date(createConsultationDto.scheduledDate),
@@ -135,9 +141,15 @@ export class ConsultationsService {
     });
   }
 
-  async getVetQueue() {
+  async getVetQueue(vetId: string) {
+    const membership = await this.clinicsService.getActiveClinicForUser(vetId);
+
     return this.prisma.consultation.findMany({
-      where: { status: ConsultationStatus.pending, isActive: true },
+      where: {
+        status: ConsultationStatus.pending,
+        isActive: true,
+        ...(membership ? { clinicId: membership.clinicId } : {}),
+      },
       include: {
         user: { select: { firstName: true, lastName: true, email: true } },
         pet: { select: { name: true, species: true, breed: true, age: true } },
@@ -196,6 +208,7 @@ export class ConsultationsService {
     if (consultation.status !== ConsultationStatus.pending) {
       throw new ConflictException('Consultation already assigned or completed');
     }
+    await this.clinicsService.requireVetClinicAccess(vetId, consultation.clinicId);
 
     // Atomic update to prevent race conditions
     try {
@@ -234,8 +247,7 @@ export class ConsultationsService {
     });
   }
 
-  // Method for vets to access any consultation
-  async findByIdForVet(id: string) {
+  async findByIdForVet(id: string, vetId: string) {
     const consultation = await this.prisma.consultation.findFirst({
       where: { id, isActive: true },
       include: {
@@ -247,6 +259,12 @@ export class ConsultationsService {
 
     if (!consultation) {
       throw new NotFoundException(`Consultation with ID '${id}' does not exist`);
+    }
+    if (consultation.assignedVetId && consultation.assignedVetId !== vetId) {
+      throw new ForbiddenException('This consultation is assigned to another vet');
+    }
+    if (!consultation.assignedVetId) {
+      await this.clinicsService.requireVetClinicAccess(vetId, consultation.clinicId);
     }
     return consultation;
   }
