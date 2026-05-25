@@ -23,6 +23,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 import { ClinicsModule } from './modules/clinics/clinics.module';
 import { PlatformAdminModule } from './modules/platform-admin/platform-admin.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 // Middleware
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
@@ -56,6 +57,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     NotificationsModule,
     ActivityTrackingModule,
     EventsModule,
+    PaymentsModule,
     SeedModule,
   ],
 })
