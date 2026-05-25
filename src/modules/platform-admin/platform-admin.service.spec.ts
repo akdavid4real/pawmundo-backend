@@ -2,10 +2,10 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClinicVerificationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { ClinicsService } from './clinics.service';
+import { PlatformAdminService } from './platform-admin.service';
 
-describe('ClinicsService', () => {
-  let service: ClinicsService;
+describe('PlatformAdminService', () => {
+  let service: PlatformAdminService;
 
   const mockPrismaService = {
     clinic: {
@@ -17,35 +17,30 @@ describe('ClinicsService', () => {
     clinicMembership: {
       count: jest.fn(),
       findMany: jest.fn(),
+      updateMany: jest.fn(),
     },
-    appointment: {
-      count: jest.fn(),
-      findMany: jest.fn(),
-    },
-    consultation: {
-      count: jest.fn(),
-      findMany: jest.fn(),
-    },
+    $transaction: jest.fn((callback) => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ClinicsService,
+        PlatformAdminService,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
-    service = module.get<ClinicsService>(ClinicsService);
+    service = module.get<PlatformAdminService>(PlatformAdminService);
     jest.clearAllMocks();
+    mockPrismaService.$transaction.mockImplementation((callback) => callback(mockPrismaService));
   });
 
-  describe('listPlatformClinics', () => {
+  describe('listClinics', () => {
     it('should filter and paginate platform clinic results', async () => {
       mockPrismaService.clinic.findMany.mockResolvedValue([{ id: 'clinic-1', name: 'Main Clinic' }]);
       mockPrismaService.clinic.count.mockResolvedValue(1);
 
-      const result = await service.listPlatformClinics({
+      const result = await service.listClinics({
         q: 'main',
         verificationStatus: 'approved',
         isActive: 'true',
@@ -65,6 +60,25 @@ describe('ClinicsService', () => {
         }),
       );
       expect(result.pagination).toEqual({ page: 2, limit: 10, total: 1, totalPages: 1 });
+    });
+  });
+
+  describe('approveClinic', () => {
+    it('should approve the clinic and activate pending clinic admin membership', async () => {
+      mockPrismaService.clinic.findUnique.mockResolvedValue({ id: 'clinic-1' });
+      mockPrismaService.clinic.update.mockResolvedValue({ id: 'clinic-1', verificationStatus: 'approved' });
+      mockPrismaService.clinicMembership.updateMany.mockResolvedValue({ count: 1 });
+
+      await service.approveClinic('clinic-1', 'admin-1');
+
+      expect(mockPrismaService.clinic.update).toHaveBeenCalledWith({
+        where: { id: 'clinic-1' },
+        data: { verificationStatus: 'approved', rejectionReason: null, isActive: true },
+      });
+      expect(mockPrismaService.clinicMembership.updateMany).toHaveBeenCalledWith({
+        where: { clinicId: 'clinic-1', role: 'clinic_admin', status: 'pending' },
+        data: expect.objectContaining({ status: 'active', approvedById: 'admin-1' }),
+      });
     });
   });
 

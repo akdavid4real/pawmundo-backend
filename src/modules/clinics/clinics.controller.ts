@@ -6,8 +6,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { ClinicsService } from './clinics.service';
 import { RegisterClinicDto } from './dto/register-clinic.dto';
 import { CreateClinicVetDto } from './dto/create-clinic-vet.dto';
-import { RejectClinicDto } from './dto/reject-clinic.dto';
-import { ListPlatformClinicsDto } from './dto/list-platform-clinics.dto';
 
 @ApiTags('clinics')
 @Controller('clinics')
@@ -97,84 +95,4 @@ export class ClinicsController {
     return this.clinicsService.removeVet(req.user.id, membershipId);
   }
 
-  @Get('platform/pending')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List clinics pending platform approval' })
-  listPendingClinics() {
-    return this.clinicsService.listPendingClinics();
-  }
-
-  @Get('platform/stats')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get platform clinic management stats' })
-  getPlatformDashboard() {
-    return this.clinicsService.getPlatformDashboard();
-  }
-
-  @Get('platform')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List and filter all clinics for platform admins' })
-  listPlatformClinics(@Query() query: ListPlatformClinicsDto) {
-    return this.clinicsService.listPlatformClinics(query);
-  }
-
-  @Get('platform/:clinicId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get clinic details for platform admins' })
-  getPlatformClinic(@Param('clinicId') clinicId: string) {
-    return this.clinicsService.getPlatformClinic(clinicId);
-  }
-
-  @Get('platform/:clinicId/memberships')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List clinic memberships for platform admins' })
-  listPlatformClinicMemberships(@Param('clinicId') clinicId: string) {
-    return this.clinicsService.listPlatformClinicMemberships(clinicId);
-  }
-
-  @Post('platform/:clinicId/approve')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Approve a clinic and activate its clinic admin membership' })
-  approveClinic(@Request() req, @Param('clinicId') clinicId: string) {
-    return this.clinicsService.approveClinic(clinicId, req.user.id);
-  }
-
-  @Post('platform/:clinicId/reject')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reject a clinic verification request' })
-  rejectClinic(@Param('clinicId') clinicId: string, @Body() dto: RejectClinicDto) {
-    return this.clinicsService.rejectClinic(clinicId, dto.reason);
-  }
-
-  @Post('platform/:clinicId/suspend')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Suspend an approved clinic from platform access' })
-  suspendClinic(@Param('clinicId') clinicId: string, @Body() dto: RejectClinicDto) {
-    return this.clinicsService.suspendClinic(clinicId, dto.reason);
-  }
-
-  @Post('platform/:clinicId/reactivate')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reactivate a suspended approved clinic' })
-  reactivateClinic(@Param('clinicId') clinicId: string) {
-    return this.clinicsService.reactivateClinic(clinicId);
-  }
 }
