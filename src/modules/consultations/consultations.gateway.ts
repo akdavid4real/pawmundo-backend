@@ -184,4 +184,13 @@ export class ConsultationsGateway implements OnGatewayConnection, OnGatewayDisco
 
     this.server.to(roomName).emit('consultation:updated', { consultationId, ...updates });
   }
+
+  notifyConsultationMessage(consultationId: string, consultation: any) {
+    const roomName = `consultation:${consultationId}`;
+
+    this.server.to(roomName).emit('consultation:message', {
+      consultationId,
+      consultation,
+    });
+  }
 }

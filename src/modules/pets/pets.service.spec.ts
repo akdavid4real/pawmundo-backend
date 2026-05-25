@@ -138,6 +138,51 @@ describe('PetsService', () => {
     });
   });
 
+  describe('uploadProfileImage', () => {
+    it('should upload a pet profile image for the owner and return the updated pet', async () => {
+      const publicUrl = 'https://storage.example/pet-images/test-pet-uuid/profile.jpg';
+      const updatedPet = { ...mockPet, profileImage: publicUrl };
+
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockStorageService.uploadFile.mockResolvedValue(publicUrl);
+      mockPrismaService.pet.update.mockResolvedValue(updatedPet);
+
+      const result = await service.uploadProfileImage(
+        'test-pet-uuid',
+        'test-owner-uuid',
+        Buffer.from('image'),
+        'image/jpeg',
+      );
+
+      expect(mockStorageService.uploadFile).toHaveBeenCalledWith(
+        'pet-images',
+        expect.stringMatching(/^test-pet-uuid\/profile_\d+\.jpeg$/),
+        expect.any(Buffer),
+        'image/jpeg',
+      );
+      expect(mockPrismaService.pet.update).toHaveBeenCalledWith({
+        where: { id: 'test-pet-uuid' },
+        data: { profileImage: publicUrl },
+      });
+      expect(result).toEqual(updatedPet);
+    });
+
+    it('should reject profile image upload when the pet is not owned by the user', async () => {
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+
+      await expect(
+        service.uploadProfileImage(
+          'test-pet-uuid',
+          'different-owner-uuid',
+          Buffer.from('image'),
+          'image/jpeg',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockStorageService.uploadFile).not.toHaveBeenCalled();
+    });
+  });
+
   describe('delete', () => {
     it('should soft delete pet successfully', async () => {
       const deletedPet = { ...mockPet, isActive: false };

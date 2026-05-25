@@ -11,6 +11,7 @@ describe('SupabaseStorageService', () => {
     storage: {
       getBucket: jest.fn(),
       createBucket: jest.fn(),
+      updateBucket: jest.fn(),
       from: jest.fn().mockReturnValue({
         upload: jest.fn(),
         getPublicUrl: jest.fn(),
@@ -56,11 +57,13 @@ describe('SupabaseStorageService', () => {
 
     it('should not create buckets if they already exist', async () => {
       mockSupabaseClient.storage.getBucket.mockResolvedValue({ data: { name: 'bucket' }, error: null });
+      mockSupabaseClient.storage.updateBucket.mockResolvedValue({ data: { name: 'bucket' }, error: null });
 
       await service.ensureBuckets();
 
       expect(mockSupabaseClient.storage.getBucket).toHaveBeenCalledTimes(Object.keys(STORAGE_BUCKETS).length);
       expect(mockSupabaseClient.storage.createBucket).not.toHaveBeenCalled();
+      expect(mockSupabaseClient.storage.updateBucket).toHaveBeenCalledTimes(Object.keys(STORAGE_BUCKETS).length);
     });
   });
 

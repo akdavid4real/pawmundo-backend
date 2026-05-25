@@ -51,20 +51,22 @@ export class SupabaseStorageService implements OnModuleInit {
     }
 
     /**
-     * Creates all required storage buckets if they don't already exist.
+     * Creates required storage buckets if they don't exist and reapplies the
+     * expected public/limit/MIME settings when they already do.
      */
     async ensureBuckets(): Promise<void> {
         const client = this.supabaseService.getClient();
 
         for (const config of Object.values(STORAGE_BUCKETS)) {
             const { data: existing } = await client.storage.getBucket(config.name);
+            const bucketOptions = {
+                public: config.public,
+                fileSizeLimit: config.maxFileSizeMB * 1024 * 1024,
+                allowedMimeTypes: config.allowedMimeTypes,
+            };
 
             if (!existing) {
-                const { error } = await client.storage.createBucket(config.name, {
-                    public: config.public,
-                    fileSizeLimit: config.maxFileSizeMB * 1024 * 1024,
-                    allowedMimeTypes: config.allowedMimeTypes,
-                });
+                const { error } = await client.storage.createBucket(config.name, bucketOptions);
 
                 if (error) {
                     this.logger.warn(`Bucket "${config.name}" creation: ${error.message}`);
@@ -72,6 +74,10 @@ export class SupabaseStorageService implements OnModuleInit {
                     this.logger.log(`Created bucket: ${config.name}`);
                 }
             } else {
+                const { error } = await client.storage.updateBucket(config.name, bucketOptions);
+                if (error) {
+                    this.logger.warn(`Bucket "${config.name}" update: ${error.message}`);
+                }
                 this.logger.debug(`Bucket "${config.name}" already exists`);
             }
         }

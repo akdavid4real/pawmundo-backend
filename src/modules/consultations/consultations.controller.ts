@@ -6,6 +6,7 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { ConsultationsGateway } from './consultations.gateway';
 
 
 @ApiTags('Consultations')
@@ -14,7 +15,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 
 export class ConsultationsController {
-  constructor(private readonly consultationsService: ConsultationsService) { }
+  constructor(
+    private readonly consultationsService: ConsultationsService,
+    private readonly consultationsGateway: ConsultationsGateway,
+  ) { }
 
   @Post()
   @ApiOperation({
@@ -240,9 +244,11 @@ export class ConsultationsController {
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  sendMessage(@Param('id') id: string, @Request() req, @Body('message') message: string) {
+  async sendMessage(@Param('id') id: string, @Request() req, @Body('message') message: string) {
     const isVet = req.user.role === 'vet';
-    return this.consultationsService.sendMessage(id, req.user.id, message, isVet);
+    const consultation = await this.consultationsService.sendMessage(id, req.user.id, message, isVet);
+    this.consultationsGateway.notifyConsultationMessage(id, consultation);
+    return consultation;
   }
 
   @Get(':id/assignment-status')
@@ -264,11 +270,13 @@ export class ConsultationsController {
   @ApiResponse({ status: 200, description: 'Messages marked as read' })
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  markMessagesAsRead(
+  async markMessagesAsRead(
     @Param('id') id: string,
     @Request() req,
     @Body('messageIds') messageIds?: string[],
   ) {
-    return this.consultationsService.markMessagesAsRead(id, req.user.id, messageIds);
+    const consultation = await this.consultationsService.markMessagesAsRead(id, req.user.id, messageIds);
+    this.consultationsGateway.notifyConsultationUpdated(id, { consultation });
+    return consultation;
   }
 }
