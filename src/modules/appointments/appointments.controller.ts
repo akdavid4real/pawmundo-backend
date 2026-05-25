@@ -19,19 +19,25 @@ export class AppointmentsController {
     return this.appointmentsService.create(req.user.id, createAppointmentDto);
   }
 
-  @ApiOperation({ summary: 'Get all user appointments' })
-  @ApiResponse({ status: 200, description: 'List of user appointments' })
-  @Get()
-  @Get('my-appointments')
-  async findMyAppointments(@Request() req) {
-    return this.appointmentsService.findByUser(req.user.id);
-  }
-
   @ApiOperation({ summary: 'Get upcoming appointments' })
   @ApiResponse({ status: 200, description: 'List of upcoming appointments' })
   @Get('upcoming')
   async findUpcoming(@Request() req) {
     return this.appointmentsService.findUpcoming(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get all user appointments' })
+  @ApiResponse({ status: 200, description: 'List of user appointments' })
+  @Get('my-appointments')
+  async findMyAppointments(@Request() req) {
+    return this.appointmentsService.findByUser(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get all user appointments' })
+  @ApiResponse({ status: 200, description: 'List of user appointments' })
+  @Get()
+  async findAllForCurrentUser(@Request() req) {
+    return this.appointmentsService.findByUser(req.user.id);
   }
 
   @ApiOperation({ summary: 'Get appointment by ID' })
