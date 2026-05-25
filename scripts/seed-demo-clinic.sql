@@ -1,6 +1,7 @@
 DO $$
 DECLARE
   clinic_id TEXT;
+  platform_admin_id TEXT;
   clinic_admin_id TEXT;
   vet_id TEXT;
 BEGIN
@@ -48,6 +49,38 @@ BEGIN
       "updatedAt" = now()
     WHERE id = clinic_id;
   END IF;
+
+  INSERT INTO public.users (
+    id,
+    email,
+    password,
+    "firstName",
+    "lastName",
+    role,
+    "isEmailVerified",
+    "isActive",
+    "updatedAt"
+  )
+  VALUES (
+    gen_random_uuid()::text,
+    'admin@pawmundo.com',
+    '$2b$12$K/KADPpBQjMdND2Wv5H/quQYl1KFwJUWdapJroMlbaAUUocfeMeVa',
+    'Platform',
+    'Admin',
+    'admin',
+    true,
+    true,
+    now()
+  )
+  ON CONFLICT (email) DO UPDATE
+  SET
+    "firstName" = EXCLUDED."firstName",
+    "lastName" = EXCLUDED."lastName",
+    role = 'admin',
+    "isEmailVerified" = true,
+    "isActive" = true,
+    "updatedAt" = now()
+  RETURNING id INTO platform_admin_id;
 
   INSERT INTO public.users (
     id,
