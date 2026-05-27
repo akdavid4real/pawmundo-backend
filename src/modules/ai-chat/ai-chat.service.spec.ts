@@ -11,6 +11,7 @@ describe('AiChatService', () => {
   let prismaService: PrismaService;
   let petsService: PetsService;
   let appointmentsService: AppointmentsService;
+  let mockFetch: jest.Mock;
 
   const mockPrismaService = {
     user: {
@@ -34,6 +35,9 @@ describe('AiChatService', () => {
   };
 
   beforeEach(async () => {
+    mockFetch = jest.fn();
+    global.fetch = mockFetch as any;
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiChatService,
@@ -73,13 +77,47 @@ describe('AiChatService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
       mockPetsService.findByOwner.mockResolvedValue([]);
       mockAppointmentsService.findUpcoming.mockResolvedValue([]);
+      mockFetch.mockResolvedValue({ ok: false, status: 401 });
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
       const mockDto = { message: 'hello', context: 'greeting' };
       const response = await service.chat('user-id', mockDto);
       expect(response).toHaveProperty('response');
       expect(typeof response.response).toBe('string');
       expect(response.typewriter).toBe(true);
+      expect(consoleErrorSpy).toHaveBeenCalled();
       // fallback response doesn't have suggestedActions
+    });
+  });
+
+  describe('chat vision payload', () => {
+    it('should send image content to Mistral when an image is provided', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
+      mockPetsService.findByOwner.mockResolvedValue([]);
+      mockAppointmentsService.findUpcoming.mockResolvedValue([]);
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          choices: [{ message: { content: 'The image shows a pet skin concern.' } }],
+        }),
+      });
+
+      const response = await service.chat('user-id', {
+        message: 'What do you see?',
+        context: { source: 'mobile' },
+        image: { base64: 'abc123', mimeType: 'image/jpeg' },
+      });
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(requestBody.model).toBe('mistral-small-latest');
+      expect(requestBody.messages[0].content).toEqual(expect.arrayContaining([
+        expect.objectContaining({ type: 'text' }),
+        {
+          type: 'image_url',
+          image_url: 'data:image/jpeg;base64,abc123',
+        },
+      ]));
+      expect(response.response).toBe('The image shows a pet skin concern.');
     });
   });
 

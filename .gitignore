@@ -10,6 +10,7 @@ project planing.txt
 __test__
 /generated/prisma
 migration.sql
+!prisma/migrations/20260528090000_add_user_subscriptions/migration.sql
 .vercel
 .env.vercel
 .env.test

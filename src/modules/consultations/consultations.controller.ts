@@ -6,7 +6,6 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { ConsultationsGateway } from './consultations.gateway';
 
 
 @ApiTags('Consultations')
@@ -17,7 +16,6 @@ import { ConsultationsGateway } from './consultations.gateway';
 export class ConsultationsController {
   constructor(
     private readonly consultationsService: ConsultationsService,
-    private readonly consultationsGateway: ConsultationsGateway,
   ) { }
 
   @Post()
@@ -64,13 +62,13 @@ export class ConsultationsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  create(@Request() req, @Body() createConsultationDto: CreateConsultationDto) {
+  async create(@Request() req, @Body() createConsultationDto: CreateConsultationDto) {
     return this.consultationsService.create(req.user.id, createConsultationDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all consultations for the authenticated user' })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'assigned', 'in-progress', 'completed', 'cancelled'], description: 'Filter by consultation status' })
+  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'assigned', 'in_progress', 'completed', 'cancelled'], description: 'Filter by consultation status' })
   @ApiResponse({ status: 200, description: 'List of consultations retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Request() req, @Query('status') status?: string) {
@@ -202,7 +200,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 400, description: 'Cannot complete consultation in current status' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  completeConsultation(
+  async completeConsultation(
     @Param('id') id: string,
     @Request() req,
     @Body('notes') notes: string,
@@ -220,7 +218,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 409, description: 'Consultation already assigned' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Vet role required' })
-  acceptConsultation(@Param('id') id: string, @Request() req) {
+  async acceptConsultation(@Param('id') id: string, @Request() req) {
     return this.consultationsService.acceptConsultation(id, req.user.id);
   }
 
@@ -232,7 +230,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 404, description: 'Consultation not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Not assigned to this vet' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  releaseConsultation(@Param('id') id: string, @Request() req) {
+  async releaseConsultation(@Param('id') id: string, @Request() req) {
     return this.consultationsService.releaseConsultation(id, req.user.id);
   }
 
@@ -246,9 +244,7 @@ export class ConsultationsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async sendMessage(@Param('id') id: string, @Request() req, @Body('message') message: string) {
     const isVet = req.user.role === 'vet';
-    const consultation = await this.consultationsService.sendMessage(id, req.user.id, message, isVet);
-    this.consultationsGateway.notifyConsultationMessage(id, consultation);
-    return consultation;
+    return this.consultationsService.sendMessage(id, req.user.id, message, isVet);
   }
 
   @Get(':id/assignment-status')
@@ -275,8 +271,6 @@ export class ConsultationsController {
     @Request() req,
     @Body('messageIds') messageIds?: string[],
   ) {
-    const consultation = await this.consultationsService.markMessagesAsRead(id, req.user.id, messageIds);
-    this.consultationsGateway.notifyConsultationUpdated(id, { consultation });
-    return consultation;
+    return this.consultationsService.markMessagesAsRead(id, req.user.id, messageIds);
   }
 }

@@ -17,7 +17,7 @@ export class AiChatService {
   ) { }
 
   async chat(userId: string, aiChatDto: AiChatDto) {
-    const { message, context } = aiChatDto;
+    const { message, context, image } = aiChatDto;
 
     const [user, pets, upcomingAppointments] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
@@ -77,9 +77,19 @@ export class AiChatService {
     const fullContext = `You are Dr. Woofson, a professional AI veterinarian. Be helpful and concise. Keep responses under 100 words. Address ${userName} by name. Reference specific pet details when relevant.
 
 ${petInfo}${appointmentInfo}
-${context ? `Context: ${context}` : ''}`;
+${context ? `Context: ${this.formatContext(context)}` : ''}
+${image ? 'The user attached an image. Analyze it cautiously and explain that image-based advice is not a substitute for in-person veterinary care.' : ''}`;
 
     const prompt = `${fullContext}\n\n${userName}: ${message}\n\nDr. Woofson (be brief and professional):`;
+    const content = image
+      ? [
+        { type: 'text', text: prompt },
+        {
+          type: 'image_url',
+          image_url: `data:${image.mimeType};base64,${image.base64}`,
+        },
+      ]
+      : prompt;
 
     try {
       const response = await fetch(`${process.env.MISTRAL_API_BASE || 'https://api.mistral.ai'}/v1/chat/completions`, {
@@ -89,8 +99,10 @@ ${context ? `Context: ${context}` : ''}`;
           'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'mistral-large-latest',
-          messages: [{ role: 'user', content: prompt }],
+          model: image
+            ? process.env.MISTRAL_VISION_MODEL || 'mistral-small-latest'
+            : process.env.MISTRAL_CHAT_MODEL || 'mistral-large-latest',
+          messages: [{ role: 'user', content }],
           temperature: 0.7,
           max_tokens: 150,
         }),
@@ -126,6 +138,18 @@ ${context ? `Context: ${context}` : ''}`;
         typewriter: true,
         timestamp: new Date().toISOString(),
       };
+    }
+  }
+
+  private formatContext(context: string | Record<string, unknown>): string {
+    if (typeof context === 'string') {
+      return context;
+    }
+
+    try {
+      return JSON.stringify(context);
+    } catch {
+      return '';
     }
   }
 

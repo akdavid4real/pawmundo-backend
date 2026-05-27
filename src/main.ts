@@ -5,11 +5,15 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
     logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug', 'verbose']
   });
+  app.use(json({ limit: '8mb' }));
+  app.use(urlencoded({ extended: true, limit: '8mb' }));
 
   // Global exception filter for detailed error messages
   app.useGlobalFilters(new GlobalExceptionFilter());

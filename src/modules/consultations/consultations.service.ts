@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
@@ -16,8 +16,14 @@ export class ConsultationsService {
   ) { }
 
   private mapConsultationStatus(status: string): ConsultationStatus {
-    if (status === 'in-progress') {
+    if (status === 'in-progress' || status === 'in_progress' || status === 'active') {
       return ConsultationStatus.in_progress;
+    }
+    if (status === 'ended') {
+      return ConsultationStatus.completed;
+    }
+    if (status === 'incoming') {
+      return ConsultationStatus.pending;
     }
 
     return status as ConsultationStatus;
@@ -119,10 +125,27 @@ export class ConsultationsService {
   }
 
   async completeConsultation(id: string, userId: string, notes: string, prescription?: string) {
-    return this.update(id, userId, {
-      status: 'completed',
-      notes,
-      prescription,
+    const consultation = await this.prisma.consultation.findFirst({
+      where: { id, isActive: true },
+    });
+
+    if (!consultation) {
+      throw new NotFoundException(`Consultation with ID '${id}' does not exist`);
+    }
+    if (consultation.userId !== userId && consultation.assignedVetId !== userId) {
+      throw new ForbiddenException(`You don't have permission to complete consultation '${id}'`);
+    }
+    if (consultation.status === ConsultationStatus.completed || consultation.status === ConsultationStatus.cancelled) {
+      throw new BadRequestException(`Cannot complete consultation '${id}' because it is already ${consultation.status}`);
+    }
+
+    return this.prisma.consultation.update({
+      where: { id },
+      data: {
+        status: ConsultationStatus.completed,
+        notes,
+        prescription,
+      },
     });
   }
 
@@ -298,6 +321,9 @@ export class ConsultationsService {
 
     if (!consultation) {
       throw new NotFoundException('Consultation not found');
+    }
+    if (consultation.status === ConsultationStatus.completed || consultation.status === ConsultationStatus.cancelled) {
+      throw new BadRequestException('Cannot send messages in a closed consultation');
     }
 
     if (!isVet && consultation.userId !== userId) {

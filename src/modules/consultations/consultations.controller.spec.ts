@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConsultationsController } from './consultations.controller';
 import { ConsultationsService } from './consultations.service';
-import { ConsultationsGateway } from './consultations.gateway';
 
 describe('ConsultationsController', () => {
   let controller: ConsultationsController;
@@ -28,11 +27,6 @@ describe('ConsultationsController', () => {
     isConsultationAssignedToVet: jest.fn(),
   };
 
-  const mockConsultationsGateway = {
-    notifyConsultationMessage: jest.fn(),
-    notifyConsultationUpdated: jest.fn(),
-  };
-
   const mockRequest = {
     user: {
       id: 'test-user-uuid',
@@ -54,10 +48,6 @@ describe('ConsultationsController', () => {
         {
           provide: ConsultationsService,
           useValue: mockConsultationsService,
-        },
-        {
-          provide: ConsultationsGateway,
-          useValue: mockConsultationsGateway,
         },
       ],
     }).compile();
@@ -236,7 +226,7 @@ describe('ConsultationsController', () => {
   });
 
   describe('sendMessage', () => {
-    it('should send a message and notify the consultation room', async () => {
+    it('should send a message', async () => {
       const consultationId = 'consult-uuid';
       const mockConsultation = { id: consultationId, messages: [{ text: 'Hello' }] };
       mockConsultationsService.sendMessage.mockResolvedValue(mockConsultation);
@@ -249,16 +239,12 @@ describe('ConsultationsController', () => {
         'Hello',
         false,
       );
-      expect(mockConsultationsGateway.notifyConsultationMessage).toHaveBeenCalledWith(
-        consultationId,
-        mockConsultation,
-      );
       expect(result).toEqual(mockConsultation);
     });
   });
 
   describe('markMessagesAsRead', () => {
-    it('should mark messages as read and notify the consultation room', async () => {
+    it('should mark messages as read', async () => {
       const consultationId = 'consult-uuid';
       const mockConsultation = { id: consultationId, messages: [{ id: 'message-1', isRead: true }] };
       mockConsultationsService.markMessagesAsRead.mockResolvedValue(mockConsultation);
@@ -273,10 +259,6 @@ describe('ConsultationsController', () => {
         consultationId,
         mockRequest.user.id,
         ['message-1'],
-      );
-      expect(mockConsultationsGateway.notifyConsultationUpdated).toHaveBeenCalledWith(
-        consultationId,
-        { consultation: mockConsultation },
       );
       expect(result).toEqual(mockConsultation);
     });

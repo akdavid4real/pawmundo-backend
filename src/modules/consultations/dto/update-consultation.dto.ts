@@ -4,7 +4,7 @@ import { IsOptional, IsEnum, IsString, IsBoolean, IsDateString } from 'class-val
 
 export class UpdateConsultationDto extends PartialType(CreateConsultationDto) {
   @IsOptional()
-  @IsEnum(['scheduled', 'in-progress', 'completed', 'cancelled'])
+  @IsEnum(['pending', 'assigned', 'in_progress', 'in-progress', 'completed', 'cancelled'])
   status?: string;
 
   @IsOptional()
@@ -32,6 +32,6 @@ export class UpdateConsultationDto extends PartialType(CreateConsultationDto) {
   meetingId?: string;
 
   @IsOptional()
-  @IsEnum(['pending', 'paid', 'refunded'])
+  @IsEnum(['pending', 'pending_payment', 'paid', 'refunded'])
   paymentStatus?: string;
 }

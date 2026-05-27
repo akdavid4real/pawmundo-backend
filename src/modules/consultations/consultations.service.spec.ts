@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConsultationsService } from './consultations.service';
 import { PetsService } from '../pets/pets.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ClinicsService } from '../clinics/clinics.service';
 
 describe('ConsultationsService', () => {
@@ -39,6 +39,10 @@ describe('ConsultationsService', () => {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
+    },
+    consultationMessage: {
+      create: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 
@@ -101,6 +105,24 @@ describe('ConsultationsService', () => {
 
       expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-uuid-123', status: 'in_progress', isActive: true },
+        include: { pet: { select: { name: true, species: true } } },
+        orderBy: { scheduledDate: 'desc' },
+      });
+    });
+
+    it('should map legacy active and ended aliases to canonical prisma enum values', async () => {
+      mockPrismaService.consultation.findMany.mockResolvedValue([mockConsultation]);
+
+      await service.findByStatus('user-uuid-123', 'active');
+      expect(mockPrismaService.consultation.findMany).toHaveBeenLastCalledWith({
+        where: { userId: 'user-uuid-123', status: 'in_progress', isActive: true },
+        include: { pet: { select: { name: true, species: true } } },
+        orderBy: { scheduledDate: 'desc' },
+      });
+
+      await service.findByStatus('user-uuid-123', 'ended');
+      expect(mockPrismaService.consultation.findMany).toHaveBeenLastCalledWith({
+        where: { userId: 'user-uuid-123', status: 'completed', isActive: true },
         include: { pet: { select: { name: true, species: true } } },
         orderBy: { scheduledDate: 'desc' },
       });
@@ -308,6 +330,56 @@ describe('ConsultationsService', () => {
       await expect(
         service.releaseConsultation(consultationId, vetId),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('completeConsultation', () => {
+    it('should allow the assigned vet to complete an active consultation', async () => {
+      const consultation = {
+        ...mockConsultation,
+        status: 'assigned',
+        assignedVetId: 'vet-uuid-123',
+      };
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      mockPrismaService.consultation.update.mockResolvedValue({ ...consultation, status: 'completed' });
+
+      await service.completeConsultation('test-consult-uuid', 'vet-uuid-123', 'Done');
+
+      expect(mockPrismaService.consultation.update).toHaveBeenCalledWith({
+        where: { id: 'test-consult-uuid' },
+        data: {
+          status: 'completed',
+          notes: 'Done',
+          prescription: undefined,
+        },
+      });
+    });
+
+    it('should reject completing a terminal consultation', async () => {
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        status: 'completed',
+      });
+
+      await expect(
+        service.completeConsultation('test-consult-uuid', 'user-uuid-123', 'Done'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('sendMessage', () => {
+    it('should reject messages in terminal consultations', async () => {
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        status: 'cancelled',
+        messages: [],
+        pet: { name: 'Buddy', species: 'dog' },
+      });
+
+      await expect(
+        service.sendMessage('test-consult-uuid', 'user-uuid-123', 'Hello'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.consultationMessage.create).not.toHaveBeenCalled();
     });
   });
 });

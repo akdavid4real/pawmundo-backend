@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PetsService } from '../pets/pets.service';
+import { ClinicsService } from '../clinics/clinics.service';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
@@ -35,12 +36,17 @@ describe('AppointmentsService', () => {
     findById: jest.fn(),
   };
 
+  const mockClinicsService = {
+    findApprovedClinicOrThrow: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppointmentsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PetsService, useValue: mockPetsService },
+        { provide: ClinicsService, useValue: mockClinicsService },
       ],
     }).compile();
 

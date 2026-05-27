@@ -22,4 +22,10 @@ export class PaymentsController {
   verifyPaystack(@Request() req, @Param('reference') reference: string) {
     return this.paymentsService.verify(req.user.id, reference);
   }
+
+  @ApiOperation({ summary: 'Get current subscription entitlement' })
+  @Get('subscription/current')
+  getCurrentSubscription(@Request() req) {
+    return this.paymentsService.getCurrentSubscription(req.user.id);
+  }
 }
