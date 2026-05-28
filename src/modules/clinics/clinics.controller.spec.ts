@@ -21,6 +21,10 @@ describe('ClinicsController', () => {
     approveVet: jest.fn(),
     suspendVet: jest.fn(),
     removeVet: jest.fn(),
+    listClinicPatients: jest.fn(),
+    getClinicPatient: jest.fn(),
+    listClinicConsultations: jest.fn(),
+    getClinicConsultation: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -71,5 +75,54 @@ describe('ClinicsController', () => {
 
     expect(mockClinicsService.listApprovedClinicVets).toHaveBeenCalledWith('clinic-uuid-123');
     expect(mockClinicsService.listClinicVets).not.toHaveBeenCalled();
+  });
+
+  it('routes GET /clinics/admin/patients to clinic admin patients', async () => {
+    mockClinicsService.listClinicPatients.mockResolvedValue([{ id: 'pet-id' }]);
+
+    await request(app.getHttpServer())
+      .get('/clinics/admin/patients?q=buddy')
+      .expect(200)
+      .expect([{ id: 'pet-id' }]);
+
+    expect(mockClinicsService.listClinicPatients).toHaveBeenCalledWith('clinic-admin-user-id', { q: 'buddy' });
+    expect(mockClinicsService.listApprovedClinicVets).not.toHaveBeenCalled();
+  });
+
+  it('routes GET /clinics/admin/patients/:petId to clinic admin patient detail', async () => {
+    mockClinicsService.getClinicPatient.mockResolvedValue({ id: 'pet-id' });
+
+    await request(app.getHttpServer())
+      .get('/clinics/admin/patients/pet-id')
+      .expect(200)
+      .expect({ id: 'pet-id' });
+
+    expect(mockClinicsService.getClinicPatient).toHaveBeenCalledWith('clinic-admin-user-id', 'pet-id');
+  });
+
+  it('routes GET /clinics/admin/consultations to clinic admin consultations', async () => {
+    mockClinicsService.listClinicConsultations.mockResolvedValue([{ id: 'consultation-id' }]);
+
+    await request(app.getHttpServer())
+      .get('/clinics/admin/consultations?status=completed&vetId=vet-id')
+      .expect(200)
+      .expect([{ id: 'consultation-id' }]);
+
+    expect(mockClinicsService.listClinicConsultations).toHaveBeenCalledWith('clinic-admin-user-id', {
+      status: 'completed',
+      vetId: 'vet-id',
+    });
+    expect(mockClinicsService.listApprovedClinicVets).not.toHaveBeenCalled();
+  });
+
+  it('routes GET /clinics/admin/consultations/:consultationId to clinic admin consultation detail', async () => {
+    mockClinicsService.getClinicConsultation.mockResolvedValue({ id: 'consultation-id' });
+
+    await request(app.getHttpServer())
+      .get('/clinics/admin/consultations/consultation-id')
+      .expect(200)
+      .expect({ id: 'consultation-id' });
+
+    expect(mockClinicsService.getClinicConsultation).toHaveBeenCalledWith('clinic-admin-user-id', 'consultation-id');
   });
 });

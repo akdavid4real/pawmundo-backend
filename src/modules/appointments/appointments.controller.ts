@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -40,8 +40,13 @@ export class AppointmentsController {
   @Get('clinic')
   @UseGuards(RolesGuard)
   @Roles('clinic_admin')
-  async findClinicAppointments(@Request() req) {
-    return this.appointmentsService.findForClinicAdmin(req.user.id);
+  async findClinicAppointments(@Request() req, @Query() query: {
+    status?: AppointmentStatus;
+    vetId?: string;
+    date?: string;
+    patientId?: string;
+  }) {
+    return this.appointmentsService.findForClinicAdmin(req.user.id, query);
   }
 
   @ApiOperation({ summary: 'Get clinic appointment detail for clinic admin' })

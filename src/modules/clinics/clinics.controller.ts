@@ -87,6 +87,47 @@ export class ClinicsController {
     return this.clinicsService.removeVet(req.user.id, membershipId);
   }
 
+  @Get('admin/patients')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('clinic_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List patients for the clinic admin clinic' })
+  listPatients(@Request() req, @Query() query: { q?: string }) {
+    return this.clinicsService.listClinicPatients(req.user.id, query);
+  }
+
+  @Get('admin/patients/:petId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('clinic_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get clinic patient detail for clinic admin' })
+  getPatient(@Request() req, @Param('petId') petId: string) {
+    return this.clinicsService.getClinicPatient(req.user.id, petId);
+  }
+
+  @Get('admin/consultations')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('clinic_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List consultations for the clinic admin clinic' })
+  listConsultations(@Request() req, @Query() query: {
+    status?: string;
+    vetId?: string;
+    date?: string;
+    patientId?: string;
+  }) {
+    return this.clinicsService.listClinicConsultations(req.user.id, query);
+  }
+
+  @Get('admin/consultations/:consultationId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('clinic_admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get clinic consultation detail for clinic admin' })
+  getConsultation(@Request() req, @Param('consultationId') consultationId: string) {
+    return this.clinicsService.getClinicConsultation(req.user.id, consultationId);
+  }
+
   @Post(':clinicId/join')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

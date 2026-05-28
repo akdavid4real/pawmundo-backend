@@ -4,6 +4,7 @@ import {
   ClinicMembershipRole,
   ClinicMembershipStatus,
   ClinicVerificationStatus,
+  ConsultationStatus,
   Prisma,
   UserRole,
 } from '@prisma/client';
@@ -316,6 +317,185 @@ export class ClinicsService {
       },
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     });
+  }
+
+  private buildDayRange(date?: string) {
+    if (!date) return undefined;
+    const start = new Date(date);
+    if (Number.isNaN(start.getTime())) {
+      throw new BadRequestException('Invalid date filter');
+    }
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { gte: start, lt: end };
+  }
+
+  private mapConsultationStatus(status?: string) {
+    if (!status) return undefined;
+    if (status === 'in-progress' || status === 'in_progress' || status === 'active') {
+      return ConsultationStatus.in_progress;
+    }
+    if (status === 'ended') {
+      return ConsultationStatus.completed;
+    }
+    if (status === 'incoming') {
+      return ConsultationStatus.pending;
+    }
+    return status as ConsultationStatus;
+  }
+
+  async listClinicPatients(userId: string, filters: { q?: string } = {}) {
+    const membership = await this.requireClinicAdmin(userId);
+    const query = filters.q?.trim();
+
+    return this.prisma.pet.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { appointments: { some: { clinicId: membership.clinicId, isActive: true } } },
+          { consultations: { some: { clinicId: membership.clinicId, isActive: true } } },
+        ],
+        ...(query
+          ? {
+              AND: [{
+                OR: [
+                  { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                  { species: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                  { breed: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                  { owner: { firstName: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+                  { owner: { lastName: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+                  { owner: { email: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+                ],
+              }],
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        species: true,
+        breed: true,
+        age: true,
+        gender: true,
+        profileImage: true,
+        healthStatus: true,
+        owner: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        appointments: {
+          where: { clinicId: membership.clinicId, isActive: true },
+          orderBy: { appointmentDate: 'desc' },
+          take: 3,
+          select: { id: true, appointmentDate: true, appointmentTime: true, status: true, reason: true, assignedVetId: true },
+        },
+        consultations: {
+          where: { clinicId: membership.clinicId, isActive: true },
+          orderBy: { scheduledDate: 'desc' },
+          take: 3,
+          select: { id: true, scheduledDate: true, status: true, reason: true, assignedVetId: true },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 100,
+    });
+  }
+
+  async getClinicPatient(userId: string, petId: string) {
+    const membership = await this.requireClinicAdmin(userId);
+    const patient = await this.prisma.pet.findFirst({
+      where: {
+        id: petId,
+        isActive: true,
+        OR: [
+          { appointments: { some: { clinicId: membership.clinicId, isActive: true } } },
+          { consultations: { some: { clinicId: membership.clinicId, isActive: true } } },
+        ],
+      },
+      include: {
+        owner: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        healthRecords: {
+          where: { isActive: true },
+          orderBy: { date: 'desc' },
+          take: 10,
+        },
+        appointments: {
+          where: { clinicId: membership.clinicId, isActive: true },
+          include: {
+            assignedVet: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+          },
+          orderBy: { appointmentDate: 'desc' },
+        },
+        consultations: {
+          where: { clinicId: membership.clinicId, isActive: true },
+          include: {
+            assignedVet: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+          },
+          orderBy: { scheduledDate: 'desc' },
+        },
+      },
+    });
+
+    if (!patient) {
+      throw new NotFoundException('Patient not found for this clinic');
+    }
+
+    return patient;
+  }
+
+  async listClinicConsultations(userId: string, filters: {
+    status?: string;
+    vetId?: string;
+    date?: string;
+    patientId?: string;
+  } = {}) {
+    const membership = await this.requireClinicAdmin(userId);
+    const dateRange = this.buildDayRange(filters.date);
+    const status = this.mapConsultationStatus(filters.status);
+
+    return this.prisma.consultation.findMany({
+      where: {
+        clinicId: membership.clinicId,
+        isActive: true,
+        ...(status ? { status } : {}),
+        ...(filters.vetId ? { assignedVetId: filters.vetId } : {}),
+        ...(filters.patientId ? { OR: [{ petId: filters.patientId }, { userId: filters.patientId }] } : {}),
+        ...(dateRange ? { scheduledDate: dateRange } : {}),
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        pet: { select: { id: true, name: true, species: true, breed: true, age: true, healthStatus: true } },
+        assignedVet: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      },
+      orderBy: [{ scheduledDate: 'desc' }, { updatedAt: 'desc' }],
+      take: 100,
+    });
+  }
+
+  async getClinicConsultation(userId: string, consultationId: string) {
+    const membership = await this.requireClinicAdmin(userId);
+    const consultation = await this.prisma.consultation.findFirst({
+      where: { id: consultationId, clinicId: membership.clinicId, isActive: true },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        pet: {
+          include: {
+            healthRecords: {
+              where: { isActive: true },
+              orderBy: { date: 'desc' },
+              take: 5,
+            },
+          },
+        },
+        assignedVet: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        messages: { orderBy: { createdAt: 'asc' } },
+        consultationNotes: { orderBy: { createdAt: 'desc' }, take: 10 },
+      },
+    });
+
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found for this clinic');
+    }
+
+    return consultation;
   }
 
   async createClinicVet(userId: string, dto: CreateClinicVetDto) {

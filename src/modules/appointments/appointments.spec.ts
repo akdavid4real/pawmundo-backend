@@ -327,6 +327,34 @@ describe('AppointmentsService', () => {
       });
     });
 
+    it('should filter clinic appointments by status, vet, date, and patient inside the admin clinic', async () => {
+      mockClinicsService.requireClinicAdmin.mockResolvedValue({ clinicId: 'clinic-uuid-123' });
+      mockPrismaService.appointment.findMany.mockResolvedValue([mockAppointment]);
+
+      await service.findForClinicAdmin('admin-user-id', {
+        status: 'confirmed' as any,
+        vetId: 'vet-uuid-123',
+        date: '2026-05-28',
+        patientId: 'pet-uuid-123',
+      });
+
+      expect(mockPrismaService.appointment.findMany).toHaveBeenCalledWith({
+        where: {
+          clinicId: 'clinic-uuid-123',
+          isActive: true,
+          status: 'confirmed',
+          assignedVetId: 'vet-uuid-123',
+          OR: [{ petId: 'pet-uuid-123' }, { userId: 'pet-uuid-123' }],
+          appointmentDate: {
+            gte: expect.any(Date),
+            lt: expect.any(Date),
+          },
+        },
+        include: expect.any(Object),
+        orderBy: [{ appointmentDate: 'asc' }, { appointmentTime: 'asc' }],
+      });
+    });
+
     it('should reject clinic admin detail outside their clinic', async () => {
       mockClinicsService.requireClinicAdmin.mockResolvedValue({ clinicId: 'clinic-uuid-123' });
       mockPrismaService.appointment.findFirst.mockResolvedValue(null);

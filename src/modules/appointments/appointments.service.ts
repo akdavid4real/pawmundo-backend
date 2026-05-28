@@ -21,6 +21,18 @@ export class AppointmentsService {
     clinic: { select: { id: true, name: true, email: true, phone: true, address: true } },
   };
 
+  private buildDayRange(date?: string) {
+    if (!date) return undefined;
+    const start = new Date(date);
+    if (Number.isNaN(start.getTime())) {
+      throw new BadRequestException('Invalid date filter');
+    }
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { gte: start, lt: end };
+  }
+
   private async normalizeClinicAssignment(dto: CreateAppointmentDto | UpdateAppointmentDto, options: { requireClinic: boolean }) {
     if (options.requireClinic && !dto.clinicId) {
       throw new BadRequestException('Clinic is required for appointment booking');
@@ -167,10 +179,24 @@ export class AppointmentsService {
     });
   }
 
-  async findForClinicAdmin(clinicAdminId: string) {
+  async findForClinicAdmin(clinicAdminId: string, filters: {
+    status?: AppointmentStatus;
+    vetId?: string;
+    date?: string;
+    patientId?: string;
+  } = {}) {
     const membership = await this.clinicsService.requireClinicAdmin(clinicAdminId);
+    const dateRange = this.buildDayRange(filters.date);
+
     return this.prisma.appointment.findMany({
-      where: { clinicId: membership.clinicId, isActive: true },
+      where: {
+        clinicId: membership.clinicId,
+        isActive: true,
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.vetId ? { assignedVetId: filters.vetId } : {}),
+        ...(filters.patientId ? { OR: [{ petId: filters.patientId }, { userId: filters.patientId }] } : {}),
+        ...(dateRange ? { appointmentDate: dateRange } : {}),
+      },
       include: this.appointmentInclude,
       orderBy: [{ appointmentDate: 'asc' }, { appointmentTime: 'asc' }],
     });
