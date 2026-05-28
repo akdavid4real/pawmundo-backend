@@ -82,6 +82,68 @@ describe('PlatformAdminService', () => {
     });
   });
 
+  describe('getClinic', () => {
+    it('should return submitted clinic details, verification documents, memberships, and operational summary', async () => {
+      const clinic = {
+        id: 'clinic-1',
+        name: 'Main Clinic',
+        registrationNumber: 'RC-123',
+        verificationDocuments: ['https://example.com/doc.pdf'],
+        memberships: [],
+        appointments: [],
+        consultations: [],
+        _count: { appointments: 1, consultations: 2, memberships: 3 },
+      };
+      mockPrismaService.clinic.findUnique.mockResolvedValue(clinic);
+
+      const result = await service.getClinic('clinic-1');
+
+      expect(mockPrismaService.clinic.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: 'clinic-1' },
+        include: expect.objectContaining({
+          memberships: expect.any(Object),
+          appointments: expect.any(Object),
+          consultations: expect.any(Object),
+          _count: expect.any(Object),
+        }),
+      }));
+      expect(result).toEqual(clinic);
+    });
+
+    it('should throw when clinic detail does not exist', async () => {
+      mockPrismaService.clinic.findUnique.mockResolvedValue(null);
+
+      await expect(service.getClinic('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('rejectClinic', () => {
+    it('should persist the platform admin rejection reason', async () => {
+      mockPrismaService.clinic.findUnique.mockResolvedValue({ id: 'clinic-1' });
+      mockPrismaService.clinic.update.mockResolvedValue({
+        id: 'clinic-1',
+        verificationStatus: 'rejected',
+        rejectionReason: 'Documents are unreadable',
+      });
+      mockPrismaService.clinicMembership.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.rejectClinic('clinic-1', 'Documents are unreadable');
+
+      expect(mockPrismaService.clinicMembership.updateMany).toHaveBeenCalledWith({
+        where: { clinicId: 'clinic-1', status: 'pending' },
+        data: { status: 'suspended' },
+      });
+      expect(mockPrismaService.clinic.update).toHaveBeenCalledWith({
+        where: { id: 'clinic-1' },
+        data: {
+          verificationStatus: 'rejected',
+          rejectionReason: 'Documents are unreadable',
+        },
+      });
+      expect(result.rejectionReason).toBe('Documents are unreadable');
+    });
+  });
+
   describe('suspendClinic', () => {
     it('should suspend clinic access without deleting the clinic', async () => {
       mockPrismaService.clinic.findUnique.mockResolvedValue({ id: 'clinic-1' });
