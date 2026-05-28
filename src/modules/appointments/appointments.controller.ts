@@ -1,9 +1,12 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { AppointmentStatus } from '@prisma/client';
 
 @ApiTags('appointments')
 @ApiBearerAuth()
@@ -31,6 +34,70 @@ export class AppointmentsController {
   @Get('my-appointments')
   async findMyAppointments(@Request() req) {
     return this.appointmentsService.findByUser(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get clinic appointments for clinic admin' })
+  @Get('clinic')
+  @UseGuards(RolesGuard)
+  @Roles('clinic_admin')
+  async findClinicAppointments(@Request() req) {
+    return this.appointmentsService.findForClinicAdmin(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get clinic appointment detail for clinic admin' })
+  @Get('clinic/:id')
+  @UseGuards(RolesGuard)
+  @Roles('clinic_admin')
+  async findClinicAppointment(@Param('id') id: string, @Request() req) {
+    return this.appointmentsService.findOneForClinicAdmin(id, req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Update clinic appointment for clinic admin' })
+  @Put('clinic/:id')
+  @UseGuards(RolesGuard)
+  @Roles('clinic_admin')
+  async updateClinicAppointment(@Param('id') id: string, @Body() dto: UpdateAppointmentDto, @Request() req) {
+    return this.appointmentsService.updateForClinicAdmin(id, req.user.id, dto);
+  }
+
+  @ApiOperation({ summary: 'Update clinic appointment status for clinic admin' })
+  @Put('clinic/:id/status')
+  @UseGuards(RolesGuard)
+  @Roles('clinic_admin')
+  async updateClinicAppointmentStatus(
+    @Param('id') id: string,
+    @Body('status') status: AppointmentStatus,
+    @Request() req,
+  ) {
+    return this.appointmentsService.transitionForClinicAdmin(id, req.user.id, status);
+  }
+
+  @ApiOperation({ summary: 'Get assigned vet appointments' })
+  @Get('vet')
+  @UseGuards(RolesGuard)
+  @Roles('vet')
+  async findVetAppointments(@Request() req) {
+    return this.appointmentsService.findForVet(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get assigned vet appointment detail' })
+  @Get('vet/:id')
+  @UseGuards(RolesGuard)
+  @Roles('vet')
+  async findVetAppointment(@Param('id') id: string, @Request() req) {
+    return this.appointmentsService.findOneForVet(id, req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Update assigned vet appointment status' })
+  @Put('vet/:id/status')
+  @UseGuards(RolesGuard)
+  @Roles('vet')
+  async updateVetAppointmentStatus(
+    @Param('id') id: string,
+    @Body('status') status: AppointmentStatus,
+    @Request() req,
+  ) {
+    return this.appointmentsService.transitionForVet(id, req.user.id, status);
   }
 
   @ApiOperation({ summary: 'Get all user appointments' })

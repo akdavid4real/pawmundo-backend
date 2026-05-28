@@ -203,10 +203,15 @@ export class ConsultationsController {
   async completeConsultation(
     @Param('id') id: string,
     @Request() req,
-    @Body('notes') notes: string,
-    @Body('prescription') prescription?: string
+    @Body() body: {
+      notes?: string;
+      diagnosis?: string;
+      prescription?: string;
+      followUpRequired?: boolean;
+      followUpDate?: string;
+    },
   ) {
-    return this.consultationsService.completeConsultation(id, req.user.id, notes, prescription);
+    return this.consultationsService.completeConsultation(id, req.user.id, body);
   }
 
   @Post(':id/accept')

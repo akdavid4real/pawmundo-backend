@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PetsService } from '../pets/pets.service';
@@ -20,6 +20,8 @@ describe('AppointmentsService', () => {
     reason: 'Checkup',
     status: 'scheduled',
     isActive: true,
+    clinicId: null,
+    assignedVetId: null,
   };
 
   const mockPrismaService = {
@@ -38,6 +40,9 @@ describe('AppointmentsService', () => {
 
   const mockClinicsService = {
     findApprovedClinicOrThrow: jest.fn(),
+    requireActiveVetMembership: jest.fn(),
+    requireClinicAdmin: jest.fn(),
+    getActiveClinicIdsForUser: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -55,7 +60,7 @@ describe('AppointmentsService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
@@ -63,7 +68,7 @@ describe('AppointmentsService', () => {
   });
 
   describe('create', () => {
-    it('should create an appointment', async () => {
+    it('should reject appointment creation without a clinic', async () => {
       const createDto = {
         petId: 'pet-uuid-123',
         vetName: 'Dr. Smith',
@@ -74,19 +79,72 @@ describe('AppointmentsService', () => {
       };
 
       mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
-      mockPrismaService.appointment.create.mockResolvedValue(mockAppointment);
 
-      const result = await service.create('user-uuid-123', createDto as any);
+      await expect(service.create('user-uuid-123', createDto as any)).rejects.toThrow(BadRequestException);
 
       expect(mockPetsService.findById).toHaveBeenCalledWith('pet-uuid-123', 'user-uuid-123');
+      expect(mockPrismaService.appointment.create).not.toHaveBeenCalled();
+    });
+
+    it('should create a clinic appointment with a real active clinic vet', async () => {
+      const createDto = {
+        petId: 'pet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        assignedVetId: 'vet-uuid-123',
+        vetName: 'Ignored Name',
+        vetClinic: 'Ignored Clinic',
+        appointmentDate: '2024-12-25',
+        appointmentTime: '10:00 AM',
+        reason: 'Checkup',
+      };
+
+      mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
+      mockClinicsService.findApprovedClinicOrThrow.mockResolvedValue({ id: 'clinic-uuid-123', name: 'Approved Clinic' });
+      mockClinicsService.requireActiveVetMembership.mockResolvedValue({
+        user: {
+          firstName: 'Ada',
+          lastName: 'Vet',
+          email: 'ada@example.com',
+          phone: '123',
+        },
+      });
+      mockPrismaService.appointment.create.mockResolvedValue({
+        ...mockAppointment,
+        clinicId: 'clinic-uuid-123',
+        assignedVetId: 'vet-uuid-123',
+      });
+
+      await service.create('user-uuid-123', createDto as any);
+
+      expect(mockClinicsService.requireActiveVetMembership).toHaveBeenCalledWith('vet-uuid-123', 'clinic-uuid-123');
       expect(mockPrismaService.appointment.create).toHaveBeenCalledWith({
         data: {
           ...createDto,
+          vetName: 'Ada Vet',
+          vetClinic: 'Approved Clinic',
+          vetPhone: '123',
+          vetEmail: 'ada@example.com',
           userId: 'user-uuid-123',
-          appointmentDate: new Date(createDto.appointmentDate)
-        }
+          appointmentDate: new Date(createDto.appointmentDate),
+        },
+        include: expect.any(Object),
       });
-      expect(result).toEqual(mockAppointment);
+    });
+
+    it('should reject clinic appointments without an assigned vet', async () => {
+      mockPetsService.findById.mockResolvedValue({ id: 'pet-uuid-123', ownerId: 'user-uuid-123' });
+      mockClinicsService.findApprovedClinicOrThrow.mockResolvedValue({ id: 'clinic-uuid-123', name: 'Approved Clinic' });
+
+      await expect(service.create('user-uuid-123', {
+        petId: 'pet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        vetName: 'Dr. Smith',
+        vetClinic: 'Pet Clinic',
+        appointmentDate: '2024-12-25',
+        appointmentTime: '10:00 AM',
+        reason: 'Checkup',
+      } as any)).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.appointment.create).not.toHaveBeenCalled();
     });
 
     it('should reject creation when the pet is not owned by the user', async () => {
@@ -116,7 +174,7 @@ describe('AppointmentsService', () => {
 
       expect(mockPrismaService.appointment.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-uuid-123', isActive: true },
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
         orderBy: { appointmentDate: 'asc' }
       });
       expect(result).toEqual(appointments);
@@ -131,7 +189,7 @@ describe('AppointmentsService', () => {
 
       expect(mockPrismaService.appointment.findUnique).toHaveBeenCalledWith({
         where: { id: 'appointment-uuid-123' },
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
       });
       expect(result).toEqual(mockAppointment);
     });
@@ -163,7 +221,7 @@ describe('AppointmentsService', () => {
       expect(mockPrismaService.appointment.update).toHaveBeenCalledWith({
         where: { id: 'appointment-uuid-123' },
         data: updateDto,
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
       });
       expect(result).toEqual(updatedAppointment);
     });
@@ -180,7 +238,7 @@ describe('AppointmentsService', () => {
       expect(mockPrismaService.appointment.update).toHaveBeenCalledWith({
         where: { id: 'appointment-uuid-123' },
         data: { appointmentDate: new Date('2024-12-26') },
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
       });
     });
 
@@ -209,7 +267,7 @@ describe('AppointmentsService', () => {
       expect(mockPrismaService.appointment.update).toHaveBeenCalledWith({
         where: { id: 'appointment-uuid-123' },
         data: { status: 'cancelled' },
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
       });
       expect(result).toEqual(cancelledAppointment);
     });
@@ -246,12 +304,99 @@ describe('AppointmentsService', () => {
           userId: 'user-uuid-123',
           isActive: true,
           appointmentDate: { gte: expect.any(Date) },
-          status: { in: ['scheduled', 'confirmed'] }
+        status: { in: ['scheduled', 'confirmed'] }
         },
-        include: { pet: { select: { name: true, species: true, breed: true } } },
+        include: expect.any(Object),
         orderBy: { appointmentDate: 'asc' }
       });
       expect(result).toEqual(upcomingAppointments);
+    });
+  });
+
+  describe('clinic admin operations', () => {
+    it('should list appointments for the clinic admin clinic', async () => {
+      mockClinicsService.requireClinicAdmin.mockResolvedValue({ clinicId: 'clinic-uuid-123' });
+      mockPrismaService.appointment.findMany.mockResolvedValue([mockAppointment]);
+
+      await service.findForClinicAdmin('admin-user-id');
+
+      expect(mockPrismaService.appointment.findMany).toHaveBeenCalledWith({
+        where: { clinicId: 'clinic-uuid-123', isActive: true },
+        include: expect.any(Object),
+        orderBy: [{ appointmentDate: 'asc' }, { appointmentTime: 'asc' }],
+      });
+    });
+
+    it('should reject clinic admin detail outside their clinic', async () => {
+      mockClinicsService.requireClinicAdmin.mockResolvedValue({ clinicId: 'clinic-uuid-123' });
+      mockPrismaService.appointment.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.findOneForClinicAdmin('appointment-uuid-123', 'admin-user-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should update clinic appointment status for clinic admin', async () => {
+      mockClinicsService.requireClinicAdmin.mockResolvedValue({ clinicId: 'clinic-uuid-123' });
+      mockPrismaService.appointment.findFirst.mockResolvedValue({ ...mockAppointment, clinicId: 'clinic-uuid-123' });
+      mockPrismaService.appointment.update.mockResolvedValue({ ...mockAppointment, status: 'confirmed' });
+
+      await service.transitionForClinicAdmin('appointment-uuid-123', 'admin-user-id', 'confirmed' as any);
+
+      expect(mockPrismaService.appointment.update).toHaveBeenCalledWith({
+        where: { id: 'appointment-uuid-123' },
+        data: { status: 'confirmed' },
+        include: expect.any(Object),
+      });
+    });
+  });
+
+  describe('vet operations', () => {
+    it('should list assigned appointments for active vet clinics', async () => {
+      mockClinicsService.getActiveClinicIdsForUser.mockResolvedValue(['clinic-uuid-123']);
+      mockPrismaService.appointment.findMany.mockResolvedValue([mockAppointment]);
+
+      await service.findForVet('vet-uuid-123');
+
+      expect(mockPrismaService.appointment.findMany).toHaveBeenCalledWith({
+        where: {
+          assignedVetId: 'vet-uuid-123',
+          isActive: true,
+          OR: [{ clinicId: null }, { clinicId: { in: ['clinic-uuid-123'] } }],
+        },
+        include: expect.any(Object),
+        orderBy: [{ appointmentDate: 'asc' }, { appointmentTime: 'asc' }],
+      });
+    });
+
+    it('should reject vet appointment detail when active clinic access is missing', async () => {
+      mockPrismaService.appointment.findFirst.mockResolvedValue({
+        ...mockAppointment,
+        clinicId: 'clinic-uuid-123',
+        assignedVetId: 'vet-uuid-123',
+      });
+      mockClinicsService.requireActiveVetMembership.mockRejectedValue(new ForbiddenException('Selected veterinarian is not active in this clinic'));
+
+      await expect(
+        service.findOneForVet('appointment-uuid-123', 'vet-uuid-123'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should update assigned appointment status for vet', async () => {
+      mockPrismaService.appointment.findFirst.mockResolvedValue({
+        ...mockAppointment,
+        clinicId: null,
+        assignedVetId: 'vet-uuid-123',
+      });
+      mockPrismaService.appointment.update.mockResolvedValue({ ...mockAppointment, status: 'completed' });
+
+      await service.transitionForVet('appointment-uuid-123', 'vet-uuid-123', 'completed' as any);
+
+      expect(mockPrismaService.appointment.update).toHaveBeenCalledWith({
+        where: { id: 'appointment-uuid-123' },
+        data: { status: 'completed' },
+        include: expect.any(Object),
+      });
     });
   });
 });

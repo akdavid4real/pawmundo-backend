@@ -38,6 +38,7 @@ model User {
   // Relations
   pets                   Pet[]
   appointments           Appointment[]
+  assignedAppointments   Appointment[]          @relation("AppointmentVet")
   consultationsAsUser    Consultation[]      @relation("ConsultationUser")
   consultationsAsVet     Consultation[]      @relation("ConsultationVet")
   consultationNotes      ConsultationNote[]
@@ -234,6 +235,7 @@ enum AppointmentStatus {
   confirmed
   completed
   cancelled
+  no_show
 }
 
 model Appointment {
@@ -241,6 +243,7 @@ model Appointment {
   userId          String
   petId           String
   clinicId        String?
+  assignedVetId   String?
   vetName         String
   vetClinic       String
   appointmentDate DateTime
@@ -257,8 +260,10 @@ model Appointment {
   user            User              @relation(fields: [userId], references: [id])
   pet             Pet               @relation(fields: [petId], references: [id])
   clinic          Clinic?           @relation(fields: [clinicId], references: [id])
+  assignedVet     User?             @relation("AppointmentVet", fields: [assignedVetId], references: [id])
 
   @@index([clinicId, appointmentDate])
+  @@index([assignedVetId, appointmentDate])
   @@map("appointments")
 }
 

@@ -205,21 +205,20 @@ describe('ConsultationsController', () => {
       const consultationId = 'consult-uuid';
       const notes = 'Patient is healthy';
       const prescription = 'Vitamin supplements';
+      const payload = { notes, prescription };
       const mockConsultation = { id: consultationId, status: 'completed', notes, prescription };
       mockConsultationsService.completeConsultation.mockResolvedValue(mockConsultation);
 
       const result = await controller.completeConsultation(
         consultationId,
         mockRequest,
-        notes,
-        prescription,
+        payload,
       );
 
       expect(service.completeConsultation).toHaveBeenCalledWith(
         consultationId,
         mockRequest.user.id,
-        notes,
-        prescription,
+        payload,
       );
       expect(result).toEqual(mockConsultation);
     });

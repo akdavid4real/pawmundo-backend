@@ -44,6 +44,9 @@ describe('ConsultationsService', () => {
       create: jest.fn(),
       updateMany: jest.fn(),
     },
+    consultationNote: {
+      create: jest.fn(),
+    },
   };
 
   const mockPetsService = {
@@ -53,6 +56,7 @@ describe('ConsultationsService', () => {
   const mockClinicsService = {
     findApprovedClinicOrThrow: jest.fn(),
     getActiveClinicForUser: jest.fn(),
+    getActiveClinicIdsForUser: jest.fn(),
     requireVetClinicAccess: jest.fn(),
   };
 
@@ -73,7 +77,7 @@ describe('ConsultationsService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('create', () => {
@@ -154,14 +158,14 @@ describe('ConsultationsService', () => {
       const mockQueue = [mockConsultation];
       const vetId = 'vet-uuid-123';
       
-      mockClinicsService.getActiveClinicForUser.mockResolvedValue(null);
+      mockClinicsService.getActiveClinicIdsForUser.mockResolvedValue([]);
       mockPrismaService.consultation.findMany.mockResolvedValue(mockQueue);
 
       const result = await service.getVetQueue(vetId);
 
-      expect(mockClinicsService.getActiveClinicForUser).toHaveBeenCalledWith(vetId);
+      expect(mockClinicsService.getActiveClinicIdsForUser).toHaveBeenCalledWith(vetId);
       expect(mockPrismaService.consultation.findMany).toHaveBeenCalledWith({
-        where: { status: 'pending', isActive: true },
+        where: { status: 'pending', isActive: true, clinicId: null },
         include: {
           pet: { select: { name: true, species: true, breed: true, age: true } },
           user: { select: { firstName: true, lastName: true, email: true } }
@@ -177,6 +181,7 @@ describe('ConsultationsService', () => {
       const vetId = 'vet-uuid-123';
       const mockActive = [mockConsultation];
 
+      mockClinicsService.getActiveClinicIdsForUser.mockResolvedValue(['clinic-uuid-123']);
       mockPrismaService.consultation.findMany.mockResolvedValue(mockActive);
 
       const result = await service.getVetActive(vetId);
@@ -186,6 +191,7 @@ describe('ConsultationsService', () => {
           assignedVetId: vetId,
           status: { in: ['assigned', 'in_progress'] },
           isActive: true,
+          OR: [{ clinicId: null }, { clinicId: { in: ['clinic-uuid-123'] } }],
         },
         include: {
           pet: { select: { name: true, species: true, breed: true, age: true, weight: true } },
@@ -202,6 +208,7 @@ describe('ConsultationsService', () => {
       const vetId = 'vet-uuid-123';
       const mockHistory = [mockConsultation];
 
+      mockClinicsService.getActiveClinicIdsForUser.mockResolvedValue(['clinic-uuid-123']);
       mockPrismaService.consultation.findMany.mockResolvedValue(mockHistory);
 
       const result = await service.getVetHistory(vetId);
@@ -211,6 +218,7 @@ describe('ConsultationsService', () => {
           assignedVetId: vetId,
           status: 'completed',
           isActive: true,
+          OR: [{ clinicId: null }, { clinicId: { in: ['clinic-uuid-123'] } }],
         },
         include: {
           pet: { select: { name: true, species: true } },
@@ -281,6 +289,24 @@ describe('ConsultationsService', () => {
         service.acceptConsultation(consultationId, vetId),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('should reject idempotent accept when the assigned vet no longer has clinic access', async () => {
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
+
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        status: 'assigned',
+        assignedVetId: vetId,
+        clinicId: 'clinic-uuid-123',
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.acceptConsultation(consultationId, vetId),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.consultation.findUnique).not.toHaveBeenCalled();
+    });
   });
 
   describe('releaseConsultation', () => {
@@ -295,13 +321,33 @@ describe('ConsultationsService', () => {
       };
 
       mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      mockClinicsService.requireVetClinicAccess.mockResolvedValue(null);
 
       await service.releaseConsultation(consultationId, vetId);
 
       expect(mockPrismaService.consultation.findFirst).toHaveBeenCalledWith({
         where: { id: consultationId, isActive: true },
       });
+      expect(mockClinicsService.requireVetClinicAccess).toHaveBeenCalledWith(vetId, undefined);
       expect(mockPrismaService.consultation.update).toHaveBeenCalled();
+    });
+
+    it('should reject release when the assigned vet no longer has clinic access', async () => {
+      const consultationId = 'test-consult-uuid';
+      const vetId = 'vet-uuid-123';
+
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        assignedVetId: vetId,
+        clinicId: 'clinic-uuid-123',
+        status: 'assigned',
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.releaseConsultation(consultationId, vetId),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.consultation.update).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if consultation not found', async () => {
@@ -341,18 +387,42 @@ describe('ConsultationsService', () => {
         assignedVetId: 'vet-uuid-123',
       };
       mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      mockClinicsService.requireVetClinicAccess.mockResolvedValue(null);
       mockPrismaService.consultation.update.mockResolvedValue({ ...consultation, status: 'completed' });
 
-      await service.completeConsultation('test-consult-uuid', 'vet-uuid-123', 'Done');
+      await service.completeConsultation('test-consult-uuid', 'vet-uuid-123', {
+        notes: 'Done',
+        diagnosis: 'Mild skin irritation',
+        prescription: 'Topical spray',
+      });
 
+      expect(mockClinicsService.requireVetClinicAccess).toHaveBeenCalledWith('vet-uuid-123', undefined);
       expect(mockPrismaService.consultation.update).toHaveBeenCalledWith({
         where: { id: 'test-consult-uuid' },
         data: {
           status: 'completed',
           notes: 'Done',
-          prescription: undefined,
+          prescription: 'Topical spray',
+          followUpRequired: undefined,
+          followUpDate: undefined,
         },
       });
+      expect(mockPrismaService.consultationNote.create).toHaveBeenCalledWith({
+        data: {
+          consultationId: 'test-consult-uuid',
+          vetId: 'vet-uuid-123',
+          content: 'Diagnosis: Mild skin irritation\n\nNotes: Done\n\nPrescription: Topical spray',
+          noteType: 'diagnosis',
+          isPrivate: false,
+        },
+      });
+    });
+
+    it('should reject completion without clinical closure data', async () => {
+      await expect(
+        service.completeConsultation('test-consult-uuid', 'vet-uuid-123', {}),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.consultation.update).not.toHaveBeenCalled();
     });
 
     it('should reject completing a terminal consultation', async () => {
@@ -364,6 +434,21 @@ describe('ConsultationsService', () => {
       await expect(
         service.completeConsultation('test-consult-uuid', 'user-uuid-123', 'Done'),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject completion when the assigned vet no longer has clinic access', async () => {
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        status: 'assigned',
+        assignedVetId: 'vet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.completeConsultation('test-consult-uuid', 'vet-uuid-123', 'Done'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.consultation.update).not.toHaveBeenCalled();
     });
   });
 
@@ -380,6 +465,72 @@ describe('ConsultationsService', () => {
         service.sendMessage('test-consult-uuid', 'user-uuid-123', 'Hello'),
       ).rejects.toThrow(BadRequestException);
       expect(mockPrismaService.consultationMessage.create).not.toHaveBeenCalled();
+    });
+
+    it('should reject vet messages when the assigned vet no longer has clinic access', async () => {
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        status: 'assigned',
+        assignedVetId: 'vet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        messages: [],
+        pet: { name: 'Buddy', species: 'dog' },
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.sendMessage('test-consult-uuid', 'vet-uuid-123', 'Hello', true),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.consultationMessage.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findByIdForVet', () => {
+    it('should allow an assigned vet with active clinic access to read a consultation', async () => {
+      const consultation = {
+        ...mockConsultation,
+        assignedVetId: 'vet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        messages: [],
+      };
+      mockPrismaService.consultation.findFirst.mockResolvedValue(consultation);
+      mockClinicsService.requireVetClinicAccess.mockResolvedValue(null);
+
+      const result = await service.findByIdForVet('test-consult-uuid', 'vet-uuid-123');
+
+      expect(mockClinicsService.requireVetClinicAccess).toHaveBeenCalledWith('vet-uuid-123', 'clinic-uuid-123');
+      expect(result).toEqual(consultation);
+    });
+
+    it('should reject an assigned vet without active clinic access', async () => {
+      mockPrismaService.consultation.findFirst.mockResolvedValue({
+        ...mockConsultation,
+        assignedVetId: 'vet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        messages: [],
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.findByIdForVet('test-consult-uuid', 'vet-uuid-123'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('markMessagesAsRead', () => {
+    it('should reject vet read updates when the assigned vet no longer has clinic access', async () => {
+      mockPrismaService.consultation.findUnique.mockResolvedValue({
+        ...mockConsultation,
+        assignedVetId: 'vet-uuid-123',
+        clinicId: 'clinic-uuid-123',
+        messages: [],
+      });
+      mockClinicsService.requireVetClinicAccess.mockRejectedValue(new ForbiddenException('You do not have access to this clinic'));
+
+      await expect(
+        service.markMessagesAsRead('test-consult-uuid', 'vet-uuid-123'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.consultationMessage.updateMany).not.toHaveBeenCalled();
     });
   });
 });

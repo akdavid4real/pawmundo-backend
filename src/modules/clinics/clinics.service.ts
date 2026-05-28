@@ -157,6 +157,20 @@ export class ClinicsService {
     });
   }
 
+  async getActiveClinicIdsForUser(userId: string, roles?: ClinicMembershipRole[]) {
+    const memberships = await this.prisma.clinicMembership.findMany({
+      where: {
+        userId,
+        status: ClinicMembershipStatus.active,
+        ...(roles ? { role: { in: roles } } : {}),
+        clinic: { isActive: true, verificationStatus: ClinicVerificationStatus.approved },
+      },
+      select: { clinicId: true },
+    });
+
+    return memberships.map(membership => membership.clinicId);
+  }
+
   async requireClinicAdmin(userId: string) {
     const membership = await this.getActiveClinicForUser(userId, [ClinicMembershipRole.clinic_admin]);
     if (!membership) {
@@ -180,6 +194,29 @@ export class ClinicsService {
 
     if (!membership) {
       throw new ForbiddenException('You do not have access to this clinic');
+    }
+
+    return membership;
+  }
+
+  async requireActiveVetMembership(userId: string, clinicId: string) {
+    const membership = await this.prisma.clinicMembership.findFirst({
+      where: {
+        userId,
+        clinicId,
+        status: ClinicMembershipStatus.active,
+        role: ClinicMembershipRole.vet,
+        user: { isActive: true, role: UserRole.vet },
+        clinic: { isActive: true, verificationStatus: ClinicVerificationStatus.approved },
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+        clinic: true,
+      },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('Selected veterinarian is not active in this clinic');
     }
 
     return membership;

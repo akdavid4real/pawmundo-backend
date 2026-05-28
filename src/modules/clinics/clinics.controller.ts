@@ -25,20 +25,6 @@ export class ClinicsController {
     return this.clinicsService.registerClinic(dto);
   }
 
-  @Post(':clinicId/join')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Request vet membership in an approved clinic' })
-  requestMembership(@Request() req, @Param('clinicId') clinicId: string) {
-    return this.clinicsService.requestVetMembership(req.user.id, clinicId);
-  }
-
-  @Get(':clinicId/vets')
-  @ApiOperation({ summary: 'List active vets for an approved clinic' })
-  listApprovedClinicVets(@Param('clinicId') clinicId: string) {
-    return this.clinicsService.listApprovedClinicVets(clinicId);
-  }
-
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -99,6 +85,20 @@ export class ClinicsController {
   @ApiOperation({ summary: 'Remove a vet from the clinic' })
   removeVet(@Request() req, @Param('membershipId') membershipId: string) {
     return this.clinicsService.removeVet(req.user.id, membershipId);
+  }
+
+  @Post(':clinicId/join')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Request vet membership in an approved clinic' })
+  requestMembership(@Request() req, @Param('clinicId') clinicId: string) {
+    return this.clinicsService.requestVetMembership(req.user.id, clinicId);
+  }
+
+  @Get(':clinicId/vets')
+  @ApiOperation({ summary: 'List active vets for an approved clinic' })
+  listApprovedClinicVets(@Param('clinicId') clinicId: string) {
+    return this.clinicsService.listApprovedClinicVets(clinicId);
   }
 
 }

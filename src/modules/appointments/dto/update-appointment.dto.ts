@@ -6,9 +6,9 @@ import { CreateAppointmentDto } from './create-appointment.dto';
 export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
   @ApiPropertyOptional({ 
     description: 'Appointment status',
-    enum: ['scheduled', 'confirmed', 'completed', 'cancelled']
+    enum: ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show']
   })
   @IsOptional()
-  @IsEnum(['scheduled', 'confirmed', 'completed', 'cancelled'])
+  @IsEnum(['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'])
   status?: string;
 }

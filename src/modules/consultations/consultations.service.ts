@@ -15,6 +15,31 @@ export class ConsultationsService {
     private clinicsService: ClinicsService,
   ) { }
 
+  private clinicAccessWhereForVet(clinicIds: string[]) {
+    return clinicIds.length > 0
+      ? { OR: [{ clinicId: null }, { clinicId: { in: clinicIds } }] }
+      : { clinicId: null };
+  }
+
+  private async requireAssignedVetAccess(consultation: { clinicId?: string | null }, vetId: string) {
+    await this.clinicsService.requireVetClinicAccess(vetId, consultation.clinicId);
+  }
+
+  private buildClinicalNoteContent(payload: {
+    notes?: string;
+    diagnosis?: string;
+    prescription?: string;
+    followUpRequired?: boolean;
+    followUpDate?: string;
+  }) {
+    return [
+      payload.diagnosis ? `Diagnosis: ${payload.diagnosis}` : null,
+      payload.notes ? `Notes: ${payload.notes}` : null,
+      payload.prescription ? `Prescription: ${payload.prescription}` : null,
+      payload.followUpRequired ? `Follow-up: ${payload.followUpDate || 'Required'}` : null,
+    ].filter(Boolean).join('\n\n');
+  }
+
   private mapConsultationStatus(status: string): ConsultationStatus {
     if (status === 'in-progress' || status === 'in_progress' || status === 'active') {
       return ConsultationStatus.in_progress;
@@ -124,7 +149,27 @@ export class ConsultationsService {
     });
   }
 
-  async completeConsultation(id: string, userId: string, notes: string, prescription?: string) {
+  async completeConsultation(
+    id: string,
+    userId: string,
+    payloadOrNotes: string | {
+      notes?: string;
+      diagnosis?: string;
+      prescription?: string;
+      followUpRequired?: boolean;
+      followUpDate?: string;
+    },
+    prescription?: string,
+  ) {
+    const payload = typeof payloadOrNotes === 'string'
+      ? { notes: payloadOrNotes, prescription }
+      : payloadOrNotes;
+    const clinicalNotes = this.buildClinicalNoteContent(payload);
+
+    if (!payload.notes?.trim() && !payload.diagnosis?.trim() && !payload.prescription?.trim()) {
+      throw new BadRequestException('Clinical notes, diagnosis, or prescription is required to complete a consultation');
+    }
+
     const consultation = await this.prisma.consultation.findFirst({
       where: { id, isActive: true },
     });
@@ -135,18 +180,37 @@ export class ConsultationsService {
     if (consultation.userId !== userId && consultation.assignedVetId !== userId) {
       throw new ForbiddenException(`You don't have permission to complete consultation '${id}'`);
     }
+    if (consultation.assignedVetId === userId) {
+      await this.requireAssignedVetAccess(consultation, userId);
+    }
     if (consultation.status === ConsultationStatus.completed || consultation.status === ConsultationStatus.cancelled) {
       throw new BadRequestException(`Cannot complete consultation '${id}' because it is already ${consultation.status}`);
     }
 
-    return this.prisma.consultation.update({
+    const completed = await this.prisma.consultation.update({
       where: { id },
       data: {
         status: ConsultationStatus.completed,
-        notes,
-        prescription,
+        notes: payload.notes,
+        prescription: payload.prescription,
+        followUpRequired: payload.followUpRequired,
+        followUpDate: payload.followUpDate ? new Date(payload.followUpDate) : undefined,
       },
     });
+
+    if (consultation.assignedVetId === userId && clinicalNotes) {
+      await this.prisma.consultationNote.create({
+        data: {
+          consultationId: id,
+          vetId: userId,
+          content: clinicalNotes,
+          noteType: payload.diagnosis ? 'diagnosis' : 'observation',
+          isPrivate: false,
+        },
+      });
+    }
+
+    return completed;
   }
 
   async getUpcoming(userId: string) {
@@ -165,13 +229,13 @@ export class ConsultationsService {
   }
 
   async getVetQueue(vetId: string) {
-    const membership = await this.clinicsService.getActiveClinicForUser(vetId);
+    const clinicIds = await this.clinicsService.getActiveClinicIdsForUser(vetId);
 
     return this.prisma.consultation.findMany({
       where: {
         status: ConsultationStatus.pending,
         isActive: true,
-        ...(membership ? { clinicId: membership.clinicId } : {}),
+        ...this.clinicAccessWhereForVet(clinicIds),
       },
       include: {
         user: { select: { firstName: true, lastName: true, email: true } },
@@ -182,11 +246,14 @@ export class ConsultationsService {
   }
 
   async getVetActive(vetId: string) {
+    const clinicIds = await this.clinicsService.getActiveClinicIdsForUser(vetId);
+
     return this.prisma.consultation.findMany({
       where: {
         assignedVetId: vetId,
         status: { in: [ConsultationStatus.assigned, ConsultationStatus.in_progress] },
         isActive: true,
+        ...this.clinicAccessWhereForVet(clinicIds),
       },
       include: {
         user: { select: { firstName: true, lastName: true, email: true, phone: true } },
@@ -197,8 +264,15 @@ export class ConsultationsService {
   }
 
   async getVetHistory(vetId: string) {
+    const clinicIds = await this.clinicsService.getActiveClinicIdsForUser(vetId);
+
     return this.prisma.consultation.findMany({
-      where: { assignedVetId: vetId, status: ConsultationStatus.completed, isActive: true },
+      where: {
+        assignedVetId: vetId,
+        status: ConsultationStatus.completed,
+        isActive: true,
+        ...this.clinicAccessWhereForVet(clinicIds),
+      },
       include: {
         user: { select: { firstName: true, lastName: true } },
         pet: { select: { name: true, species: true } },
@@ -219,6 +293,7 @@ export class ConsultationsService {
 
     // Idempotent - if already assigned to this vet
     if (consultation.assignedVetId === vetId && consultation.status === ConsultationStatus.assigned) {
+      await this.requireAssignedVetAccess(consultation, vetId);
       return this.prisma.consultation.findUnique({
         where: { id: consultationId },
         include: {
@@ -263,6 +338,7 @@ export class ConsultationsService {
     if (consultation.assignedVetId !== vetId) {
       throw new ForbiddenException('You are not assigned to this consultation');
     }
+    await this.requireAssignedVetAccess(consultation, vetId);
 
     return this.prisma.consultation.update({
       where: { id: consultationId },
@@ -275,8 +351,37 @@ export class ConsultationsService {
       where: { id, isActive: true },
       include: {
         user: { select: { firstName: true, lastName: true, email: true, phone: true } },
-        pet: { select: { name: true, species: true, breed: true, age: true, weight: true } },
+        pet: {
+          select: {
+            name: true,
+            species: true,
+            breed: true,
+            age: true,
+            weight: true,
+            healthStatus: true,
+            allergies: true,
+            pastIllnesses: true,
+            surgeries: true,
+            medicalNotes: true,
+            healthRecords: {
+              where: { isActive: true },
+              orderBy: { date: 'desc' },
+              take: 5,
+              select: {
+                id: true,
+                type: true,
+                title: true,
+                description: true,
+                date: true,
+                veterinarian: true,
+                clinic: true,
+                notes: true,
+              },
+            },
+          },
+        },
         messages: { orderBy: { createdAt: 'asc' } },
+        consultationNotes: { orderBy: { createdAt: 'desc' }, take: 10 },
       },
     });
 
@@ -286,9 +391,7 @@ export class ConsultationsService {
     if (consultation.assignedVetId && consultation.assignedVetId !== vetId) {
       throw new ForbiddenException('This consultation is assigned to another vet');
     }
-    if (!consultation.assignedVetId) {
-      await this.clinicsService.requireVetClinicAccess(vetId, consultation.clinicId);
-    }
+    await this.clinicsService.requireVetClinicAccess(vetId, consultation.clinicId);
     return consultation;
   }
 
@@ -331,6 +434,9 @@ export class ConsultationsService {
     }
     if (isVet && consultation.assignedVetId !== userId) {
       throw new ForbiddenException('You are not assigned to this consultation');
+    }
+    if (isVet) {
+      await this.requireAssignedVetAccess(consultation, userId);
     }
 
     const newMessage = await this.prisma.consultationMessage.create({
@@ -394,6 +500,9 @@ export class ConsultationsService {
     }
 
     const isVetReading = consultation.assignedVetId === userId;
+    if (isVetReading) {
+      await this.requireAssignedVetAccess(consultation, userId);
+    }
 
     // Determine which messages to mark as read
     const messagesToUpdate = consultation.messages.filter(msg => {
