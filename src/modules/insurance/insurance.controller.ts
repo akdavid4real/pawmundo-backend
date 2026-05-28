@@ -29,47 +29,11 @@ export class InsuranceController {
     return this.insuranceService.findByUser(req.user.id, status, petId);
   }
 
-  @ApiOperation({ summary: 'Get insurance policy by ID' })
-  @ApiResponse({ status: 200, description: 'Insurance policy details' })
-  @ApiResponse({ status: 404, description: 'Insurance policy not found' })
-  @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
-    return this.insuranceService.findById(id, req.user.id);
-  }
-
-  @ApiOperation({ summary: 'Update insurance policy' })
-  @ApiResponse({ status: 200, description: 'Insurance policy updated successfully' })
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() updateInsuranceDto: UpdateInsuranceDto, @Request() req) {
-    return this.insuranceService.update(id, req.user.id, updateInsuranceDto);
-  }
-
-  @ApiOperation({ summary: 'Update insurance policy status' })
-  @ApiResponse({ status: 200, description: 'Insurance status updated' })
-  @Put(':id/status')
-  async updateStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
-    return this.insuranceService.updateStatus(id, req.user.id, status);
-  }
-
-  @ApiOperation({ summary: 'Delete insurance policy' })
-  @ApiResponse({ status: 200, description: 'Insurance policy deleted successfully' })
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Request() req) {
-    return this.insuranceService.delete(id, req.user.id);
-  }
-
   @ApiOperation({ summary: 'Get active policies by pet' })
   @ApiResponse({ status: 200, description: 'Active insurance policies for pet' })
   @Get('pet/:petId/active')
   async findActivePoliciesByPet(@Param('petId') petId: string, @Request() req) {
     return this.insuranceService.findActivePoliciesByPet(petId, req.user.id);
-  }
-
-  @ApiOperation({ summary: 'Check policy coverage for amount' })
-  @ApiResponse({ status: 200, description: 'Coverage check result' })
-  @Get(':id/coverage/:amount')
-  async checkCoverage(@Param('id') id: string, @Param('amount') amount: number, @Request() req) {
-    return this.insuranceService.checkCoverage(id, req.user.id, amount);
   }
 
   @ApiOperation({ summary: 'Submit insurance claim' })
@@ -92,5 +56,41 @@ export class InsuranceController {
   @Get('claims/:claimId')
   async getClaim(@Param('claimId') claimId: string, @Request() req) {
     return this.insuranceService.getClaimById(claimId, req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Get insurance policy by ID' })
+  @ApiResponse({ status: 200, description: 'Insurance policy details' })
+  @ApiResponse({ status: 404, description: 'Insurance policy not found' })
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Request() req) {
+    return this.insuranceService.findById(id, req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Check policy coverage for amount' })
+  @ApiResponse({ status: 200, description: 'Coverage check result' })
+  @Get(':id/coverage/:amount')
+  async checkCoverage(@Param('id') id: string, @Param('amount') amount: number, @Request() req) {
+    return this.insuranceService.checkCoverage(id, req.user.id, amount);
+  }
+
+  @ApiOperation({ summary: 'Update insurance policy' })
+  @ApiResponse({ status: 200, description: 'Insurance policy updated successfully' })
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() updateInsuranceDto: UpdateInsuranceDto, @Request() req) {
+    return this.insuranceService.update(id, req.user.id, updateInsuranceDto);
+  }
+
+  @ApiOperation({ summary: 'Update insurance policy status' })
+  @ApiResponse({ status: 200, description: 'Insurance status updated' })
+  @Put(':id/status')
+  async updateStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
+    return this.insuranceService.updateStatus(id, req.user.id, status);
+  }
+
+  @ApiOperation({ summary: 'Delete insurance policy' })
+  @ApiResponse({ status: 200, description: 'Insurance policy deleted successfully' })
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.insuranceService.delete(id, req.user.id);
   }
 }

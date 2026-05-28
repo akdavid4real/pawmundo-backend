@@ -12,7 +12,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) { }
 
-  @Post()
   @ApiOperation({
     summary: 'Create medication record',
     description: `
@@ -56,7 +55,6 @@ export class MedicationsController {
     return this.medicationsService.create(req.user.id, createMedicationDto);
   }
 
-  @Get('active')
   @ApiOperation({
     summary: 'Get all active medications',
     description: `
@@ -94,7 +92,6 @@ export class MedicationsController {
     return this.medicationsService.findActive(req.user.id);
   }
 
-  @Get('pet/:petId')
   @ApiOperation({
     summary: 'Get medications for a specific pet',
     description: 'Retrieve all medication records (active and completed) for a specific pet'
@@ -106,7 +103,6 @@ export class MedicationsController {
     return this.medicationsService.findByPet(petId, req.user.id);
   }
 
-  @Get(':id')
   @ApiOperation({ summary: 'Get medication by ID' })
   @ApiParam({ name: 'id', description: 'Medication ID' })
   @ApiResponse({ status: 200, description: 'Medication retrieved' })
@@ -116,7 +112,6 @@ export class MedicationsController {
     return this.medicationsService.findById(id, req.user.id);
   }
 
-  @Patch(':id')
   @ApiOperation({
     summary: 'Update medication details',
     description: 'Update medication information such as dosage, frequency, or instructions'
@@ -128,7 +123,6 @@ export class MedicationsController {
     return this.medicationsService.update(id, req.user.id, updateMedicationDto);
   }
 
-  @Patch(':id/complete')
   @ApiOperation({
     summary: 'Mark medication as completed',
     description: `
@@ -147,7 +141,6 @@ export class MedicationsController {
     return this.medicationsService.markCompleted(id, req.user.id);
   }
 
-  @Delete(':id')
   @ApiOperation({
     summary: 'Delete medication record',
     description: 'Soft delete a medication record (marks as inactive)'
