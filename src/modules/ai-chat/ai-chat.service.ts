@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiChatDto } from './dto/ai-chat.dto';
 import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
@@ -18,6 +18,7 @@ export class AiChatService {
 
   async chat(userId: string, aiChatDto: AiChatDto) {
     const { message, context, image } = aiChatDto;
+    await this.assertAiChatEntitlement(userId);
 
     const [user, pets, upcomingAppointments] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
@@ -150,6 +151,19 @@ ${image ? 'The user attached an image. Analyze it cautiously and explain that im
       return JSON.stringify(context);
     } catch {
       return '';
+    }
+  }
+
+  private async assertAiChatEntitlement(userId: string) {
+    const subscription = await this.prisma.userSubscription.findUnique({
+      where: { userId },
+    });
+    const expiresAt = subscription?.expiresAt ? new Date(subscription.expiresAt) : null;
+    const isExpired = expiresAt ? expiresAt.getTime() < Date.now() : false;
+    const hasPaidPlan = subscription?.plan === 'plus' || subscription?.plan === 'pro';
+
+    if (!subscription?.isActive || !hasPaidPlan || isExpired) {
+      throw new ForbiddenException('AI Vet Chat requires an active Plus or Pro subscription.');
     }
   }
 

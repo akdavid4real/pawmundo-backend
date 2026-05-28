@@ -61,17 +61,17 @@ export class SymptomCheckerService {
 **Recent Medical History:**
 ${healthRecords.length > 0 ?
         healthRecords.map(record =>
-          `• ${record.date.toDateString()}: ${record.type} - ${record.title || record.description}${record.notes ? ` (Notes: ${record.notes})` : ''}`
+          `- ${record.date.toDateString()}: ${record.type} - ${record.title || record.description}${record.notes ? ` (Notes: ${record.notes})` : ''}`
         ).join('\n') :
-        '• No recent medical records on file'
+        '- No recent medical records on file'
       }
 
 **Current Medications:**
 ${medications.length > 0 ?
         medications.map(med =>
-          `• ${med.name}: ${med.dosage} - ${med.frequency}${med.instructions ? ` (${med.instructions})` : ''}`
+          `- ${med.name}: ${med.dosage} - ${med.frequency}${med.instructions ? ` (${med.instructions})` : ''}`
         ).join('\n') :
-        '• No current medications'
+        '- No current medications'
       }
 
 **Emergency Contact:** Owner should be contacted for any urgent concerns.`;
@@ -241,6 +241,7 @@ Respond ONLY with valid JSON in this exact format:
             'Lethargy or unusual behavior changes',
             'Difficulty breathing or excessive panting',
           ],
+          personalizedMessage: 'I could not fully parse the AI response, so use these conservative care steps and contact a veterinarian if symptoms continue or worsen.',
         };
       }
     } catch {
@@ -275,6 +276,7 @@ Respond ONLY with valid JSON in this exact format:
           'Difficulty breathing or excessive panting',
           'Lethargy or unresponsiveness',
         ],
+        personalizedMessage: 'I could not reach the AI service, so this is a conservative safety fallback. Monitor closely and contact a veterinarian if symptoms persist or worsen.',
       };
     }
   }

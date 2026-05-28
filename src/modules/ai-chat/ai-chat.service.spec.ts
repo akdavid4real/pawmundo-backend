@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiChatService } from './ai-chat.service';
+import { ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SymptomCheckerService } from '../symptom-checker/symptom-checker.service';
 import { PetsService } from '../pets/pets.service';
@@ -19,6 +20,9 @@ describe('AiChatService', () => {
     },
     pet: {
       findMany: jest.fn(),
+    },
+    userSubscription: {
+      findUnique: jest.fn(),
     },
   };
 
@@ -74,6 +78,11 @@ describe('AiChatService', () => {
 
   describe('chat fallback', () => {
     it('should generate a fallback response when api fails', async () => {
+      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
+        plan: 'plus',
+        isActive: true,
+        expiresAt: null,
+      });
       mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
       mockPetsService.findByOwner.mockResolvedValue([]);
       mockAppointmentsService.findUpcoming.mockResolvedValue([]);
@@ -92,6 +101,11 @@ describe('AiChatService', () => {
 
   describe('chat vision payload', () => {
     it('should send image content to Mistral when an image is provided', async () => {
+      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
+        plan: 'pro',
+        isActive: true,
+        expiresAt: new Date(Date.now() + 86400000),
+      });
       mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
       mockPetsService.findByOwner.mockResolvedValue([]);
       mockAppointmentsService.findUpcoming.mockResolvedValue([]);
@@ -118,6 +132,30 @@ describe('AiChatService', () => {
         },
       ]));
       expect(response.response).toBe('The image shows a pet skin concern.');
+    });
+  });
+
+  describe('chat entitlement', () => {
+    it('should reject users without an active paid subscription', async () => {
+      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
+        plan: 'free',
+        isActive: true,
+        expiresAt: null,
+      });
+
+      await expect(service.chat('user-id', { message: 'hello' })).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('should reject expired paid subscriptions', async () => {
+      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
+        plan: 'plus',
+        isActive: true,
+        expiresAt: new Date(Date.now() - 86400000),
+      });
+
+      await expect(service.chat('user-id', { message: 'hello' })).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 
