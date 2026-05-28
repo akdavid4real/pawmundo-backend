@@ -13,6 +13,9 @@ describe('UserService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    consultation: {
+      count: jest.fn(),
+    },
   };
 
   const mockSupabaseStorageService = {
@@ -34,7 +37,7 @@ describe('UserService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
@@ -57,6 +60,7 @@ describe('UserService', () => {
         address: '{"city":"Testville"}',
         firstName: 'John',
         lastName: 'Doe',
+        role: 'user',
       });
 
       const result = await service.findById('user-id');
@@ -65,24 +69,69 @@ describe('UserService', () => {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
+        role: 'user',
         avatar: 'http://avatar.url',
         phoneNumber: '1234567890',
         address: { city: 'Testville' },
+        professionalVerificationStatus: undefined,
+        stats: undefined,
       });
+    });
+
+    it('should return backend-backed vet professional fields and stats', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'vet-id',
+        email: 'vet@example.com',
+        firstName: 'Ada',
+        lastName: 'Vet',
+        role: 'vet',
+        profileImage: null,
+        phone: null,
+        address: null,
+        licenseNumber: 'VET-123',
+        specialization: 'Dermatology',
+        bio: 'Small animal care',
+        yearsOfExperience: 7,
+        professionalVerificationStatus: 'pending',
+      });
+      mockPrismaService.consultation.count
+        .mockResolvedValueOnce(12)
+        .mockResolvedValueOnce(2);
+
+      const result = await service.findById('vet-id');
+
+      expect(result).toEqual(expect.objectContaining({
+        id: 'vet-id',
+        role: 'vet',
+        licenseNumber: 'VET-123',
+        specialization: 'Dermatology',
+        bio: 'Small animal care',
+        yearsOfExperience: 7,
+        professionalVerificationStatus: 'pending',
+        stats: {
+          totalConsultations: 12,
+          activeCases: 2,
+          rating: null,
+        },
+      }));
     });
 
     it('should handle invalid JSON address gracefully', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: 'user-id',
         address: 'invalid-json',
+        role: 'user',
       });
 
       const result = await service.findById('user-id');
       expect(result).toEqual({
         id: 'user-id',
+        role: 'user',
         avatar: undefined,
         phoneNumber: undefined,
         address: 'invalid-json',
+        professionalVerificationStatus: undefined,
+        stats: undefined,
       });
     });
   });
@@ -128,6 +177,7 @@ describe('UserService', () => {
         profileImage: 'http://new.avatar',
         phone: '0987654321',
         address: '{"city":"Newville"}',
+        role: 'user',
       });
 
       const result = await service.updateProfile('user-id', updateData);
@@ -146,10 +196,63 @@ describe('UserService', () => {
       expect(result).toEqual({
         id: 'user-id',
         firstName: 'Jane',
+        role: 'user',
         avatar: 'http://new.avatar',
         phoneNumber: '0987654321',
         address: { city: 'Newville' },
+        professionalVerificationStatus: undefined,
+        stats: undefined,
       });
+    });
+
+    it('should persist supported vet professional fields without fake stats', async () => {
+      const updateData = {
+        licenseNumber: 'VET-456',
+        specialization: 'Surgery',
+        bio: 'Experienced surgeon',
+        yearsOfExperience: '9',
+        stats: { totalConsultations: 999 },
+      };
+
+      mockPrismaService.user.update.mockResolvedValue({
+        id: 'vet-id',
+        firstName: 'Ada',
+        lastName: 'Vet',
+        role: 'vet',
+        licenseNumber: 'VET-456',
+        specialization: 'Surgery',
+        bio: 'Experienced surgeon',
+        yearsOfExperience: 9,
+        professionalVerificationStatus: null,
+      });
+      mockPrismaService.consultation.count
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(1);
+
+      const result = await service.updateProfile('vet-id', updateData);
+
+      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+        where: { id: 'vet-id' },
+        data: {
+          licenseNumber: 'VET-456',
+          specialization: 'Surgery',
+          bio: 'Experienced surgeon',
+          yearsOfExperience: 9,
+        },
+        omit: { password: true },
+      });
+      expect(result).toEqual(expect.objectContaining({
+        licenseNumber: 'VET-456',
+        specialization: 'Surgery',
+        bio: 'Experienced surgeon',
+        yearsOfExperience: 9,
+        professionalVerificationStatus: 'unverified',
+        stats: {
+          totalConsultations: 3,
+          activeCases: 1,
+          rating: null,
+        },
+      }));
     });
   });
 });

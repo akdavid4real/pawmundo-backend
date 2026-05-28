@@ -42,6 +42,21 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
+  licenseNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  specialization?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  yearsOfExperience?: number;
+
+  @IsOptional()
+  @IsString()
   phone?: string;
 
   @IsOptional()

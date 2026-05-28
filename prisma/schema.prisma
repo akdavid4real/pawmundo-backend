@@ -26,6 +26,11 @@ model User {
   phone                  String?
   address                String?
   profileImage           String?
+  licenseNumber          String?
+  specialization         String?
+  bio                    String?
+  yearsOfExperience      Int?
+  professionalVerificationStatus String?
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
   passwordResetToken     String?

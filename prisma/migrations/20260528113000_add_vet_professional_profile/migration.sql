@@ -1,0 +1,6 @@
+ALTER TABLE "users"
+ADD COLUMN IF NOT EXISTS "licenseNumber" TEXT,
+ADD COLUMN IF NOT EXISTS "specialization" TEXT,
+ADD COLUMN IF NOT EXISTS "bio" TEXT,
+ADD COLUMN IF NOT EXISTS "yearsOfExperience" INTEGER,
+ADD COLUMN IF NOT EXISTS "professionalVerificationStatus" TEXT;

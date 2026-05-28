@@ -12,6 +12,7 @@ __test__
 migration.sql
 !prisma/migrations/20260528090000_add_user_subscriptions/migration.sql
 !prisma/migrations/20260528103000_add_appointment_vet_assignment/migration.sql
+!prisma/migrations/20260528113000_add_vet_professional_profile/migration.sql
 .vercel
 .env.vercel
 .env.test
