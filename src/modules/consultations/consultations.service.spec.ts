@@ -4,6 +4,7 @@ import { PetsService } from '../pets/pets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ClinicsService } from '../clinics/clinics.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 describe('ConsultationsService', () => {
   let service: ConsultationsService;
@@ -60,6 +61,10 @@ describe('ConsultationsService', () => {
     requireVetClinicAccess: jest.fn(),
   };
 
+  const mockEntitlementsService = {
+    requireConsultation: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,6 +72,7 @@ describe('ConsultationsService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PetsService, useValue: mockPetsService },
         { provide: ClinicsService, useValue: mockClinicsService },
+        { provide: EntitlementsService, useValue: mockEntitlementsService },
       ],
     }).compile();
 
@@ -74,6 +80,7 @@ describe('ConsultationsService', () => {
     prisma = module.get<PrismaService>(PrismaService);
     petsService = module.get<PetsService>(PetsService);
     clinicsService = module.get<ClinicsService>(ClinicsService);
+    mockEntitlementsService.requireConsultation.mockResolvedValue('plus');
   });
 
   afterEach(() => {
@@ -95,9 +102,23 @@ describe('ConsultationsService', () => {
 
       const result = await service.create(userId, createDto as any);
 
+      expect(mockEntitlementsService.requireConsultation).toHaveBeenCalledWith(userId, undefined);
       expect(mockPetsService.findById).toHaveBeenCalledWith(createDto.petId, userId);
       expect(mockPrismaService.consultation.create).toHaveBeenCalled();
       expect(result).toEqual(mockConsultation);
+    });
+
+    it('should reject consultation creation when subscription entitlement is missing', async () => {
+      mockEntitlementsService.requireConsultation.mockRejectedValue(new ForbiddenException('paid required'));
+
+      await expect(service.create('user-uuid-123', {
+        petId: 'pet-uuid-123',
+        scheduledDate: new Date().toISOString(),
+        reason: 'Annual checkup',
+        consultationType: 'chat',
+      } as any)).rejects.toThrow(ForbiddenException);
+      expect(mockPetsService.findById).not.toHaveBeenCalled();
+      expect(mockPrismaService.consultation.create).not.toHaveBeenCalled();
     });
   });
 

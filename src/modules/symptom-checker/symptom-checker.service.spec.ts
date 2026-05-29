@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SymptomCheckerService } from './symptom-checker.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 describe('SymptomCheckerService', () => {
   let service: SymptomCheckerService;
@@ -13,6 +14,10 @@ describe('SymptomCheckerService', () => {
     healthRecord: { findMany: jest.fn() },
     medication: { findMany: jest.fn() },
     symptomCheck: { create: jest.fn(), findMany: jest.fn() },
+  };
+
+  const mockEntitlementsService = {
+    requireSymptomChecker: jest.fn(),
   };
 
   const dto = {
@@ -31,6 +36,7 @@ describe('SymptomCheckerService', () => {
       providers: [
         SymptomCheckerService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EntitlementsService, useValue: mockEntitlementsService },
       ],
     }).compile();
 
@@ -54,11 +60,19 @@ describe('SymptomCheckerService', () => {
     mockPrismaService.healthRecord.findMany.mockResolvedValue([]);
     mockPrismaService.medication.findMany.mockResolvedValue([]);
     mockPrismaService.symptomCheck.create.mockResolvedValue({ id: 'check-id' });
+    mockEntitlementsService.requireSymptomChecker.mockResolvedValue('plus');
   });
 
   afterEach(() => {
     process.env.MISTRAL_API_KEY = originalApiKey;
     jest.clearAllMocks();
+  });
+
+  it('requires symptom checker entitlement before checking symptoms', async () => {
+    mockEntitlementsService.requireSymptomChecker.mockRejectedValue(new Error('paid required'));
+
+    await expect(service.checkSymptoms('user-id', dto)).rejects.toThrow('paid required');
+    expect(mockPrismaService.pet.findUnique).not.toHaveBeenCalled();
   });
 
   it('returns a safety fallback with personalized message when Mistral is unavailable', async () => {

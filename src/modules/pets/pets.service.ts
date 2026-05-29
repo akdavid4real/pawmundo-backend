@@ -2,15 +2,18 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { PrismaService } from '../prisma/prisma.service';
 import { HealthStatus } from '@prisma/client';
 import { SupabaseStorageService, STORAGE_BUCKETS } from '../supabase/supabase-storage.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 @Injectable()
 export class PetsService {
   constructor(
     private prisma: PrismaService,
     private readonly storageService: SupabaseStorageService,
+    private readonly entitlementsService: EntitlementsService,
   ) { }
 
   async create(petData: any) {
+    await this.entitlementsService.requireCanCreatePet(petData.ownerId);
     return this.prisma.pet.create({ data: petData });
   }
 
@@ -99,6 +102,7 @@ export class PetsService {
 
   async uploadPhoto(petId: string, ownerId: string, file: Buffer, mimetype: string, caption?: string) {
     await this.findById(petId, ownerId);
+    await this.entitlementsService.requirePhotoGallery(ownerId);
 
     const fileExt = mimetype.split('/')[1] || 'png';
     const filePath = `${petId}/${Date.now()}.${fileExt}`;

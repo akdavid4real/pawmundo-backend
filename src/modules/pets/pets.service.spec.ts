@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException, BadRequestException } from '@nes
 import { PetsService } from './pets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseStorageService } from '../supabase/supabase-storage.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 describe('PetsService', () => {
   let service: PetsService;
@@ -41,21 +42,29 @@ describe('PetsService', () => {
     deleteFile: jest.fn(),
   };
 
+  const mockEntitlementsService = {
+    requireCanCreatePet: jest.fn(),
+    requirePhotoGallery: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PetsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: SupabaseStorageService, useValue: mockStorageService },
+        { provide: EntitlementsService, useValue: mockEntitlementsService },
       ],
     }).compile();
 
     service = module.get<PetsService>(PetsService);
     prisma = module.get<PrismaService>(PrismaService);
+    mockEntitlementsService.requireCanCreatePet.mockResolvedValue(undefined);
+    mockEntitlementsService.requirePhotoGallery.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('create', () => {
@@ -67,8 +76,16 @@ describe('PetsService', () => {
 
       const result = await service.create(petData);
 
+      expect(mockEntitlementsService.requireCanCreatePet).toHaveBeenCalledWith('test-owner-uuid');
       expect(mockPrismaService.pet.create).toHaveBeenCalledWith({ data: petData });
       expect(result).toEqual(savedPet);
+    });
+
+    it('should reject pet creation when entitlement limit is reached', async () => {
+      mockEntitlementsService.requireCanCreatePet.mockRejectedValue(new ForbiddenException('limit reached'));
+
+      await expect(service.create({ name: 'Buddy', ownerId: 'test-owner-uuid' })).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.pet.create).not.toHaveBeenCalled();
     });
   });
 
@@ -179,6 +196,35 @@ describe('PetsService', () => {
         ),
       ).rejects.toThrow(ForbiddenException);
 
+      expect(mockStorageService.uploadFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('uploadPhoto', () => {
+    it('should require photo gallery entitlement before uploading a pet photo', async () => {
+      const photo = { id: 'photo-id', petId: 'test-pet-uuid', url: 'https://storage.example/photo.jpg' };
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockStorageService.uploadFile.mockResolvedValue(photo.url);
+      mockPrismaService.petPhoto.create.mockResolvedValue(photo);
+
+      const result = await service.uploadPhoto(
+        'test-pet-uuid',
+        'test-owner-uuid',
+        Buffer.from('image'),
+        'image/jpeg',
+      );
+
+      expect(mockEntitlementsService.requirePhotoGallery).toHaveBeenCalledWith('test-owner-uuid');
+      expect(result).toEqual(photo);
+    });
+
+    it('should reject photo upload when photo gallery entitlement is missing', async () => {
+      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
+      mockEntitlementsService.requirePhotoGallery.mockRejectedValue(new ForbiddenException('paid required'));
+
+      await expect(
+        service.uploadPhoto('test-pet-uuid', 'test-owner-uuid', Buffer.from('image'), 'image/jpeg'),
+      ).rejects.toThrow(ForbiddenException);
       expect(mockStorageService.uploadFile).not.toHaveBeenCalled();
     });
   });

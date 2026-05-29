@@ -6,6 +6,7 @@ import { SymptomCheckerService } from '../symptom-checker/symptom-checker.servic
 import { PetsService } from '../pets/pets.service';
 import { HealthRecordsService } from '../health-records/health-records.service';
 import { AppointmentsService } from '../appointments/appointments.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 describe('AiChatService', () => {
   let service: AiChatService;
@@ -21,9 +22,6 @@ describe('AiChatService', () => {
     pet: {
       findMany: jest.fn(),
     },
-    userSubscription: {
-      findUnique: jest.fn(),
-    },
   };
 
   const mockSymptomCheckerService = {};
@@ -38,6 +36,10 @@ describe('AiChatService', () => {
     findUpcoming: jest.fn(),
   };
 
+  const mockEntitlementsService = {
+    requireAiChat: jest.fn(),
+  };
+
   beforeEach(async () => {
     mockFetch = jest.fn();
     global.fetch = mockFetch as any;
@@ -50,6 +52,7 @@ describe('AiChatService', () => {
         { provide: PetsService, useValue: mockPetsService },
         { provide: HealthRecordsService, useValue: mockHealthRecordsService },
         { provide: AppointmentsService, useValue: mockAppointmentsService },
+        { provide: EntitlementsService, useValue: mockEntitlementsService },
       ],
     }).compile();
 
@@ -57,6 +60,7 @@ describe('AiChatService', () => {
     prismaService = module.get<PrismaService>(PrismaService);
     petsService = module.get<PetsService>(PetsService);
     appointmentsService = module.get<AppointmentsService>(AppointmentsService);
+    mockEntitlementsService.requireAiChat.mockResolvedValue('plus');
   });
 
   afterEach(() => {
@@ -78,11 +82,6 @@ describe('AiChatService', () => {
 
   describe('chat fallback', () => {
     it('should generate a fallback response when api fails', async () => {
-      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
-        plan: 'plus',
-        isActive: true,
-        expiresAt: null,
-      });
       mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
       mockPetsService.findByOwner.mockResolvedValue([]);
       mockAppointmentsService.findUpcoming.mockResolvedValue([]);
@@ -101,11 +100,6 @@ describe('AiChatService', () => {
 
   describe('chat vision payload', () => {
     it('should send image content to Mistral when an image is provided', async () => {
-      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
-        plan: 'pro',
-        isActive: true,
-        expiresAt: new Date(Date.now() + 86400000),
-      });
       mockPrismaService.user.findUnique.mockResolvedValue({ firstName: 'John' });
       mockPetsService.findByOwner.mockResolvedValue([]);
       mockAppointmentsService.findUpcoming.mockResolvedValue([]);
@@ -137,22 +131,7 @@ describe('AiChatService', () => {
 
   describe('chat entitlement', () => {
     it('should reject users without an active paid subscription', async () => {
-      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
-        plan: 'free',
-        isActive: true,
-        expiresAt: null,
-      });
-
-      await expect(service.chat('user-id', { message: 'hello' })).rejects.toBeInstanceOf(ForbiddenException);
-      expect(mockFetch).not.toHaveBeenCalled();
-    });
-
-    it('should reject expired paid subscriptions', async () => {
-      mockPrismaService.userSubscription.findUnique.mockResolvedValue({
-        plan: 'plus',
-        isActive: true,
-        expiresAt: new Date(Date.now() - 86400000),
-      });
+      mockEntitlementsService.requireAiChat.mockRejectedValue(new ForbiddenException('AI Vet Chat requires an active Plus or Pro subscription.'));
 
       await expect(service.chat('user-id', { message: 'hello' })).rejects.toBeInstanceOf(ForbiddenException);
       expect(mockFetch).not.toHaveBeenCalled();

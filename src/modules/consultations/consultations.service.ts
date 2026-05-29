@@ -6,6 +6,7 @@ import { PetsService } from '../pets/pets.service';
 import { v4 as uuidv4 } from 'uuid';
 import { ConsultationStatus, Prisma } from '@prisma/client';
 import { ClinicsService } from '../clinics/clinics.service';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 @Injectable()
 export class ConsultationsService {
@@ -13,6 +14,7 @@ export class ConsultationsService {
     private prisma: PrismaService,
     private petsService: PetsService,
     private clinicsService: ClinicsService,
+    private entitlementsService: EntitlementsService,
   ) { }
 
   private clinicAccessWhereForVet(clinicIds: string[]) {
@@ -63,6 +65,7 @@ export class ConsultationsService {
   }
 
   async create(userId: string, createConsultationDto: CreateConsultationDto) {
+    await this.entitlementsService.requireConsultation(userId, createConsultationDto.consultationType);
     await this.petsService.findById(createConsultationDto.petId, userId);
     if (createConsultationDto.clinicId) {
       await this.clinicsService.findApprovedClinicOrThrow(createConsultationDto.clinicId);

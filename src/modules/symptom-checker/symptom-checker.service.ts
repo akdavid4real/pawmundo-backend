@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SymptomCheckDto } from './dto/symptom-check.dto';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 @Injectable()
 export class SymptomCheckerService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private entitlementsService: EntitlementsService,
+  ) { }
 
   async extractPetContext(userId: string, message: string): Promise<string> {
     const [user, userPets] = await Promise.all([
@@ -78,6 +82,8 @@ ${medications.length > 0 ?
   }
 
   async checkSymptoms(userId: string, symptomCheckDto: SymptomCheckDto) {
+    await this.entitlementsService.requireSymptomChecker(userId);
+
     const [user, pet] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
       this.prisma.pet.findUnique({ where: { id: symptomCheckDto.petId } }),
