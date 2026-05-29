@@ -2,11 +2,22 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type EffectivePlan = 'free' | 'plus' | 'pro';
+export type EntitlementFeature = 'ai_chat' | 'symptom_checker';
 
 const PET_LIMITS: Record<EffectivePlan, number | null> = {
   free: 1,
   plus: 5,
   pro: null,
+};
+
+const FREE_MONTHLY_FEATURE_LIMITS: Record<EntitlementFeature, number> = {
+  ai_chat: 5,
+  symptom_checker: 2,
+};
+
+const FEATURE_NAMES: Record<EntitlementFeature, string> = {
+  ai_chat: 'AI Vet Chat',
+  symptom_checker: 'Symptom checker',
 };
 
 @Injectable()
@@ -63,12 +74,78 @@ export class EntitlementsService {
     }
   }
 
+  async requireFreeMonthlyQuota(
+    userId: string,
+    feature: EntitlementFeature,
+    now = new Date(),
+  ) {
+    const limit = FREE_MONTHLY_FEATURE_LIMITS[feature];
+    const { periodStart, periodEnd } = this.getMonthlyPeriod(now);
+    const used = await this.prisma.entitlementUsage.count({
+      where: {
+        userId,
+        feature,
+        periodStart,
+      },
+    });
+
+    if (used >= limit) {
+      throw new ForbiddenException({
+        message: `Free plan includes ${limit} ${FEATURE_NAMES[feature]} use${limit === 1 ? '' : 's'} per month. Upgrade to Plus or Pro for unlimited access.`,
+        details: {
+          feature,
+          plan: 'free',
+          limit,
+          used,
+          remaining: 0,
+          periodStart: periodStart.toISOString(),
+          periodEnd: periodEnd.toISOString(),
+        },
+      });
+    }
+
+    return {
+      limit,
+      used,
+      remaining: limit - used,
+      periodStart,
+      periodEnd,
+    };
+  }
+
+  async recordFreeMonthlyUsage(
+    userId: string,
+    feature: EntitlementFeature,
+    plan?: EffectivePlan,
+    now = new Date(),
+  ) {
+    const effectivePlan = plan ?? await this.getEffectivePlan(userId);
+    if (effectivePlan !== 'free') return;
+
+    const { periodStart } = this.getMonthlyPeriod(now);
+    await this.prisma.entitlementUsage.create({
+      data: {
+        userId,
+        feature,
+        periodStart,
+      },
+    });
+  }
+
   async requireAiChat(userId: string) {
-    return this.requirePaid(userId, 'AI Vet Chat');
+    const plan = await this.getEffectivePlan(userId);
+    if (plan !== 'free') return plan;
+
+    await this.requireFreeMonthlyQuota(userId, 'ai_chat');
+    return plan;
   }
 
   async requireSymptomChecker(userId: string) {
-    return this.requirePaid(userId, 'Symptom checker');
+    const plan = await this.getEffectivePlan(userId);
+    if (plan !== 'free') return plan;
+
+    await this.requireFreeMonthlyQuota(userId, 'symptom_checker');
+    return plan;
   }
 
   async requirePhotoGallery(userId: string) {
@@ -81,5 +158,28 @@ export class EntitlementsService {
       return this.requirePro(userId, 'Video consultations');
     }
     return this.requirePaid(userId, 'Vet consultations');
+  }
+
+  private getMonthlyPeriod(now: Date) {
+    const periodStart = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      1,
+      0,
+      0,
+      0,
+      0,
+    ));
+    const periodEnd = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() + 1,
+      1,
+      0,
+      0,
+      0,
+      0,
+    ));
+
+    return { periodStart, periodEnd };
   }
 }

@@ -57,9 +57,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     }
 
-    // Log a clean one-liner for each error
+    // Log expected 4xx responses as normal request outcomes; reserve WARN/ERROR for server-side issues.
     if (status >= 500) {
       this.logger.error(
+        `${request.method} ${request.url} - ${status} - ${message}`,
+      );
+    } else if (status >= 400) {
+      this.logger.log(
         `${request.method} ${request.url} - ${status} - ${message}`,
       );
     } else {

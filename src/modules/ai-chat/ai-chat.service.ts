@@ -20,7 +20,7 @@ export class AiChatService {
 
   async chat(userId: string, aiChatDto: AiChatDto) {
     const { message, context, image } = aiChatDto;
-    await this.entitlementsService.requireAiChat(userId);
+    const plan = await this.entitlementsService.requireAiChat(userId);
 
     const [user, pets, upcomingAppointments] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
@@ -121,6 +121,8 @@ ${image ? 'The user attached an image. Analyze it cautiously and explain that im
       const data = await response.json();
       const aiResponse = data.choices[0].message.content;
 
+      await this.entitlementsService.recordFreeMonthlyUsage(userId, 'ai_chat', plan);
+
       return {
         response: aiResponse,
         typewriter: true,
@@ -135,6 +137,8 @@ ${image ? 'The user attached an image. Analyze it cautiously and explain that im
       } else {
         fallbackResponse += `I'm here to help with pet questions. Having connectivity issues - please try again.`;
       }
+
+      await this.entitlementsService.recordFreeMonthlyUsage(userId, 'ai_chat', plan);
 
       return {
         response: fallbackResponse,

@@ -38,6 +38,7 @@ describe('AiChatService', () => {
 
   const mockEntitlementsService = {
     requireAiChat: jest.fn(),
+    recordFreeMonthlyUsage: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -61,6 +62,7 @@ describe('AiChatService', () => {
     petsService = module.get<PetsService>(PetsService);
     appointmentsService = module.get<AppointmentsService>(AppointmentsService);
     mockEntitlementsService.requireAiChat.mockResolvedValue('plus');
+    mockEntitlementsService.recordFreeMonthlyUsage.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -93,6 +95,7 @@ describe('AiChatService', () => {
       expect(response).toHaveProperty('response');
       expect(typeof response.response).toBe('string');
       expect(response.typewriter).toBe(true);
+      expect(mockEntitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith('user-id', 'ai_chat', 'plus');
       expect(consoleErrorSpy).toHaveBeenCalled();
       // fallback response doesn't have suggestedActions
     });
@@ -126,6 +129,7 @@ describe('AiChatService', () => {
         },
       ]));
       expect(response.response).toBe('The image shows a pet skin concern.');
+      expect(mockEntitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith('user-id', 'ai_chat', 'plus');
     });
   });
 

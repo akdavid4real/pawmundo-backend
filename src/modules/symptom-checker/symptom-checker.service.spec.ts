@@ -18,6 +18,7 @@ describe('SymptomCheckerService', () => {
 
   const mockEntitlementsService = {
     requireSymptomChecker: jest.fn(),
+    recordFreeMonthlyUsage: jest.fn(),
   };
 
   const dto = {
@@ -61,6 +62,7 @@ describe('SymptomCheckerService', () => {
     mockPrismaService.medication.findMany.mockResolvedValue([]);
     mockPrismaService.symptomCheck.create.mockResolvedValue({ id: 'check-id' });
     mockEntitlementsService.requireSymptomChecker.mockResolvedValue('plus');
+    mockEntitlementsService.recordFreeMonthlyUsage.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -83,6 +85,7 @@ describe('SymptomCheckerService', () => {
     expect(result.analysis.vetRequired).toBe(true);
     expect(result.analysis.urgencyLevel).toBe('Urgent');
     expect(result.analysis.personalizedMessage).toContain('conservative safety fallback');
+    expect(mockEntitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith('user-id', 'symptom_checker', 'plus');
     expect(mockPrismaService.symptomCheck.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         personalizedMessage: expect.stringContaining('conservative safety fallback'),
@@ -104,6 +107,7 @@ describe('SymptomCheckerService', () => {
 
     expect(result.analysis.vetRequired).toBe(true);
     expect(result.analysis.personalizedMessage).toContain('could not fully parse');
+    expect(mockEntitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith('user-id', 'symptom_checker', 'plus');
     expect(mockPrismaService.symptomCheck.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         personalizedMessage: expect.stringContaining('could not fully parse'),

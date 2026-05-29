@@ -52,6 +52,7 @@ describe('AI and symptom lifecycle DB-free coverage', () => {
     entitlementsService = {
       requireSymptomChecker: jest.fn().mockResolvedValue('plus'),
       requireAiChat: jest.fn().mockResolvedValue('plus'),
+      recordFreeMonthlyUsage: jest.fn().mockResolvedValue(undefined),
     };
     petsService = {
       findByOwner: jest.fn().mockResolvedValue([
@@ -117,6 +118,7 @@ describe('AI and symptom lifecycle DB-free coverage', () => {
     });
 
     expect(entitlementsService.requireSymptomChecker).toHaveBeenCalledWith(userId);
+    expect(entitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith(userId, 'symptom_checker', 'plus');
     expect(prisma.pet.findUnique).toHaveBeenCalledWith({ where: { id: petId } });
     expect(prisma.symptomCheck.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -173,6 +175,7 @@ describe('AI and symptom lifecycle DB-free coverage', () => {
     const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
 
     expect(entitlementsService.requireAiChat).toHaveBeenCalledWith(userId);
+    expect(entitlementsService.recordFreeMonthlyUsage).toHaveBeenCalledWith(userId, 'ai_chat', 'plus');
     expect(petsService.findByOwner).toHaveBeenCalledWith(userId);
     expect(healthRecordsService.getHealthSummary).toHaveBeenCalledWith(petId, userId);
     expect(body.messages[0].content).toContain('Milo');

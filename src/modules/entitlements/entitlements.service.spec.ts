@@ -5,6 +5,7 @@ describe('EntitlementsService', () => {
   const mockPrisma = {
     userSubscription: { findUnique: jest.fn() },
     pet: { count: jest.fn() },
+    entitlementUsage: { count: jest.fn(), create: jest.fn() },
   };
   let service: EntitlementsService;
 
@@ -26,10 +27,51 @@ describe('EntitlementsService', () => {
     await expect(service.getEffectivePlan('user-id')).resolves.toBe('free');
   });
 
-  it('rejects paid features for free users', async () => {
+  it('allows free users within monthly AI and symptom checker quotas', async () => {
     mockPrisma.userSubscription.findUnique.mockResolvedValue(null);
+    mockPrisma.entitlementUsage.count
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(1);
 
-    await expect(service.requireSymptomChecker('user-id')).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.requireAiChat('user-id')).resolves.toBe('free');
+    await expect(service.requireSymptomChecker('user-id')).resolves.toBe('free');
+    expect(mockPrisma.entitlementUsage.count).toHaveBeenNthCalledWith(1, {
+      where: expect.objectContaining({
+        userId: 'user-id',
+        feature: 'ai_chat',
+      }),
+    });
+    expect(mockPrisma.entitlementUsage.count).toHaveBeenNthCalledWith(2, {
+      where: expect.objectContaining({
+        userId: 'user-id',
+        feature: 'symptom_checker',
+      }),
+    });
+  });
+
+  it('rejects free users after monthly AI and symptom checker quotas are exhausted', async () => {
+    mockPrisma.userSubscription.findUnique.mockResolvedValue(null);
+    mockPrisma.entitlementUsage.count
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(2);
+
+    await expect(service.requireAiChat('user-id')).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(service.requireSymptomChecker('user-id')).rejects.toThrow('Free plan includes 2 Symptom checker uses per month');
+  });
+
+  it('records monthly usage only for free users', async () => {
+    mockPrisma.entitlementUsage.create.mockResolvedValue({ id: 'usage-id' });
+
+    await service.recordFreeMonthlyUsage('free-user-id', 'ai_chat', 'free');
+    await service.recordFreeMonthlyUsage('plus-user-id', 'ai_chat', 'plus');
+
+    expect(mockPrisma.entitlementUsage.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.entitlementUsage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'free-user-id',
+        feature: 'ai_chat',
+      }),
+    });
   });
 
   it('enforces free and plus pet limits', async () => {

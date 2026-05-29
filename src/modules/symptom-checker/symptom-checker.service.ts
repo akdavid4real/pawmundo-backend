@@ -82,7 +82,7 @@ ${medications.length > 0 ?
   }
 
   async checkSymptoms(userId: string, symptomCheckDto: SymptomCheckDto) {
-    await this.entitlementsService.requireSymptomChecker(userId);
+    const plan = await this.entitlementsService.requireSymptomChecker(userId);
 
     const [user, pet] = await Promise.all([
       this.prisma.user.findUnique({ where: { id: userId } }),
@@ -127,6 +127,7 @@ ${medications.length > 0 ?
         personalizedMessage: aiResponse.personalizedMessage,
       },
     });
+    await this.entitlementsService.recordFreeMonthlyUsage(userId, 'symptom_checker', plan);
 
     return {
       petInfo: {

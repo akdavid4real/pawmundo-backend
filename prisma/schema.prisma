@@ -54,6 +54,7 @@ model User {
   notifications          Notification[]
   notificationPreference NotificationPreference?
   subscription           UserSubscription?
+  entitlementUsage       EntitlementUsage[]
   events                 Event[]
   forumPosts             ForumPost[]
   forumReplies           ForumReply[]
@@ -94,6 +95,25 @@ model UserSubscription {
 
   @@index([userId, isActive])
   @@map("user_subscriptions")
+}
+
+enum EntitlementFeature {
+  ai_chat
+  symptom_checker
+}
+
+model EntitlementUsage {
+  id          String             @id @default(uuid())
+  userId      String
+  feature     EntitlementFeature
+  periodStart DateTime
+  createdAt   DateTime           @default(now())
+
+  user        User               @relation(fields: [userId], references: [id])
+
+  @@index([userId, feature, periodStart])
+  @@index([feature, periodStart])
+  @@map("entitlement_usage")
 }
 
 enum ClinicVerificationStatus {

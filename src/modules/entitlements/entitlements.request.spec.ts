@@ -54,6 +54,7 @@ describe('Entitlement request-facing enforcement', () => {
       requireAiChat: jest.fn().mockResolvedValue(undefined),
       requireSymptomChecker: jest.fn().mockResolvedValue(undefined),
       requireConsultation: jest.fn().mockResolvedValue(undefined),
+      recordFreeMonthlyUsage: jest.fn().mockResolvedValue(undefined),
     };
 
     petsService = new PetsService(prisma, storageService, entitlementsService);
