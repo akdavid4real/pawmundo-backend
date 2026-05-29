@@ -74,7 +74,7 @@ export class PetsService {
     });
   }
 
-  // ── Profile Image ────────────────────────────────
+  // Profile Image
 
   async uploadProfileImage(petId: string, ownerId: string, file: Buffer, mimetype: string) {
     await this.findById(petId, ownerId);
@@ -95,7 +95,7 @@ export class PetsService {
     });
   }
 
-  // ── Photo Management ─────────────────────────────
+  // Photo Management
 
   async uploadPhoto(petId: string, ownerId: string, file: Buffer, mimetype: string, caption?: string) {
     await this.findById(petId, ownerId);

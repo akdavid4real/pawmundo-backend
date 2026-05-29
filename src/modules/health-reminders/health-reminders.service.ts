@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HealthRecordsService } from '../health-records/health-records.service';
 import { PetsService } from '../pets/pets.service';
@@ -6,6 +6,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class HealthRemindersService {
+  private readonly logger = new Logger(HealthRemindersService.name);
+
   constructor(
     private healthRecordsService: HealthRecordsService,
     private petsService: PetsService,
@@ -14,7 +16,9 @@ export class HealthRemindersService {
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
   async sendDailyReminders() {
-    console.log('Checking for health reminders...');
+    if (process.env.DEBUG_REMINDERS === 'true') {
+      this.logger.debug('Checking for health reminders...');
+    }
   }
 
   async getRemindersForUser(userId: string) {

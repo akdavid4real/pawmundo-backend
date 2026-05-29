@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, UseInterceptors, UploadedFile, BadRequestException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,6 +11,8 @@ import { UpdatePetDto } from './dto/update-pet.dto';
 @Controller('pets')
 @UseGuards(JwtAuthGuard)
 export class PetsController {
+  private readonly logger = new Logger(PetsController.name);
+
   constructor(private readonly petsService: PetsService) { }
 
   @ApiOperation({
@@ -150,11 +152,13 @@ export class PetsController {
   @Get('my-pets')
   async findMyPets(@Request() req, @Query('species') species?: string) {
     const userId = req.user.id;
-    console.log('🐾 Finding pets for userId:', userId);
+    if (process.env.DEBUG_PETS === 'true') {
+      this.logger.debug(`Finding pets for userId: ${userId}`);
+    }
     return this.petsService.findByOwner(userId, species);
   }
 
-  // ── Profile Image ────────────────────────────────
+  // Profile Image
 
   @Post(':id/profile-image')
   @UseInterceptors(FileInterceptor('file'))
@@ -181,7 +185,7 @@ export class PetsController {
     return this.petsService.uploadProfileImage(id, userId, file.buffer, file.mimetype);
   }
 
-  // ── Photo Management ─────────────────────────────
+  // Photo Management
 
   @Post(':id/photos')
   @UseInterceptors(FileInterceptor('file'))
